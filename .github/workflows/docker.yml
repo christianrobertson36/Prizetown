@@ -15,8 +15,8 @@ env:
   OWNER: christianrobertson36
   API_IMAGE: prizetown-api
   WEB_IMAGE: prizetown-web
-  API_TAG: v1
-  WEB_TAG: v1
+  API_TAG: v2
+  WEB_TAG: v2
 
 jobs:
   build-api:
