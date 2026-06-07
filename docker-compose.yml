@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16
+    container_name: prizetown-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prizetown
+      POSTGRES_USER: prizetown
+      POSTGRES_PASSWORD: change_this_password
+    volumes:
+      - /mnt/APP_POOL/prizetown/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prizetown -d prizetown"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ghcr.io/christianrobertson36/prizetown-api:v1
+    container_name: prizetown-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5060:5000"
+    environment:
+      PORT: 5000
+      DATABASE_URL: postgres://prizetown:change_this_password@db:5432/prizetown
+      JWT_SECRET: change_this_to_a_long_random_secret
+      ADMIN_EMAIL: admin@prizetown.local
+      ADMIN_PASSWORD: admin123
+      PUBLIC_BASE_URL: http://192.168.1.177:3100
+    volumes:
+      - /mnt/APP_POOL/prizetown/uploads:/app/uploads
+
+  web:
+    image: ghcr.io/christianrobertson36/prizetown-web:v1
+    container_name: prizetown-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3100:3000"
+    environment:
+      VITE_API_URL: http://192.168.1.177:5060
