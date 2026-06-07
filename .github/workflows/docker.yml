@@ -15,8 +15,9 @@ env:
   OWNER: christianrobertson36
   API_IMAGE: prizetown-api
   WEB_IMAGE: prizetown-web
-  API_TAG: v2
-  WEB_TAG: v2
+  API_TAG: v3
+  WEB_TAG: v3
+  VITE_API_URL: http://192.168.1.177:5060
 
 jobs:
   build-api:
@@ -56,7 +57,10 @@ jobs:
 
       - name: Build web image
         run: |
-          docker build -t $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG ./web
+          docker build \
+            --build-arg VITE_API_URL=$VITE_API_URL \
+            -t $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG \
+            ./web
 
       - name: Push web image
         run: |
