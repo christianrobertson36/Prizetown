@@ -38,13 +38,7 @@ const defaultSettings = {
   terms_text: 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.', responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
   age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules and free-entry terms.'
 };
-function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/competition/')) return 'home'; return 'home'; }
-
-function initialCompetitionSlug() {
-  const match = window.location.pathname.match(/\/competition\/([^/?#]+)/i);
-  return match ? decodeURIComponent(match[1]) : '';
-}
-
+function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; return 'home'; }
 
 function App() {
   const [page, setPageState] = useState(initialPage());
@@ -62,19 +56,8 @@ function App() {
   const [message, setMessage] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('prizetown_cart') || '[]'));
   const [selected, setSelected] = useState(null);
-  const [initialSlug, setInitialSlug] = useState(initialCompetitionSlug());
 
-  function setPage(next) {
-    setPageState(next);
-    if (next !== 'home') setSelected(null);
-    window.history.replaceState(null, '', next === 'home' ? '/' : `/${next}`);
-  }
-  function openCompetition(c) {
-    setSelected(c);
-    setPageState('home');
-    window.history.replaceState(null, '', `/competition/${slugify(c.slug || c.title || c.id)}`);
-    setTimeout(() => window.scrollTo({ top: 180, behavior: 'smooth' }), 0);
-  }
+  function setPage(next) { setPageState(next); window.history.replaceState(null, '', next === 'home' ? '/' : `/${next}`); }
   function saveCart(next) { setCart(next); localStorage.setItem('prizetown_cart', JSON.stringify(next)); }
   async function load() {
     const [comps, wins, siteSettings, iw] = await Promise.all([api('/competitions'), api('/winners'), api('/settings'), api('/instant-winners')]);
@@ -87,15 +70,6 @@ function App() {
   useEffect(() => { if (user?.role === 'admin') loadAdminData().catch(() => {}); }, [user]);
   function logout() { localStorage.removeItem('prizetown_token'); localStorage.removeItem('prizetown_user'); setUser(null); setEntries([]); setOrders([]); setPage('home'); }
   const active = competitions.filter(c => c.status === 'active');
-  useEffect(() => {
-    if (!initialSlug || competitions.length === 0) return;
-    const found = competitions.find(c => slugify(c.slug || c.title || c.id) === slugify(initialSlug) || String(c.id) === String(initialSlug));
-    if (found) {
-      setSelected(found);
-      setPageState('home');
-      setInitialSlug('');
-    }
-  }, [initialSlug, competitions]);
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   return <div>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
@@ -107,7 +81,7 @@ function App() {
       {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => setPage('login')}><User size={16} /> Login</button>}
     </nav></header>
     {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
-    {page === 'home' && <Home settings={settings} competitions={active} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={openCompetition} />}
+    {page === 'home' && <Home settings={settings} competitions={active} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
@@ -120,8 +94,8 @@ function App() {
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   return <main>
     <section className="hero compact-hero"><div><p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p><h1>{settings.hero_title}</h1><p>{settings.hero_text}</p>{!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}</div><div className="hero-card"><Zap size={40} /><h3>Pick a competition</h3><p>Use the scrolling competition posts below to jump straight into prize details, ticket choices, entry lists and instant-win prizes without cluttering the homepage.</p></div></section>
-    <CompetitionScroller competitions={competitions} setSelected={openCompetition} />
-    {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => { setSelected(null); window.history.replaceState(null, '', '/'); }} />}
+    <CompetitionScroller competitions={competitions} setSelected={setSelected} />
+    {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} />}
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
     <WebsiteFooter settings={settings} setPage={setPage} />
   </main>;
@@ -167,7 +141,8 @@ function WebsiteFooter({ settings, setPage }) {
 function CompetitionScroller({ competitions, setSelected }) {
   if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No active competitions yet. Use Admin → Seed demo competitions to fill this page.</p></section>;
   const scrolling = competitions.length > 1 ? [...competitions, ...competitions] : competitions;
-  return <section className="competition-scroll-section"><div className="section-head"><div><p className="eyebrow"><Ticket size={16} /> Live competitions</p><h2>Tap a prize post to enter</h2></div><span className="muted">Hover or touch to pause the scroll</span></div><div className="competition-marquee"><div className="competition-track">{scrolling.map((c, idx) => <CompetitionPost key={`${c.id}-${idx}`} c={c} onOpen={() => setSelected(c)} />)}</div></div></section>;
+  function openCompetition(c) { setSelected(c); setTimeout(() => window.scrollTo({ top: 180, behavior: 'smooth' }), 0); }
+  return <section className="competition-scroll-section"><div className="section-head"><div><p className="eyebrow"><Ticket size={16} /> Live competitions</p><h2>Tap a prize post to enter</h2></div><span className="muted">Hover or touch to pause the scroll</span></div><div className="competition-marquee"><div className="competition-track">{scrolling.map((c, idx) => <CompetitionPost key={`${c.id}-${idx}`} c={c} onOpen={() => openCompetition(c)} />)}</div></div></section>;
 }
 
 function CompetitionPost({ c, onOpen }) {
