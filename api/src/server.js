@@ -239,8 +239,10 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
   `);
-  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`);
-  await pool.query(`UPDATE instant_win_prizes SET active = TRUE WHERE active IS NULL`);
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`).catch(() => {});
+  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS entry_type TEXT DEFAULT 'paid'`).catch(() => {});
+  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS answer TEXT`).catch(() => {});
+  await pool.query(`UPDATE instant_win_prizes SET active = TRUE WHERE active IS NULL`).catch(() => {});
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@prizetown.local';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
@@ -285,7 +287,7 @@ function safeInt(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v20' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v21' }));
 
 
 async function getSettingsObject() {
@@ -862,7 +864,8 @@ app.post('/admin/import-test-csv', auth('admin'), upload.single('file'), async (
     if (compResult.rowCount === 0) return res.status(404).json({ error: 'Competition not found.' });
     const competition = compResult.rows[0];
 
-    const rows = parseCsvText(req.file.buffer.toString('utf8'));
+    const csvText = req.file.buffer ? req.file.buffer.toString('utf8') : fs.readFileSync(req.file.path, 'utf8');
+    const rows = parseCsvText(csvText);
     if (rows.length === 0) return res.status(400).json({ error: 'CSV has no rows.' });
 
     await client.query('BEGIN');
