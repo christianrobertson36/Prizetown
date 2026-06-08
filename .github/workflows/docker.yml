@@ -16,7 +16,7 @@ env:
   API_IMAGE: prizetown-api
   WEB_IMAGE: prizetown-web
   API_TAG: v15
-  WEB_TAG: v15
+  WEB_TAG: v16
   VITE_API_URL: http://192.168.1.177:5051
 
 jobs:
