@@ -17,6 +17,20 @@ function daysLeft(value) {
   return `${d} Days ${h} Hrs ${m} Mins`;
 }
 
+function competitionTheme(c) {
+  const text = `${c?.title || ''} ${c?.description || ''}`.toLowerCase();
+  if (/car|bmw|audi|mercedes|vw|volkswagen|ford|range rover|vehicle/.test(text)) return { key: 'car', label: 'Car', emoji: '🚗' };
+  if (/cash|£|pound|money|voucher|prize pot/.test(text)) return { key: 'cash', label: 'Cash', emoji: '💷' };
+  if (/holiday|trip|travel|flight|hotel|disney|dubai|cruise/.test(text)) return { key: 'holiday', label: 'Holiday', emoji: '✈️' };
+  if (/iphone|ipad|phone|ps5|playstation|xbox|nintendo|switch|laptop|macbook|tech|console|tv/.test(text)) return { key: 'tech', label: 'Tech', emoji: '📱' };
+  if (/garden|kitchen|sofa|furniture|home|appliance/.test(text)) return { key: 'home', label: 'Home', emoji: '🏠' };
+  return { key: 'prize', label: 'Prize', emoji: '🎁' };
+}
+function shortPrizeLabel(c) {
+  const title = String(c?.title || 'Featured Prize').replace(/\s+/g, ' ').trim();
+  return title.length > 28 ? `${title.slice(0, 28)}…` : title;
+}
+
 const defaultSettings = {
   site_name: 'Prizetown', support_email: 'support@prizetown.local', hero_eyebrow: 'Custom competition platform',
   hero_title: 'Win big prizes with Prizetown', hero_text: 'Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.',
@@ -97,7 +111,13 @@ function CompetitionScroller({ competitions, setSelected }) {
 function CompetitionPost({ c, onOpen }) {
   const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100));
   const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
-  return <button className="competition-post" onClick={onOpen} title={`Open ${c.title}`}>{c.image_url ? <img src={imageUrl(c.image_url)} alt="" /> : <div className="post-placeholder"><Gift size={28} /></div>}<div className="post-copy"><span className="badge">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'Live now'}</span><strong>{c.title}</strong><small>{money(c.ticket_price_pence)} per entry · {percent}% sold</small><small>{remaining} tickets remaining</small>{Number(c.instant_win_total || 0) > 0 && <em><Zap size={13} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</em>}</div></button>;
+  const theme = competitionTheme(c);
+  return <button className="competition-post" onClick={onOpen} title={`Open ${c.title}`}>
+    <div className="post-visual-wrap">
+      {c.image_url ? <img src={imageUrl(c.image_url)} alt="" /> : <div className={`post-placeholder theme-${theme.key}`}><span className="visual-badge">{theme.label}</span><div className="visual-icon" aria-hidden="true">{theme.emoji}</div><strong>{shortPrizeLabel(c)}</strong></div>}
+      <span className="post-corner-badge">{theme.label}</span>
+    </div>
+    <div className="post-copy"><span className="badge">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'Live now'}</span><strong>{c.title}</strong><small>{money(c.ticket_price_pence)} per entry · {percent}% sold</small><small>{remaining} tickets remaining</small>{Number(c.instant_win_total || 0) > 0 && <em><Zap size={13} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</em>}</div></button>;
 }
 
 function CompetitionCard({ c, cart, saveCart, setMessage, setPage, setSelected }) {
