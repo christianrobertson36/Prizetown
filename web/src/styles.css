@@ -97,3 +97,29 @@ details { margin-top: 1rem; color: #c8cada; }
 .entry-chip-list { display:flex; flex-wrap:wrap; gap:.4rem; max-height:260px; overflow:auto; }
 .entry-chip-list span { padding:.35rem .55rem; border-radius:.65rem; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.1); }
 @media (max-width: 800px) { .detail-grid { grid-template-columns:1fr; } .detail-img { min-height:220px; } }
+
+/* v10 admin menu tidy-up */
+.admin-main { width: min(1280px, calc(100% - 2rem)); }
+.admin-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 1rem; align-items: start; }
+.admin-menu { position: sticky; top: 5.5rem; }
+.admin-menu h2 { margin-top: 0; }
+.admin-tabs { display: grid; gap: .55rem; margin: 1rem 0; }
+.admin-tabs button { width: 100%; display: flex; align-items: center; gap: .55rem; justify-content: flex-start; border: 1px solid rgba(255,255,255,.12); color: white; background: rgba(255,255,255,.06); padding: .8rem .9rem; border-radius: .9rem; font-weight: 850; }
+.admin-tabs button.active { background: linear-gradient(135deg, rgba(253,224,71,.95), rgba(249,115,22,.9)); color: #08101f; border-color: transparent; }
+.admin-content { min-width: 0; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .8rem; margin: 1rem 0 1.4rem; }
+.stat-grid div { padding: 1rem; border-radius: 1rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+.stat-grid strong { display: block; font-size: 1.65rem; color: #fde047; }
+.stat-grid span { color: #c8cada; font-weight: 750; }
+.admin-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.competition-admin-row { grid-template-columns: 1fr auto auto; }
+.competition-admin-row button { display: inline-flex; align-items: center; gap: .35rem; }
+@media (max-width: 900px) {
+  .admin-shell, .admin-split { grid-template-columns: 1fr; }
+  .admin-menu { position: static; }
+  .admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .admin-tabs { grid-template-columns: 1fr; }
+  .competition-admin-row { grid-template-columns: 1fr; }
+}
