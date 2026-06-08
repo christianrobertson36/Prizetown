@@ -240,8 +240,6 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
   `);
   await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`).catch(() => {});
-  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS entry_type TEXT DEFAULT 'paid'`).catch(() => {});
-  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS answer TEXT`).catch(() => {});
   await pool.query(`UPDATE instant_win_prizes SET active = TRUE WHERE active IS NULL`).catch(() => {});
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@prizetown.local';
@@ -253,41 +251,7 @@ async function initDb() {
   }
 }
 
-
-function parseCsvLine(line) {
-  const out = [];
-  let cur = '';
-  let quoted = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i];
-    const next = line[i + 1];
-    if (ch === '"' && quoted && next === '"') { cur += '"'; i += 1; continue; }
-    if (ch === '"') { quoted = !quoted; continue; }
-    if (ch === ',' && !quoted) { out.push(cur); cur = ''; continue; }
-    cur += ch;
-  }
-  out.push(cur);
-  return out.map(v => v.trim());
-}
-
-function parseCsvText(text) {
-  const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim().length > 0);
-  if (lines.length < 2) return [];
-  const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
-  return lines.slice(1).map(line => {
-    const values = parseCsvLine(line);
-    const row = {};
-    headers.forEach((h, i) => { row[h] = values[i] || ''; });
-    return row;
-  });
-}
-
-function safeInt(value, fallback = 0) {
-  const n = Number.parseInt(value, 10);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v21' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v22' }));
 
 
 async function getSettingsObject() {
@@ -852,93 +816,7 @@ app.get('/winners', async (_req, res) => {
 });
 
 initDb()
-  .then(() => 
-app.post('/admin/import-test-csv', auth('admin'), upload.single('file'), async (req, res) => {
-  const client = await pool.connect();
-  try {
-    if (!req.file) return res.status(400).json({ error: 'CSV file is required.' });
-    const competitionId = safeInt(req.body.competition_id || req.body.competitionId);
-    if (!competitionId) return res.status(400).json({ error: 'Choose a competition before importing.' });
-
-    const compResult = await client.query('SELECT id, title, max_tickets FROM competitions WHERE id = $1', [competitionId]);
-    if (compResult.rowCount === 0) return res.status(404).json({ error: 'Competition not found.' });
-    const competition = compResult.rows[0];
-
-    const csvText = req.file.buffer ? req.file.buffer.toString('utf8') : fs.readFileSync(req.file.path, 'utf8');
-    const rows = parseCsvText(csvText);
-    if (rows.length === 0) return res.status(400).json({ error: 'CSV has no rows.' });
-
-    await client.query('BEGIN');
-
-    const existingTickets = new Set((await client.query('SELECT ticket_number FROM entries WHERE competition_id = $1', [competitionId])).rows.map(r => Number(r.ticket_number)));
-    let nextTicket = 1;
-    const imported = [];
-    const skipped = [];
-
-    for (const row of rows) {
-      const name = row.customer_name || row.name || row.full_name || 'Test Customer';
-      const email = row.customer_email || row.email || '';
-      if (!email) { skipped.push({ reason: 'missing email', row }); continue; }
-
-      let ticketNumber = safeInt(row.ticket_number || row.ticket || row.number, 0);
-      if (!ticketNumber) {
-        while (existingTickets.has(nextTicket)) nextTicket += 1;
-        ticketNumber = nextTicket;
-      }
-      if (existingTickets.has(ticketNumber)) {
-        skipped.push({ reason: `ticket #${ticketNumber} already exists`, row });
-        continue;
-      }
-      if (ticketNumber > Number(competition.max_tickets || 999999)) {
-        skipped.push({ reason: `ticket #${ticketNumber} is above max tickets`, row });
-        continue;
-      }
-
-      let userResult = await client.query('SELECT id FROM users WHERE email = $1', [email]);
-      let userId;
-      if (userResult.rowCount === 0) {
-        const created = await client.query(
-          `INSERT INTO users (name, email, password_hash, role)
-           VALUES ($1, $2, $3, 'customer')
-           RETURNING id`,
-          [name, email, 'csv-import-test-user']
-        );
-        userId = created.rows[0].id;
-      } else {
-        userId = userResult.rows[0].id;
-      }
-
-      const entryType = row.entry_type || 'csv_test';
-      const paymentStatus = row.payment_status || (entryType.includes('free') ? 'free_entry' : 'test_import');
-      const inserted = await client.query(
-        `INSERT INTO entries (competition_id, user_id, ticket_number, payment_status, entry_type, answer, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())
-         RETURNING id, ticket_number`,
-        [competitionId, userId, ticketNumber, paymentStatus, entryType, row.answer || 'CSV test import']
-      );
-
-      existingTickets.add(ticketNumber);
-      imported.push({ id: inserted.rows[0].id, ticket_number: ticketNumber, customer_name: name, customer_email: email });
-    }
-
-    await client.query(
-      `INSERT INTO audit_logs (user_email, action, details)
-       VALUES ($1, 'csv_import_test_entries', $2)`,
-      [req.user?.email || 'admin', `Imported ${imported.length} CSV test entries into ${competition.title}. Skipped ${skipped.length}.`]
-    ).catch(() => {});
-
-    await client.query('COMMIT');
-    res.json({ ok: true, competition: competition.title, imported_count: imported.length, skipped_count: skipped.length, imported, skipped: skipped.slice(0, 20) });
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
-    console.error(err);
-    res.status(500).json({ error: err.message || 'CSV import failed.' });
-  } finally {
-    client.release();
-  }
-});
-
-app.listen(port, () => console.log(`Prizetown API running on ${port} (v15 draw wheel)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v22 draw wheel)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
