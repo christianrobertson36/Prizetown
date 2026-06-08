@@ -58,6 +58,7 @@ function App() {
   const active = competitions.filter(c => c.status === 'active');
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   return <div>
+    <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
     <header className="topbar"><button className="brand" onClick={() => setPage('home')}><Gift /> {settings.site_name || 'Prizetown'}</button><nav>
       <button onClick={() => setPage('home')}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
@@ -78,12 +79,25 @@ function App() {
 
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   return <main>
-    <section className="hero"><div><p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p><h1>{settings.hero_title}</h1><p>{settings.hero_text}</p>{!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}</div><div className="hero-card"><Zap size={40} /><h3>Instant wins now built in</h3><p>Competition pages now include Northern-style sold stats, countdowns, prize details, ticket selectors, entry lists and instant-win prize panels.</p></div></section>
+    <section className="hero compact-hero"><div><p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p><h1>{settings.hero_title}</h1><p>{settings.hero_text}</p>{!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}</div><div className="hero-card"><Zap size={40} /><h3>Pick a competition</h3><p>Use the scrolling competition posts below to jump straight into prize details, ticket choices, entry lists and instant-win prizes without cluttering the homepage.</p></div></section>
+    <CompetitionScroller competitions={competitions} setSelected={setSelected} />
     {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} />}
-    <section className="ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 8).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
-    <section className="grid-section"><h2>Live competitions</h2>{competitions.length === 0 && <p className="muted">No active competitions yet. Use Admin → Seed demo competitions to fill this page.</p>}<div className="cards">{competitions.map(c => <CompetitionCard key={c.id} c={c} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} setSelected={setSelected} />)}</div></section>
+    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
     <section className="panel info-panel"><h2>Free entry and terms</h2><p>{settings.free_entry_global}</p><p className="muted">{settings.responsible_play_text}</p><details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details><p className="muted">{settings.footer_text}</p></section>
   </main>;
+}
+
+function CompetitionScroller({ competitions, setSelected }) {
+  if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No active competitions yet. Use Admin → Seed demo competitions to fill this page.</p></section>;
+  const scrolling = competitions.length > 1 ? [...competitions, ...competitions] : competitions;
+  function openCompetition(c) { setSelected(c); setTimeout(() => window.scrollTo({ top: 180, behavior: 'smooth' }), 0); }
+  return <section className="competition-scroll-section"><div className="section-head"><div><p className="eyebrow"><Ticket size={16} /> Live competitions</p><h2>Tap a prize post to enter</h2></div><span className="muted">Hover or touch to pause the scroll</span></div><div className="competition-marquee"><div className="competition-track">{scrolling.map((c, idx) => <CompetitionPost key={`${c.id}-${idx}`} c={c} onOpen={() => openCompetition(c)} />)}</div></div></section>;
+}
+
+function CompetitionPost({ c, onOpen }) {
+  const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100));
+  const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
+  return <button className="competition-post" onClick={onOpen} title={`Open ${c.title}`}>{c.image_url ? <img src={imageUrl(c.image_url)} alt="" /> : <div className="post-placeholder"><Gift size={28} /></div>}<div className="post-copy"><span className="badge">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'Live now'}</span><strong>{c.title}</strong><small>{money(c.ticket_price_pence)} per entry · {percent}% sold</small><small>{remaining} tickets remaining</small>{Number(c.instant_win_total || 0) > 0 && <em><Zap size={13} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</em>}</div></button>;
 }
 
 function CompetitionCard({ c, cart, saveCart, setMessage, setPage, setSelected }) {

@@ -123,3 +123,89 @@ details { margin-top: 1rem; color: #c8cada; }
   .admin-tabs { grid-template-columns: 1fr; }
   .competition-admin-row { grid-template-columns: 1fr; }
 }
+
+
+/* v11 Northern-style homepage scrollers */
+.welcome-marquee {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(250,204,21,.95), rgba(249,115,22,.95), rgba(168,85,247,.95));
+  color: #08101f;
+  border-bottom: 1px solid rgba(255,255,255,.18);
+}
+.marquee-track {
+  display: flex;
+  gap: 2.5rem;
+  width: max-content;
+  padding: .55rem 0;
+  animation: prizetownMarquee 28s linear infinite;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.marquee-track span { white-space: nowrap; }
+.marquee-track:hover, .competition-track:hover { animation-play-state: paused; }
+.topbar { top: 2.15rem; }
+.compact-hero { padding-bottom: 1.4rem; }
+.competition-scroll-section { margin: .5rem 0 1.3rem; }
+.section-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.section-head h2 { margin: .2rem 0 0; font-size: clamp(1.8rem, 3vw, 2.6rem); }
+.competition-marquee {
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 24px 80px rgba(0,0,0,.22);
+  padding: .85rem 0;
+  mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+}
+.competition-track {
+  display: flex;
+  gap: .9rem;
+  width: max-content;
+  padding: 0 .9rem;
+  animation: competitionMarquee 48s linear infinite;
+}
+.competition-post {
+  width: 330px;
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: .85rem;
+  align-items: center;
+  text-align: left;
+  color: white;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  border-radius: 1.1rem;
+  padding: .75rem;
+  flex: 0 0 auto;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.competition-post:hover { transform: translateY(-2px); border-color: rgba(250,204,21,.55); background: rgba(255,255,255,.12); }
+.competition-post img, .post-placeholder {
+  width: 112px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: .9rem;
+  background: radial-gradient(circle at 30% 20%, rgba(250,204,21,.32), transparent 36%), linear-gradient(135deg, rgba(124,58,237,.45), rgba(249,115,22,.28));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fde047;
+}
+.post-copy { min-width: 0; display: grid; gap: .22rem; }
+.post-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.02rem; }
+.post-copy small { color: #c8cada; }
+.post-copy em { display: inline-flex; align-items: center; gap: .25rem; color: #fde68a; font-style: normal; font-weight: 850; font-size: .82rem; }
+.winners-ticker { mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent); }
+@keyframes prizetownMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes competitionMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track, .competition-track { animation: none; flex-wrap: nowrap; overflow-x: auto; } }
+@media (max-width: 800px) {
+  .topbar { top: 2.15rem; }
+  .section-head { align-items: start; flex-direction: column; }
+  .competition-post { width: 292px; grid-template-columns: 96px 1fr; }
+  .competition-post img, .post-placeholder { width: 96px; height: 78px; }
+}
