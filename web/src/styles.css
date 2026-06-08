@@ -383,3 +383,6 @@ details { margin-top: 1rem; color: #c8cada; }
 /* v18 restore visible competitions */
 .competition-grid-fallback { margin-top: 1.5rem; }
 .competition-grid-fallback .cards { margin-top: .75rem; }
+
+/* v20 csv import polish */
+.admin-tabs button[disabled], button[disabled] { opacity: .65; cursor: not-allowed; }
