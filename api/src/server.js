@@ -249,6 +249,10 @@ async function initDb() {
   await pool.query(`UPDATE instant_win_prizes SET active = TRUE WHERE active IS NULL`).catch(() => {});
   await pool.query(`UPDATE instant_win_prizes SET quantity_total = 1 WHERE quantity_total IS NULL`).catch(() => {});
 
+  
+  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS entry_type TEXT DEFAULT 'paid'`).catch(() => {});
+  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS answer TEXT`).catch(() => {});
+
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@prizetown.local';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const existing = await query('SELECT id FROM users WHERE email = $1', [normalizeEmail(adminEmail)]);
@@ -258,7 +262,50 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v23' }));
+
+function parseCsvLine(line) {
+  const values = [];
+  let value = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    const next = line[i + 1];
+    if (ch === '"' && quoted && next === '"') {
+      value += '"';
+      i += 1;
+    } else if (ch === '"') {
+      quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      values.push(value);
+      value = '';
+    } else {
+      value += ch;
+    }
+  }
+  values.push(value);
+  return values.map(v => v.trim());
+}
+
+function parseCsvText(csvText) {
+  const lines = String(csvText || '').replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+  const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase().trim());
+  return lines.slice(1).map(line => {
+    const values = parseCsvLine(line);
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] || '';
+    });
+    return row;
+  });
+}
+
+function toInt(value, fallback = 0) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v25' }));
 
 
 async function getSettingsObject() {
@@ -820,6 +867,124 @@ app.get('/winners', async (_req, res) => {
     ORDER BY w.announced_at DESC
   `);
   res.json(result.rows);
+});
+
+
+app.post('/admin/import-test-csv', auth('admin'), upload.single('file'), async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const competitionId = toInt(req.body.competition_id || req.body.competitionId, 0);
+    if (!competitionId) return res.status(400).json({ error: 'Choose a competition before importing.' });
+    if (!req.file) return res.status(400).json({ error: 'CSV file is required.' });
+
+    const competitionResult = await client.query('SELECT id, title, max_tickets FROM competitions WHERE id = $1', [competitionId]);
+    if (competitionResult.rowCount === 0) return res.status(404).json({ error: 'Competition not found.' });
+    const competition = competitionResult.rows[0];
+
+    const csvText = req.file.buffer ? req.file.buffer.toString('utf8') : fs.readFileSync(req.file.path, 'utf8');
+    const rows = parseCsvText(csvText);
+    if (rows.length === 0) return res.status(400).json({ error: 'CSV has no rows.' });
+
+    await client.query('BEGIN');
+
+    const existingTicketRows = await client.query('SELECT ticket_number FROM entries WHERE competition_id = $1', [competitionId]);
+    const existingTickets = new Set(existingTicketRows.rows.map(row => Number(row.ticket_number)));
+    let nextTicket = 1;
+    const imported = [];
+    const skipped = [];
+
+    for (const row of rows) {
+      const customerName = row.customer_name || row.name || row.full_name || 'CSV Test Customer';
+      const customerEmail = row.customer_email || row.email || '';
+      if (!customerEmail) {
+        skipped.push({ reason: 'Missing customer_email/email', row });
+        continue;
+      }
+
+      let ticketNumber = toInt(row.ticket_number || row.ticket || row.number, 0);
+      if (!ticketNumber) {
+        while (existingTickets.has(nextTicket)) nextTicket += 1;
+        ticketNumber = nextTicket;
+      }
+
+      if (existingTickets.has(ticketNumber)) {
+        skipped.push({ reason: `Ticket #${ticketNumber} already exists`, row });
+        continue;
+      }
+
+      if (ticketNumber > Number(competition.max_tickets || 999999)) {
+        skipped.push({ reason: `Ticket #${ticketNumber} is above max tickets`, row });
+        continue;
+      }
+
+      let userId;
+      const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [customerEmail]);
+      if (existingUser.rowCount > 0) {
+        userId = existingUser.rows[0].id;
+      } else {
+        const createdUser = await client.query(
+          `INSERT INTO users (name, email, password_hash, role)
+           VALUES ($1, $2, $3, 'customer')
+           RETURNING id`,
+          [customerName, customerEmail, 'csv-import-test-user']
+        );
+        userId = createdUser.rows[0].id;
+      }
+
+      const paymentStatus = row.payment_status || (String(row.entry_type || '').includes('free') ? 'free_entry' : 'csv_test');
+      const entryType = row.entry_type || 'csv_test';
+      const answer = row.answer || row.notes || 'CSV test import';
+
+      let inserted;
+      try {
+        inserted = await client.query(
+          `INSERT INTO entries (competition_id, user_id, ticket_number, payment_status, entry_type, answer, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())
+           RETURNING id, ticket_number`,
+          [competitionId, userId, ticketNumber, paymentStatus, entryType, answer]
+        );
+      } catch (entryErr) {
+        inserted = await client.query(
+          `INSERT INTO entries (competition_id, user_id, ticket_number, payment_status, created_at)
+           VALUES ($1, $2, $3, $4, NOW())
+           RETURNING id, ticket_number`,
+          [competitionId, userId, ticketNumber, paymentStatus]
+        );
+      }
+
+      existingTickets.add(ticketNumber);
+      imported.push({
+        id: inserted.rows[0].id,
+        ticket_number: ticketNumber,
+        customer_name: customerName,
+        customer_email: customerEmail
+      });
+    }
+
+    await client.query(
+      `INSERT INTO audit_logs (user_email, action, details)
+       VALUES ($1, 'csv_import_test_entries', $2)`,
+      [req.user?.email || 'admin', `Imported ${imported.length} CSV test entries into ${competition.title}. Skipped ${skipped.length}.`]
+    ).catch(() => {});
+
+    await client.query('COMMIT');
+
+    res.json({
+      ok: true,
+      competition: competition.title,
+      imported_count: imported.length,
+      skipped_count: skipped.length,
+      imported,
+      skipped: skipped.slice(0, 50)
+    });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('CSV import failed', err);
+    res.status(500).json({ error: err.message || 'CSV import failed.' });
+  } finally {
+    client.release();
+    if (req.file?.path) fs.unlink(req.file.path, () => {});
+  }
 });
 
 initDb()
