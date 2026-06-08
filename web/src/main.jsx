@@ -12,6 +12,17 @@ function slugify(value) {
   return String(value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+const defaultSettings = {
+  site_name: 'Prizetown',
+  support_email: 'support@prizetown.local',
+  hero_eyebrow: 'Custom competition platform',
+  hero_title: 'Win big prizes with Prizetown',
+  hero_text: 'Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.',
+  footer_text: 'Please play responsibly. Free entry routes and terms should be checked before public launch.',
+  free_entry_global: 'Postal/free entry route details can be added here from Admin Settings.',
+  terms_text: 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.'
+};
+
 function initialPage() {
   const path = window.location.pathname.toLowerCase();
   if (path.includes('/admin')) return 'admin';
@@ -26,6 +37,7 @@ function App() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('prizetown_user') || 'null'));
   const [competitions, setCompetitions] = useState([]);
   const [winners, setWinners] = useState([]);
+  const [settings, setSettings] = useState(defaultSettings);
   const [entries, setEntries] = useState([]);
   const [orders, setOrders] = useState([]);
   const [adminEntries, setAdminEntries] = useState([]);
@@ -45,9 +57,10 @@ function App() {
   }
 
   async function load() {
-    const [comps, wins] = await Promise.all([api('/competitions'), api('/winners')]);
+    const [comps, wins, siteSettings] = await Promise.all([api('/competitions'), api('/winners'), api('/settings')]);
     setCompetitions(comps);
     setWinners(wins);
+    setSettings({ ...defaultSettings, ...siteSettings });
   }
 
   async function loadAccount() {
@@ -83,7 +96,7 @@ function App() {
   return (
     <div>
       <header className="topbar">
-        <button className="brand" onClick={() => setPage('home')}><Gift /> Prizetown</button>
+        <button className="brand" onClick={() => setPage('home')}><Gift /> {settings.site_name || 'Prizetown'}</button>
         <nav>
           <button onClick={() => setPage('home')}>Competitions</button>
           <button onClick={() => setPage('winners')}>Winners</button>
@@ -96,25 +109,25 @@ function App() {
 
       {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
 
-      {page === 'home' && <Home competitions={active} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} />}
+      {page === 'home' && <Home settings={settings} competitions={active} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} />}
       {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
       {page === 'winners' && <Winners winners={winners} />}
       {page === 'cart' && <Cart user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
       {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
-      {page === 'admin' && user?.role === 'admin' && <Admin competitions={competitions} entries={adminEntries} orders={adminOrders} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
+      {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
       {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     </div>
   );
 }
 
-function Home({ competitions, user, setPage, cart, saveCart, setMessage }) {
+function Home({ settings, competitions, user, setPage, cart, saveCart, setMessage }) {
   return (
     <main>
       <section className="hero">
         <div>
-          <p className="eyebrow"><Sparkles size={16} /> Custom competition platform</p>
-          <h1>Win big prizes with Prizetown</h1>
-          <p>Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.</p>
+          <p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p>
+          <h1>{settings.hero_title}</h1>
+          <p>{settings.hero_text}</p>
           {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
         </div>
         <div className="hero-card">
@@ -130,6 +143,13 @@ function Home({ competitions, user, setPage, cart, saveCart, setMessage }) {
         <div className="cards">
           {competitions.map(c => <CompetitionCard key={c.id} c={c} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} />)}
         </div>
+      </section>
+
+      <section className="panel info-panel">
+        <h2>Free entry and terms</h2>
+        <p>{settings.free_entry_global}</p>
+        <details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details>
+        <p className="muted">{settings.footer_text}</p>
       </section>
     </main>
   );
@@ -299,10 +319,15 @@ function Account({ user, entries, orders, setPage, reload }) {
   );
 }
 
-function Admin({ competitions, entries, orders, reload, setMessage }) {
+function Admin({ settings, setSettings, competitions, entries, orders, reload, setMessage }) {
   const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '' };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
+  const [settingsForm, setSettingsForm] = useState({ ...defaultSettings, ...settings });
+
+  useEffect(() => {
+    setSettingsForm({ ...defaultSettings, ...settings });
+  }, [settings]);
 
   function updateField(key, value) {
     const next = { ...form, [key]: value };
@@ -347,6 +372,19 @@ function Admin({ competitions, entries, orders, reload, setMessage }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function updateSetting(key, value) {
+    setSettingsForm({ ...settingsForm, [key]: value });
+  }
+
+  async function saveSettings(e) {
+    e.preventDefault();
+    try {
+      const saved = await api('/admin/settings', { method: 'PATCH', body: JSON.stringify(settingsForm) });
+      setSettings({ ...defaultSettings, ...saved });
+      setMessage('Site settings saved.');
+    } catch (err) { setMessage(err.message); }
+  }
+
   return (
     <main>
       <section className="admin-layout">
@@ -373,7 +411,23 @@ function Admin({ competitions, entries, orders, reload, setMessage }) {
           {editing && <button type="button" className="link" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}
         </form>
 
-        <div className="panel list-panel">
+        <div>
+          <form className="panel settings-panel" onSubmit={saveSettings}>
+            <h2>Site settings</h2>
+            <div className="two">
+              <label>Site name<input value={settingsForm.site_name || ''} onChange={e => updateSetting('site_name', e.target.value)} /></label>
+              <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => updateSetting('support_email', e.target.value)} /></label>
+            </div>
+            <label>Hero eyebrow<input value={settingsForm.hero_eyebrow || ''} onChange={e => updateSetting('hero_eyebrow', e.target.value)} /></label>
+            <label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => updateSetting('hero_title', e.target.value)} /></label>
+            <label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => updateSetting('hero_text', e.target.value)} /></label>
+            <label>Global free entry route<textarea value={settingsForm.free_entry_global || ''} onChange={e => updateSetting('free_entry_global', e.target.value)} /></label>
+            <label>Terms / legal text<textarea value={settingsForm.terms_text || ''} onChange={e => updateSetting('terms_text', e.target.value)} /></label>
+            <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => updateSetting('footer_text', e.target.value)} /></label>
+            <button className="primary full">Save site settings</button>
+          </form>
+
+          <div className="panel list-panel">
           <h2>Competitions</h2>
           {competitions.map(c => (
             <div className="list-row" key={c.id}>
@@ -386,6 +440,7 @@ function Admin({ competitions, entries, orders, reload, setMessage }) {
           {orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}
           <h2>Recent entries</h2>
           {entries.slice(0, 10).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}
+          </div>
         </div>
       </section>
     </main>

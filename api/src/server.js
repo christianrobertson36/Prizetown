@@ -136,6 +136,23 @@ async function initDb() {
       announced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS site_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT '',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    INSERT INTO site_settings (key, value) VALUES
+      ('site_name', 'Prizetown'),
+      ('support_email', 'support@prizetown.local'),
+      ('hero_eyebrow', 'Custom competition platform'),
+      ('hero_title', 'Win big prizes with Prizetown'),
+      ('hero_text', 'Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.'),
+      ('footer_text', 'Please play responsibly. Free entry routes and terms should be checked before public launch.'),
+      ('free_entry_global', 'Postal/free entry route details can be added here from Admin Settings.'),
+      ('terms_text', 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.')
+    ON CONFLICT (key) DO NOTHING;
+
     ALTER TABLE entries ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL;
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
@@ -151,7 +168,46 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v6' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v7' }));
+
+
+async function getSettingsObject() {
+  const result = await query('SELECT key, value FROM site_settings ORDER BY key');
+  return Object.fromEntries(result.rows.map(row => [row.key, row.value]));
+}
+
+const allowedSettings = [
+  'site_name',
+  'support_email',
+  'hero_eyebrow',
+  'hero_title',
+  'hero_text',
+  'footer_text',
+  'free_entry_global',
+  'terms_text'
+];
+
+app.get('/settings', async (_req, res) => {
+  res.json(await getSettingsObject());
+});
+
+app.get('/admin/settings', auth('admin'), async (_req, res) => {
+  res.json(await getSettingsObject());
+});
+
+app.patch('/admin/settings', auth('admin'), async (req, res) => {
+  const updates = req.body || {};
+  for (const key of allowedSettings) {
+    if (Object.prototype.hasOwnProperty.call(updates, key)) {
+      await query(
+        `INSERT INTO site_settings (key, value, updated_at) VALUES ($1, $2, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+        [key, String(updates[key] ?? '')]
+      );
+    }
+  }
+  res.json(await getSettingsObject());
+});
 
 app.post('/auth/register', async (req, res) => {
   const { name = '', email, password } = req.body;
@@ -428,7 +484,7 @@ app.get('/winners', async (_req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v6 orders)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v7 settings)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
