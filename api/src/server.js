@@ -239,6 +239,8 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
   `);
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`);
+  await pool.query(`UPDATE instant_win_prizes SET active = TRUE WHERE active IS NULL`);
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@prizetown.local';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
@@ -249,7 +251,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v15' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v19' }));
 
 
 async function getSettingsObject() {
