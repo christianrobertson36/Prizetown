@@ -262,3 +262,106 @@ details { margin-top: 1rem; color: #c8cada; }
   .post-visual-wrap { width: 108px; height: 82px; }
   .competition-post img, .post-placeholder { width: 108px; height: 82px; }
 }
+
+
+/* v14 proper website footer */
+.site-footer {
+  margin: 2rem 0 0;
+  border-radius: 1.6rem;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(250,204,21,.16), transparent 26rem),
+    radial-gradient(circle at 85% 0%, rgba(168,85,247,.2), transparent 24rem),
+    rgba(255,255,255,.075);
+  box-shadow: 0 24px 80px rgba(0,0,0,.24);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.35fr .8fr 1fr 1.2fr;
+  gap: 1.2rem;
+  padding: 1.5rem;
+}
+.footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: 1.25rem;
+  color: white;
+  margin-bottom: .55rem;
+}
+.footer-brand p,
+.footer-col p {
+  margin: .35rem 0;
+  color: #c8cada;
+}
+.footer-responsible {
+  display: inline-block;
+  margin-top: .75rem !important;
+  padding: .55rem .75rem;
+  border-radius: .85rem;
+  color: #fef3c7 !important;
+  background: rgba(250,204,21,.12);
+  border: 1px solid rgba(250,204,21,.2);
+  font-weight: 750;
+}
+.footer-col h3 {
+  margin: 0 0 .75rem;
+  font-size: 1rem;
+  color: #fde047;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.footer-col button,
+.footer-col a {
+  display: block;
+  width: fit-content;
+  margin: .35rem 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #f7f7fb;
+  text-decoration: none;
+  font-weight: 800;
+}
+.footer-col button:hover,
+.footer-col a:hover {
+  color: #fde047;
+  text-decoration: underline;
+}
+.footer-legal p {
+  max-height: 8rem;
+  overflow: auto;
+  padding-right: .35rem;
+}
+.footer-terms {
+  margin: 0 1.5rem 1rem;
+  padding: .9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.09);
+}
+.footer-terms summary {
+  cursor: pointer;
+  color: #f7f7fb;
+  font-weight: 900;
+}
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .9rem 1.5rem;
+  background: rgba(8,16,31,.55);
+  color: #9ca3af;
+  font-size: .92rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 900px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 620px) {
+  .footer-grid { grid-template-columns: 1fr; padding: 1.1rem; }
+  .footer-terms { margin: 0 1.1rem 1rem; }
+  .footer-bottom { align-items: flex-start; flex-direction: column; padding: .9rem 1.1rem; }
+}

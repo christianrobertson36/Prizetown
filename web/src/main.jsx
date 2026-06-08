@@ -97,8 +97,45 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
     <CompetitionScroller competitions={competitions} setSelected={setSelected} />
     {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} />}
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
-    <section className="panel info-panel"><h2>Free entry and terms</h2><p>{settings.free_entry_global}</p><p className="muted">{settings.responsible_play_text}</p><details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details><p className="muted">{settings.footer_text}</p></section>
+    <WebsiteFooter settings={settings} setPage={setPage} />
   </main>;
+}
+
+function WebsiteFooter({ settings, setPage }) {
+  return <footer className="site-footer">
+    <div className="footer-grid">
+      <div className="footer-brand">
+        <div className="footer-logo"><Gift size={24} /> <strong>{settings.site_name || 'Prizetown'}</strong></div>
+        <p>{settings.footer_text || 'Prize competitions, instant wins and final draw prizes. Please enter responsibly.'}</p>
+        <p className="footer-responsible">{settings.responsible_play_text || '18+ only. Please enter responsibly.'}</p>
+      </div>
+      <div className="footer-col">
+        <h3>Explore</h3>
+        <button onClick={() => setPage('home')}>Live competitions</button>
+        <button onClick={() => setPage('winners')}>Winners</button>
+        <button onClick={() => setPage('cart')}>Basket</button>
+        <button onClick={() => setPage('account')}>My entries</button>
+      </div>
+      <div className="footer-col">
+        <h3>Help & contact</h3>
+        <p>Support email</p>
+        <a href={`mailto:${settings.support_email || 'support@prizetown.local'}`}>{settings.support_email || 'support@prizetown.local'}</a>
+        <p className="muted">For account, entry or prize questions, contact support with your order details.</p>
+      </div>
+      <div className="footer-col footer-legal">
+        <h3>Free entry route</h3>
+        <p>{settings.free_entry_global || 'Free-entry route details can be added from Admin Settings.'}</p>
+      </div>
+    </div>
+    <details className="footer-terms">
+      <summary>Terms, legal and competition rules</summary>
+      <p>{settings.terms_text || 'Add your terms and legal wording from Admin Settings before going public.'}</p>
+    </details>
+    <div className="footer-bottom">
+      <span>© {new Date().getFullYear()} {settings.site_name || 'Prizetown'}</span>
+      <span>Custom competition platform</span>
+    </div>
+  </footer>;
 }
 
 function CompetitionScroller({ competitions, setSelected }) {
