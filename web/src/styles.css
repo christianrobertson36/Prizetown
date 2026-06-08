@@ -682,3 +682,45 @@ details { margin-top: 1rem; color: #c8cada; }
     radial-gradient(circle at 12% 0%, rgba(250,204,21,.14), transparent 16rem),
     rgba(255,255,255,.055);
 }
+
+
+/* v33 simpler pounds + percentage fund calculator */
+.fund-total {
+  display: grid;
+  gap: .25rem;
+  padding: .9rem;
+  margin: .8rem 0;
+  border-radius: 1rem;
+  background: rgba(250,204,21,.1);
+  border: 1px solid rgba(250,204,21,.18);
+}
+.fund-total span,
+.fund-total small {
+  color: #c8cada;
+  font-weight: 750;
+}
+.fund-total strong {
+  color: #fde047;
+  font-size: 1.55rem;
+}
+.fund-percent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: .75rem;
+}
+.fund-percent-grid label {
+  padding: .8rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.fund-percent-grid input {
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+.fund-percent-grid small {
+  display: block;
+  margin-top: .25rem;
+  color: #fde047;
+  font-weight: 900;
+}
