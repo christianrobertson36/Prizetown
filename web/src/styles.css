@@ -69,3 +69,8 @@ details { margin-top: 1rem; color: #c8cada; }
   .checkout-bar { justify-content: stretch; }
   .checkout-bar button, .checkout-bar .secondary { width: 100%; }
 }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 6px 10px; border-radius: 999px; background: rgba(17, 24, 39, 0.08); font-size: 0.85rem; font-weight: 700; }
+.check-row { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; }
+.check-row input { width: auto; margin-top: 4px; }
+.checkout-compliance { min-width: 260px; max-width: 460px; }

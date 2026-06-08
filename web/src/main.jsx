@@ -20,7 +20,9 @@ const defaultSettings = {
   hero_text: 'Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.',
   footer_text: 'Please play responsibly. Free entry routes and terms should be checked before public launch.',
   free_entry_global: 'Postal/free entry route details can be added here from Admin Settings.',
-  terms_text: 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.'
+  terms_text: 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.',
+  responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
+  age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules and free-entry terms.'
 };
 
 function initialPage() {
@@ -42,6 +44,7 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [adminEntries, setAdminEntries] = useState([]);
   const [adminOrders, setAdminOrders] = useState([]);
+  const [adminAudit, setAdminAudit] = useState([]);
   const [message, setMessage] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('prizetown_cart') || '[]'));
 
@@ -72,9 +75,10 @@ function App() {
 
   async function loadAdminData() {
     if (user?.role !== 'admin') return;
-    const [rows, orderRows] = await Promise.all([api('/admin/entries'), api('/admin/orders')]);
+    const [rows, orderRows, auditRows] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs')]);
     setAdminEntries(rows);
     setAdminOrders(orderRows);
+    setAdminAudit(auditRows);
   }
 
   useEffect(() => { load().catch(err => setMessage(err.message)); }, []);
@@ -112,9 +116,9 @@ function App() {
       {page === 'home' && <Home settings={settings} competitions={active} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} />}
       {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
       {page === 'winners' && <Winners winners={winners} />}
-      {page === 'cart' && <Cart user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
+      {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
       {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
-      {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
+      {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
       {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     </div>
   );
@@ -132,8 +136,8 @@ function Home({ settings, competitions, user, setPage, cart, saveCart, setMessag
         </div>
         <div className="hero-card">
           <Trophy size={40} />
-          <h3>v6 basket and ticket allocation</h3>
-          <p>Orders, customer entries and ticket numbers are stored in PostgreSQL. Stripe payment comes next.</p>
+          <h3>v8 compliance foundation</h3>
+          <p>Age confirmation, rules, closing dates, free-entry recording and audit logs are now built in. Payment provider approval still comes next.</p>
         </div>
       </section>
 
@@ -148,6 +152,7 @@ function Home({ settings, competitions, user, setPage, cart, saveCart, setMessag
       <section className="panel info-panel">
         <h2>Free entry and terms</h2>
         <p>{settings.free_entry_global}</p>
+        <p className="muted">{settings.responsible_play_text}</p>
         <details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details>
         <p className="muted">{settings.footer_text}</p>
       </section>
@@ -180,6 +185,8 @@ function CompetitionCard({ c, cart, saveCart, setMessage, setPage }) {
         <p>{c.description}</p>
         <div className="progress"><span style={{ width: `${percent}%` }} /></div>
         <p className="muted">{c.entries_sold || 0} / {c.max_tickets} tickets sold · {remaining} left</p>
+        {c.closes_at && <p className="muted">Closes: {new Date(c.closes_at).toLocaleString()}</p>}
+        {c.age_restricted && <p className="badge">{c.min_age || 18}+ only</p>}
         {c.question && <label>Question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}
         <div className="two compact">
           <label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label>
@@ -188,6 +195,7 @@ function CompetitionCard({ c, cart, saveCart, setMessage, setPage }) {
         <button className="primary full" onClick={addToBasket}><ShoppingCart size={16} /> Add to basket</button>
         <button className="secondary full" onClick={() => setPage('cart')}>Go to basket</button>
         {c.free_entry_text && <details><summary>Free entry route</summary><p>{c.free_entry_text}</p></details>}
+        {c.rules_text && <details><summary>Competition rules</summary><p>{c.rules_text}</p></details>}
       </div>
     </article>
   );
@@ -227,8 +235,9 @@ function Login({ setUser, setPage, setMessage }) {
   );
 }
 
-function Cart({ user, setPage, cart, saveCart, reload, reloadAccount, setMessage }) {
+function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, setMessage }) {
   const [busy, setBusy] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const total = cart.reduce((sum, item) => sum + item.quantity * item.unit_price_pence, 0);
 
   function updateQty(id, quantity) {
@@ -249,7 +258,7 @@ function Cart({ user, setPage, cart, saveCart, reload, reloadAccount, setMessage
     if (cart.length === 0) return setMessage('Basket is empty.');
     try {
       setBusy(true);
-      const data = await api('/orders', { method: 'POST', body: JSON.stringify({ items: cart }) });
+      const data = await api('/orders', { method: 'POST', body: JSON.stringify({ items: cart, age_confirmed: ageConfirmed }) });
       saveCart([]);
       setMessage(`Order #${data.order.id} created. Ticket numbers: ${data.entries.map(e => e.ticket_number).join(', ')}`);
       await reload();
@@ -284,6 +293,10 @@ function Cart({ user, setPage, cart, saveCart, reload, reloadAccount, setMessage
         <div className="checkout-bar">
           <h2>Total: {money(total)}</h2>
           <button className="secondary" onClick={() => setPage('home')}>Continue browsing</button>
+          <div className="checkout-compliance">
+            <label className="check-row"><input type="checkbox" checked={ageConfirmed} onChange={e => setAgeConfirmed(e.target.checked)} /> <span>{settings.age_confirmation_text}</span></label>
+            <p className="muted">{settings.responsible_play_text}</p>
+          </div>
           <button className="primary" disabled={busy || cart.length === 0} onClick={checkout}><Ticket size={16} /> {busy ? 'Creating order...' : 'Checkout and allocate tickets'}</button>
         </div>
       </section>
@@ -319,11 +332,12 @@ function Account({ user, entries, orders, setPage, reload }) {
   );
 }
 
-function Admin({ settings, setSettings, competitions, entries, orders, reload, setMessage }) {
-  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '' };
+function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, reload, setMessage }) {
+  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '' };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [settingsForm, setSettingsForm] = useState({ ...defaultSettings, ...settings });
+  const [freeForm, setFreeForm] = useState({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' });
 
   useEffect(() => {
     setSettingsForm({ ...defaultSettings, ...settings });
@@ -368,7 +382,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, reload, s
 
   function edit(c) {
     setEditing(c.id);
-    setForm({ ...c, draw_at: c.draw_at ? c.draw_at.slice(0, 16) : '' });
+    setForm({ ...c, draw_at: c.draw_at ? c.draw_at.slice(0, 16) : '', closes_at: c.closes_at ? c.closes_at.slice(0, 16) : '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -383,6 +397,21 @@ function Admin({ settings, setSettings, competitions, entries, orders, reload, s
       setSettings({ ...defaultSettings, ...saved });
       setMessage('Site settings saved.');
     } catch (err) { setMessage(err.message); }
+  }
+
+
+  async function saveFreeEntry(e) {
+    e.preventDefault();
+    try {
+      const saved = await api('/admin/free-entry', { method: 'POST', body: JSON.stringify(freeForm) });
+      setMessage(`Manual/free entry recorded. Ticket #${saved.entry.ticket_number}`);
+      setFreeForm({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' });
+      reload();
+    } catch (err) { setMessage(err.message); }
+  }
+
+  function updateFreeField(key, value) {
+    setFreeForm({ ...freeForm, [key]: value });
   }
 
   return (
@@ -401,10 +430,18 @@ function Admin({ settings, setSettings, competitions, entries, orders, reload, s
             <label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label>
             <label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label>
           </div>
-          <label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label>
+          <div className="two">
+            <label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label>
+            <label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label>
+          </div>
+          <div className="two">
+            <label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label>
+            <label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label>
+          </div>
           <label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label>
           <label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label>
           <label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label>
+          <label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} placeholder="Eligibility, entry limits, draw method, closing date and prize-specific rules" /></label>
           <label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>
           {form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}
           <button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button>
@@ -423,8 +460,22 @@ function Admin({ settings, setSettings, competitions, entries, orders, reload, s
             <label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => updateSetting('hero_text', e.target.value)} /></label>
             <label>Global free entry route<textarea value={settingsForm.free_entry_global || ''} onChange={e => updateSetting('free_entry_global', e.target.value)} /></label>
             <label>Terms / legal text<textarea value={settingsForm.terms_text || ''} onChange={e => updateSetting('terms_text', e.target.value)} /></label>
+            <label>Responsible play text<textarea value={settingsForm.responsible_play_text || ''} onChange={e => updateSetting('responsible_play_text', e.target.value)} /></label>
+            <label>Age confirmation text<textarea value={settingsForm.age_confirmation_text || ''} onChange={e => updateSetting('age_confirmation_text', e.target.value)} /></label>
             <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => updateSetting('footer_text', e.target.value)} /></label>
             <button className="primary full">Save site settings</button>
+          </form>
+
+          <form className="panel" onSubmit={saveFreeEntry}>
+            <h2>Record manual/free entry</h2>
+            <label>Competition<select value={freeForm.competition_id} onChange={e => updateFreeField('competition_id', e.target.value)} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
+            <div className="two">
+              <label>Customer name<input value={freeForm.customer_name} onChange={e => updateFreeField('customer_name', e.target.value)} required /></label>
+              <label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => updateFreeField('customer_email', e.target.value)} required /></label>
+            </div>
+            <label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => updateFreeField('postal_reference', e.target.value)} placeholder="Envelope ref, date received, or internal note" /></label>
+            <label>Notes<textarea value={freeForm.notes} onChange={e => updateFreeField('notes', e.target.value)} /></label>
+            <button className="primary full">Record free entry</button>
           </form>
 
           <div className="panel list-panel">
@@ -440,6 +491,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, reload, s
           {orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}
           <h2>Recent entries</h2>
           {entries.slice(0, 10).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}
+          <h2>Audit log</h2>
+          {(auditLogs || []).slice(0, 10).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} · {a.details} · {new Date(a.created_at).toLocaleString()}</p></div></div>)}
           </div>
         </div>
       </section>

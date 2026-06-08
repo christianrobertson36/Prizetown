@@ -15,8 +15,8 @@ env:
   OWNER: christianrobertson36
   API_IMAGE: prizetown-api
   WEB_IMAGE: prizetown-web
-  API_TAG: v7
-  WEB_TAG: v7
+  API_TAG: v8
+  WEB_TAG: v8
   VITE_API_URL: http://192.168.1.177:5051
 
 jobs:

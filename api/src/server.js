@@ -82,6 +82,10 @@ async function initDb() {
       question TEXT NOT NULL DEFAULT '',
       answer TEXT NOT NULL DEFAULT '',
       free_entry_text TEXT NOT NULL DEFAULT '',
+      rules_text TEXT NOT NULL DEFAULT '',
+      closes_at TIMESTAMPTZ,
+      min_age INTEGER NOT NULL DEFAULT 18,
+      age_restricted BOOLEAN NOT NULL DEFAULT TRUE,
       ticket_price_pence INTEGER NOT NULL DEFAULT 0,
       max_tickets INTEGER NOT NULL DEFAULT 100,
       max_per_user INTEGER NOT NULL DEFAULT 10,
@@ -142,6 +146,27 @@ async function initDb() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      user_email TEXT NOT NULL DEFAULT '',
+      action TEXT NOT NULL,
+      details TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS free_entry_requests (
+      id SERIAL PRIMARY KEY,
+      competition_id INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
+      entry_id INTEGER REFERENCES entries(id) ON DELETE SET NULL,
+      customer_name TEXT NOT NULL DEFAULT '',
+      customer_email TEXT NOT NULL DEFAULT '',
+      postal_reference TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT '',
+      processed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     INSERT INTO site_settings (key, value) VALUES
       ('site_name', 'Prizetown'),
       ('support_email', 'support@prizetown.local'),
@@ -150,10 +175,16 @@ async function initDb() {
       ('hero_text', 'Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.'),
       ('footer_text', 'Please play responsibly. Free entry routes and terms should be checked before public launch.'),
       ('free_entry_global', 'Postal/free entry route details can be added here from Admin Settings.'),
-      ('terms_text', 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.')
+      ('terms_text', 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.'),
+      ('responsible_play_text', '18+ only. Please enter responsibly. Do not spend more than you can afford.'),
+      ('age_confirmation_text', 'I confirm I am 18 or over and I agree to the competition rules and free-entry terms.')
     ON CONFLICT (key) DO NOTHING;
 
     ALTER TABLE entries ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS rules_text TEXT NOT NULL DEFAULT '';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS closes_at TIMESTAMPTZ;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS min_age INTEGER NOT NULL DEFAULT 18;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS age_restricted BOOLEAN NOT NULL DEFAULT TRUE;
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
@@ -168,7 +199,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v7' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v8' }));
 
 
 async function getSettingsObject() {
@@ -184,7 +215,9 @@ const allowedSettings = [
   'hero_text',
   'footer_text',
   'free_entry_global',
-  'terms_text'
+  'terms_text',
+  'responsible_play_text',
+  'age_confirmation_text'
 ];
 
 app.get('/settings', async (_req, res) => {
@@ -235,12 +268,28 @@ app.post('/auth/login', async (req, res) => {
   res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role }, token: signToken(user) });
 });
 
+
+async function audit(user, action, details = '') {
+  try {
+    await query('INSERT INTO audit_logs (user_id, user_email, action, details) VALUES ($1,$2,$3,$4)', [user?.id || null, user?.email || '', action, details]);
+  } catch (err) {
+    console.warn('Audit log failed', err.message);
+  }
+}
+
+function ensureCompetitionOpen(competition) {
+  if (!competition || competition.status !== 'active') throw new Error('Competition is not active');
+  const now = Date.now();
+  if (competition.closes_at && new Date(competition.closes_at).getTime() <= now) throw new Error('Competition is closed');
+  if (competition.draw_at && new Date(competition.draw_at).getTime() <= now) throw new Error('Competition draw date has passed');
+}
+
 app.get('/competitions', async (_req, res) => {
   const result = await query(`
     SELECT c.*,
       COUNT(e.id)::int AS entries_sold
     FROM competitions c
-    LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test')
+    LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test','free_manual')
     GROUP BY c.id
     ORDER BY c.created_at DESC
   `);
@@ -252,7 +301,7 @@ app.get('/competitions/:slug', async (req, res) => {
     SELECT c.*,
       COUNT(e.id)::int AS entries_sold
     FROM competitions c
-    LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test')
+    LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test','free_manual')
     WHERE c.slug = $1
     GROUP BY c.id
   `, [req.params.slug]);
@@ -264,7 +313,7 @@ app.get('/competitions/:id/entries', async (req, res) => {
   const result = await query(`
     SELECT ticket_number, customer_name, created_at
     FROM entries
-    WHERE competition_id = $1 AND payment_status IN ('paid','free','paid_test')
+    WHERE competition_id = $1 AND payment_status IN ('paid','free','paid_test','free_manual')
     ORDER BY ticket_number ASC
   `, [req.params.id]);
   res.json(result.rows);
@@ -279,10 +328,11 @@ app.post('/admin/competitions', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     INSERT INTO competitions
-    (title, slug, description, question, answer, free_entry_text, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
     RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '']);
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '']);
+  await audit(req.user, 'competition_created', `Created competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
 
@@ -290,17 +340,19 @@ app.patch('/admin/competitions/:id', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     UPDATE competitions SET
-      title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6,
-      ticket_price_pence=$7, max_tickets=$8, max_per_user=$9, draw_at=$10, status=$11, image_url=$12,
+      title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6, rules_text=$7,
+      closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13, draw_at=$14, status=$15, image_url=$16,
       updated_at=NOW()
-    WHERE id=$13 RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', req.params.id]);
+    WHERE id=$17 RETURNING *
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Competition not found' });
+  await audit(req.user, 'competition_updated', `Updated competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
 
 app.delete('/admin/competitions/:id', auth('admin'), async (req, res) => {
   await query('DELETE FROM competitions WHERE id = $1', [req.params.id]);
+  await audit(req.user, 'competition_deleted', `Deleted competition ${req.params.id}`);
   res.json({ ok: true });
 });
 
@@ -316,7 +368,7 @@ async function allocateTickets(client, { competition, user, orderId, quantity, p
     const inserted = await client.query(`
       INSERT INTO entries (competition_id,user_id,order_id,customer_name,customer_email,ticket_number,payment_status)
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
-    `, [competition.id, user.id, orderId, user.name || '', user.email, n, paymentStatus]);
+    `, [competition.id, user?.id || null, orderId, user?.name || '', user?.email || '', n, paymentStatus]);
     entries.push(inserted.rows[0]);
   }
   if (entries.length !== quantity) throw new Error('Not enough tickets remaining');
@@ -326,6 +378,8 @@ async function allocateTickets(client, { competition, user, orderId, quantity, p
 app.post('/orders', auth(), async (req, res) => {
   const items = Array.isArray(req.body.items) ? req.body.items : [];
   const notes = String(req.body.notes || '');
+  const ageConfirmed = req.body.age_confirmed === true;
+  if (!ageConfirmed) return res.status(400).json({ error: 'Please confirm your age and acceptance of the competition rules.' });
   if (items.length === 0) return res.status(400).json({ error: 'Basket is empty' });
   if (items.length > 20) return res.status(400).json({ error: 'Too many basket items' });
 
@@ -345,19 +399,19 @@ app.post('/orders', auth(), async (req, res) => {
       const quantity = Math.min(50, Math.max(1, toInt(item.quantity, 1)));
       const answerGiven = String(item.answer || '').trim();
       const competition = (await client.query('SELECT * FROM competitions WHERE id=$1', [competitionId])).rows[0];
-      if (!competition || competition.status !== 'active') throw new Error('One basket item is no longer active');
+      ensureCompetitionOpen(competition);
       if (competition.answer && answerGiven.toLowerCase() !== competition.answer.trim().toLowerCase()) {
         throw new Error(`Answer is incorrect for ${competition.title}`);
       }
       const already = (await client.query(
-        "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND user_id=$2 AND payment_status IN ('paid','free','paid_test')",
+        "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND user_id=$2 AND payment_status IN ('paid','free','paid_test','free_manual')",
         [competition.id, user.id]
       )).rows[0].count;
       if (already + quantity > competition.max_per_user) {
         throw new Error(`Max entries reached for ${competition.title}`);
       }
       const sold = (await client.query(
-        "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND payment_status IN ('paid','free','paid_test')",
+        "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND payment_status IN ('paid','free','paid_test','free_manual')",
         [competition.id]
       )).rows[0].count;
       if (sold + quantity > competition.max_tickets) throw new Error(`${competition.title} does not have enough tickets left`);
@@ -382,6 +436,7 @@ app.post('/orders', auth(), async (req, res) => {
     }
 
     await client.query('COMMIT');
+    await audit(req.user, 'order_created', `Order #${order.id} created with ${allEntries.length} entries`);
     res.json({ order, entries: allEntries });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
@@ -398,17 +453,17 @@ app.post('/competitions/:id/entries/free', auth(), async (req, res) => {
     await client.query('BEGIN');
     await client.query('LOCK TABLE entries IN EXCLUSIVE MODE');
     const comp = (await client.query('SELECT * FROM competitions WHERE id = $1', [req.params.id])).rows[0];
-    if (!comp || comp.status !== 'active') throw new Error('Competition is not active');
+    ensureCompetitionOpen(comp);
     if (comp.answer && String(answer || '').trim().toLowerCase() !== comp.answer.trim().toLowerCase()) {
       throw new Error('Answer is incorrect');
     }
     const count = await client.query(
-      "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND user_id=$2 AND payment_status IN ('paid','free','paid_test')",
+      "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND user_id=$2 AND payment_status IN ('paid','free','paid_test','free_manual')",
       [comp.id, req.user.id]
     );
     if (count.rows[0].count >= comp.max_per_user) throw new Error('Max entries reached');
     const sold = await client.query(
-      "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND payment_status IN ('paid','free','paid_test')",
+      "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND payment_status IN ('paid','free','paid_test','free_manual')",
       [comp.id]
     );
     if (sold.rows[0].count >= comp.max_tickets) throw new Error('Sold out');
@@ -473,6 +528,57 @@ app.get('/admin/orders', auth('admin'), async (_req, res) => {
   res.json(result.rows);
 });
 
+
+
+app.get('/admin/audit-logs', auth('admin'), async (_req, res) => {
+  const result = await query('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 200');
+  res.json(result.rows);
+});
+
+app.post('/admin/free-entry', auth('admin'), async (req, res) => {
+  const competitionId = toInt(req.body.competition_id);
+  const customerName = String(req.body.customer_name || '').trim();
+  const customerEmail = normalizeEmail(req.body.customer_email);
+  const postalReference = String(req.body.postal_reference || '').trim();
+  const notes = String(req.body.notes || '').trim();
+  if (!competitionId || !customerName || !customerEmail) return res.status(400).json({ error: 'Competition, customer name and email are required' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('LOCK TABLE entries IN EXCLUSIVE MODE');
+    const competition = (await client.query('SELECT * FROM competitions WHERE id=$1', [competitionId])).rows[0];
+    ensureCompetitionOpen(competition);
+
+    const existing = (await client.query(
+      "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND customer_email=$2 AND payment_status IN ('paid','free','paid_test','free_manual','free_manual')",
+      [competition.id, customerEmail]
+    )).rows[0].count;
+    if (existing + 1 > competition.max_per_user) throw new Error('Max entries reached for this email');
+
+    const sold = (await client.query(
+      "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND payment_status IN ('paid','free','paid_test','free_manual','free_manual')",
+      [competition.id]
+    )).rows[0].count;
+    if (sold + 1 > competition.max_tickets) throw new Error('Sold out');
+
+    const manualUser = { id: null, name: customerName, email: customerEmail };
+    const [entry] = await allocateTickets(client, { competition, user: manualUser, orderId: null, quantity: 1, paymentStatus: 'free_manual' });
+    const freeReq = (await client.query(`
+      INSERT INTO free_entry_requests (competition_id, entry_id, customer_name, customer_email, postal_reference, notes, processed_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
+    `, [competition.id, entry.id, customerName, customerEmail, postalReference, notes, req.user.id])).rows[0];
+    await client.query('COMMIT');
+    await audit(req.user, 'manual_free_entry_created', `Manual/free entry #${entry.id} for ${customerEmail} on ${competition.title}`);
+    res.json({ request: freeReq, entry });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    res.status(400).json({ error: err.message || 'Free entry failed' });
+  } finally {
+    client.release();
+  }
+});
+
 app.get('/winners', async (_req, res) => {
   const result = await query(`
     SELECT w.*, c.title AS competition_title
@@ -484,7 +590,7 @@ app.get('/winners', async (_req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v7 settings)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v8 compliance)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
