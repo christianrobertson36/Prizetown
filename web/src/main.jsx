@@ -17,19 +17,21 @@ function daysLeft(value) {
   return `${d} Days ${h} Hrs ${m} Mins`;
 }
 
+
 function competitionTheme(c) {
-  const text = `${c?.title || ''} ${c?.description || ''}`.toLowerCase();
-  if (/car|bmw|audi|mercedes|vw|volkswagen|ford|range rover|vehicle/.test(text)) return { key: 'car', label: 'Car', emoji: '🚗' };
-  if (/cash|£|pound|money|voucher|prize pot/.test(text)) return { key: 'cash', label: 'Cash', emoji: '💷' };
-  if (/holiday|trip|travel|flight|hotel|disney|dubai|cruise/.test(text)) return { key: 'holiday', label: 'Holiday', emoji: '✈️' };
-  if (/iphone|ipad|phone|ps5|playstation|xbox|nintendo|switch|laptop|macbook|tech|console|tv/.test(text)) return { key: 'tech', label: 'Tech', emoji: '📱' };
-  if (/garden|kitchen|sofa|furniture|home|appliance/.test(text)) return { key: 'home', label: 'Home', emoji: '🏠' };
-  return { key: 'prize', label: 'Prize', emoji: '🎁' };
+  const t = `${c?.title || ''} ${c?.description || ''}`.toLowerCase();
+  if (/car|bmw|audi|mercedes|vw|volkswagen|ford|range rover|vehicle/.test(t)) return { key: 'car', label: 'MOTOR' };
+  if (/cash|£|pound|money|voucher|prize pot/.test(t)) return { key: 'cash', label: 'CASH' };
+  if (/holiday|trip|travel|flight|hotel|disney|dubai|cruise/.test(t)) return { key: 'holiday', label: 'HOLIDAY' };
+  if (/iphone|ipad|phone|ps5|playstation|xbox|nintendo|switch|laptop|macbook|tech|console|tv/.test(t)) return { key: 'tech', label: 'TECH' };
+  if (/garden|kitchen|sofa|furniture|home|appliance/.test(t)) return { key: 'home', label: 'HOME' };
+  return { key: 'prize', label: 'PRIZE' };
 }
 function shortPrizeLabel(c) {
   const title = String(c?.title || 'Featured Prize').replace(/\s+/g, ' ').trim();
-  return title.length > 28 ? `${title.slice(0, 28)}…` : title;
+  return title.length > 34 ? `${title.slice(0, 34)}…` : title;
 }
+
 
 const defaultSettings = {
   site_name: 'Prizetown', support_email: 'support@prizetown.local', hero_eyebrow: 'Custom competition platform',
@@ -94,11 +96,26 @@ function App() {
 
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   return <main>
-    <section className="hero compact-hero"><div><p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p><h1>{settings.hero_title}</h1><p>{settings.hero_text}</p>{!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}</div><div className="hero-card"><Zap size={40} /><h3>Pick a competition</h3><p>Use the scrolling prize posts or the live competition grid below to open prize details, ticket choices, entry lists and instant-win prizes.</p></div></section>
+    <section className="hero compact-hero northern-hero">
+      <div>
+        <p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p>
+        <h1>{settings.hero_title}</h1>
+        <p>{settings.hero_text}</p>
+        {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
+      </div>
+      <div className="hero-card draw-card">
+        <Clock size={38} />
+        <h3>Pick a poster</h3>
+        <p>Tap a scrolling competition poster below to open the full prize page, ticket choices, entry list and instant wins.</p>
+      </div>
+    </section>
+
     <CompetitionScroller competitions={competitions} setSelected={setSelected} />
+
     {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} />}
-    <section className="grid-section competition-grid-fallback"><div className="section-head"><div><p className="eyebrow"><Trophy size={16} /> Live competitions</p><h2>All competitions</h2></div><span className="muted">If the scroller is moving too fast, use these cards instead.</span></div>{competitions.length === 0 ? <div className="panel info-panel"><p className="muted">No competitions found. In admin, make sure competitions are set to active or use Seed demo competitions.</p></div> : <div className="cards">{competitions.map(c => <CompetitionCard key={c.id} c={c} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} setSelected={setSelected} />)}</div>}</section>
+
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
+
     {typeof WebsiteFooter === 'function' ? <WebsiteFooter settings={settings} setPage={setPage} /> : <section className="panel info-panel"><h2>Free entry and terms</h2><p>{settings.free_entry_global}</p><p className="muted">{settings.responsible_play_text}</p><details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details><p className="muted">{settings.footer_text}</p></section>}
   </main>;
 }
@@ -107,21 +124,38 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
 function CompetitionScroller({ competitions, setSelected }) {
   if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No competitions are available yet. In admin, set a competition to active or use Seed demo competitions.</p></section>;
   const scrolling = competitions.length > 1 ? [...competitions, ...competitions] : competitions;
-  function openCompetition(c) { setSelected(c); setTimeout(() => window.scrollTo({ top: 180, behavior: 'smooth' }), 0); }
-  return <section className="competition-scroll-section"><div className="section-head"><div><p className="eyebrow"><Ticket size={16} /> Live competitions</p><h2>Tap a prize post to enter</h2></div><span className="muted">Hover or touch to pause the scroll</span></div><div className="competition-marquee"><div className="competition-track">{scrolling.map((c, idx) => <CompetitionPost key={`${c.id}-${idx}`} c={c} onOpen={() => openCompetition(c)} />)}</div></div></section>;
+  return <section className="competition-scroll-section northern-competition-section">
+    <div className="section-head">
+      <div><p className="eyebrow"><Ticket size={16} /> Live competitions</p><h2>Tap a poster to enter</h2></div>
+      <span className="muted">Poster strip pauses on hover</span>
+    </div>
+    <div className="competition-marquee poster-marquee"><div className="competition-track poster-track">{scrolling.map((c, idx) => <CompetitionPost key={`${c.id}-${idx}`} c={c} onOpen={() => setSelected(c)} />)}</div></div>
+  </section>;
 }
 
 function CompetitionPost({ c, onOpen }) {
   const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100));
   const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
   const theme = competitionTheme(c);
-  return <button className="competition-post" onClick={onOpen} title={`Open ${c.title}`}>
-    <div className="post-visual-wrap">
-      {c.image_url ? <img src={imageUrl(c.image_url)} alt="" /> : <div className={`post-placeholder theme-${theme.key}`}><span className="visual-badge">{theme.label}</span><div className="visual-icon" aria-hidden="true">{theme.emoji}</div><strong>{shortPrizeLabel(c)}</strong></div>}
-      <span className="post-corner-badge">{theme.label}</span>
+  return <button className="competition-poster" onClick={onOpen} title={`Open ${c.title}`}>
+    <div className={`poster-image theme-${theme.key}`}>
+      {c.image_url ? <img src={imageUrl(c.image_url)} alt="" /> : <div className="generated-poster"><span className="poster-kicker">{theme.label}</span><strong>{shortPrizeLabel(c)}</strong><small>{money(c.ticket_price_pence)} Per Entry</small></div>}
+      <span className="poster-status">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'Live Now'}</span>
     </div>
-    <div className="post-copy"><span className="badge">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'Live now'}</span><strong>{c.title}</strong><small>{money(c.ticket_price_pence)} per entry · {percent}% sold</small><small>{remaining} tickets remaining</small>{Number(c.instant_win_total || 0) > 0 && <em><Zap size={13} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</em>}</div></button>;
+    <div className="poster-body">
+      <strong>{c.title}</strong>
+      <small>Draw On {fmtDate(c.draw_at)}</small>
+      <div className="poster-countdown">{daysLeft(c.closes_at)}</div>
+      <div className="progress"><span style={{ width: `${percent}%` }} /></div>
+      <small><b>{percent}% SOLD</b> · {c.entries_sold || 0}/{c.max_tickets}</small>
+      <small>{remaining} Tickets Remaining</small>
+      <span className="poster-price">{money(c.ticket_price_pence)} Per Entry</span>
+      {Number(c.instant_win_total || 0) > 0 && <em><Zap size={13} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</em>}
+      <span className="poster-enter">Enter Now</span>
+    </div>
+  </button>;
 }
+
 
 function CompetitionCard({ c, cart, saveCart, setMessage, setPage, setSelected }) {
   const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100)); const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
@@ -149,7 +183,6 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [activeTab, setActiveTab] = useState('overview');
   const [settingsForm, setSettingsForm] = useState({ ...defaultSettings, ...settings });
   const [freeForm, setFreeForm] = useState({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' });
-  const [csvForm, setCsvForm] = useState({ competition_id: '', file: null, result: null, busy: false });
   const [iwForm, setIwForm] = useState({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' });
   const [drawCompetitionId, setDrawCompetitionId] = useState('');
   const [drawData, setDrawData] = useState(null);
@@ -172,25 +205,6 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function saveFreeEntry(e) { e.preventDefault(); try { const saved = await api('/admin/free-entry', { method: 'POST', body: JSON.stringify(freeForm) }); setMessage(`Manual/free entry recorded. Ticket #${saved.entry.ticket_number}`); setFreeForm({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
-  async function importCsv(e) {
-    e.preventDefault();
-    if (!csvForm.competition_id) return setMessage('Choose a competition first.');
-    if (!csvForm.file) return setMessage('Choose a CSV file first.');
-    try {
-      setCsvForm(prev => ({ ...prev, busy: true, result: null }));
-      const body = new FormData();
-      body.append('competition_id', csvForm.competition_id);
-      body.append('file', csvForm.file);
-      const result = await api('/admin/import-test-csv', { method: 'POST', body });
-      setCsvForm(prev => ({ ...prev, busy: false, result }));
-      setMessage(`CSV import complete: ${result.imported_count} imported, ${result.skipped_count} skipped.`);
-      reload();
-    } catch (err) {
-      setCsvForm(prev => ({ ...prev, busy: false }));
-      setMessage(err.message);
-    }
-  }
-
   async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Demo competitions added.'); reload(); }
   async function loadDraw() {
     if (!drawCompetitionId) return setMessage('Choose a competition first.');
@@ -244,8 +258,6 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
         {activeTab === 'draws' && <div className="admin-split draw-admin"><div className="panel"><h1>Final draw wheel</h1><p className="muted">Load all eligible paid/test/free entries, then open Wheel of Names pre-filled or copy the list for livestream/manual draw use.</p><label>Competition<select value={drawCompetitionId} onChange={e => { setDrawCompetitionId(e.target.value); setDrawData(null); setDrawWinnerEntryId(''); }}><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title} · {c.status}</option>)}</select></label><div className="draw-actions"><button type="button" className="primary" onClick={loadDraw}>Load draw entries</button><button type="button" className="secondary" disabled={!drawData} onClick={openWheel}>Open Wheel of Names</button><button type="button" className="secondary" disabled={!drawData} onClick={copyDrawList}>Copy list</button><button type="button" className="secondary" disabled={!drawData} onClick={downloadDrawCsv}>Download CSV</button></div>{drawData && <div className="draw-summary"><strong>{drawData.entries.length}</strong><span>eligible entries loaded</span><p>{drawData.competition.title}</p></div>}{drawData && <label>Wheel import list<textarea className="draw-list" readOnly value={drawText()} /></label>}<p className="muted">Tip: for very large draws, use Copy list then paste into Wheel of Names. The automatic URL works best while the browser URL stays a sensible size.</p></div><form className="panel" onSubmit={recordDrawWinner}><h1>Record winner</h1><p className="muted">After the wheel selects a winning ticket, choose it below to save the final result, publish it to Winners, close the competition and record an audit log.</p>{!drawData && <p>Load a competition draw first.</p>}{drawData && <><label>Winning ticket<select value={drawWinnerEntryId} onChange={e => setDrawWinnerEntryId(e.target.value)} required><option value="">Choose winning ticket</option>{drawData.entries.map(e => <option key={e.id} value={e.id}>Ticket #{e.ticket_number} · {e.customer_name || e.customer_email || 'Customer'}</option>)}</select></label><label>Draw notes<textarea value={drawNotes} onChange={e => setDrawNotes(e.target.value)} placeholder="Example: Draw completed live using Wheel of Names." /></label><button className="primary full">Record final draw winner</button></>}<h2>Recent draw results</h2>{drawResults.length === 0 && <p className="muted">No final draw results recorded yet.</p>}{drawResults.slice(0, 6).map(d => <div className="list-row entry-row" key={d.id}><div><strong>{d.competition_title}</strong><p>Ticket #{d.ticket_number} · {d.winner_name} · {new Date(d.created_at).toLocaleString()}</p></div></div>)}</form></div>}
-
-        {activeTab === 'csv-import' && <div className="admin-split"><form className="panel" onSubmit={importCsv}><h1>Temporary CSV test import</h1><p className="muted">Use this for testing draw entries only. Choose a competition, upload the test CSV, and it will create customer test entries/ticket numbers.</p><label>Competition<select value={csvForm.competition_id} onChange={e => setCsvForm({ ...csvForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><label>CSV file<input type="file" accept=".csv,text/csv" onChange={e => setCsvForm({ ...csvForm, file: e.target.files?.[0] || null })} /></label><button className="primary full" disabled={csvForm.busy}>{csvForm.busy ? 'Importing...' : 'Import CSV test entries'}</button><p className="muted">Supported columns: customer_name, customer_email, ticket_number, entry_type, payment_status, order_reference, wheel_label, notes.</p></form><div className="panel list-panel"><h1>Import result</h1>{!csvForm.result && <p className="muted">No CSV imported yet.</p>}{csvForm.result && <><p><strong>{csvForm.result.imported_count}</strong> imported · <strong>{csvForm.result.skipped_count}</strong> skipped</p><h3>Imported tickets</h3>{csvForm.result.imported.slice(0, 20).map(r => <div className="list-row entry-row" key={r.id}><div><strong>Ticket #{r.ticket_number}</strong><p>{r.customer_name} · {r.customer_email}</p></div></div>)}{csvForm.result.skipped?.length > 0 && <><h3>Skipped rows</h3>{csvForm.result.skipped.map((s, i) => <div className="list-row entry-row" key={i}><div><strong>{s.reason}</strong><p>{s.row?.customer_email || s.row?.email || 'No email'}</p></div></div>)}</>}</>}</div></div>}
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
 
