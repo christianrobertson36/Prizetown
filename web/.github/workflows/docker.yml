@@ -1,0 +1,43 @@
+name: Build and Push Prizetown Web Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: christianrobertson36
+  WEB_IMAGE: prizetown-web
+  WEB_TAG: v11
+  VITE_API_URL: http://192.168.1.177:5051
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build web image
+        run: |
+          docker build \
+            --build-arg VITE_API_URL=$VITE_API_URL \
+            -t $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG \
+            ./web
+
+      - name: Push web image
+        run: |
+          docker push $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG
