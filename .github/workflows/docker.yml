@@ -14,7 +14,7 @@ env:
   REGISTRY: ghcr.io
   OWNER: christianrobertson36
   API_IMAGE: prizetown-api
-  API_TAG: v22
+  API_TAG: v23
 
 jobs:
   build-api:
