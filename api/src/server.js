@@ -140,6 +140,20 @@ async function initDb() {
       announced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+
+    CREATE TABLE IF NOT EXISTS draw_results (
+      id SERIAL PRIMARY KEY,
+      competition_id INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
+      entry_id INTEGER REFERENCES entries(id) ON DELETE SET NULL,
+      ticket_number INTEGER NOT NULL DEFAULT 0,
+      winner_name TEXT NOT NULL DEFAULT '',
+      winner_email TEXT NOT NULL DEFAULT '',
+      draw_method TEXT NOT NULL DEFAULT 'wheel_of_names',
+      notes TEXT NOT NULL DEFAULT '',
+      created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS site_settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL DEFAULT '',
@@ -172,15 +186,32 @@ async function initDb() {
       competition_id INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
       prize_title TEXT NOT NULL,
       prize_value_pence INTEGER NOT NULL DEFAULT 0,
-      winning_ticket_number INTEGER NOT NULL,
-      status TEXT NOT NULL DEFAULT 'pending',
-      entry_id INTEGER REFERENCES entries(id) ON DELETE SET NULL,
-      winner_name TEXT NOT NULL DEFAULT '',
-      winner_email TEXT NOT NULL DEFAULT '',
-      claimed_at TIMESTAMPTZ,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE (competition_id, winning_ticket_number)
+      prize_image_url TEXT NOT NULL DEFAULT '',
+      quantity_total INTEGER NOT NULL DEFAULT 1,
+      winning_tickets TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS instant_win_claims (
+      id SERIAL PRIMARY KEY,
+      prize_id INTEGER NOT NULL REFERENCES instant_win_prizes(id) ON DELETE CASCADE,
+      competition_id INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
+      entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      customer_name TEXT NOT NULL DEFAULT '',
+      customer_email TEXT NOT NULL DEFAULT '',
+      ticket_number INTEGER NOT NULL,
+      prize_title TEXT NOT NULL DEFAULT '',
+      claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (competition_id, ticket_number)
+    );
+
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS prize_summary TEXT NOT NULL DEFAULT '';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS ticket_presets TEXT NOT NULL DEFAULT '10,20,50,100,250,500,1000,2500';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS max_per_order INTEGER NOT NULL DEFAULT 2500;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Instant Wins';
 
     INSERT INTO site_settings (key, value) VALUES
       ('site_name', 'Prizetown'),
@@ -200,11 +231,13 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS closes_at TIMESTAMPTZ;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS min_age INTEGER NOT NULL DEFAULT 18;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS age_restricted BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS prize_summary TEXT NOT NULL DEFAULT '';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS ticket_presets TEXT NOT NULL DEFAULT '10,20,50,100,250,500,1000,2500';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS max_per_order INTEGER NOT NULL DEFAULT 2500;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Instant Wins';
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
-    CREATE INDEX IF NOT EXISTS idx_instant_win_competition_id ON instant_win_prizes(competition_id);
-    CREATE INDEX IF NOT EXISTS idx_instant_win_status ON instant_win_prizes(status);
   `);
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@prizetown.local';
@@ -214,52 +247,9 @@ async function initDb() {
     const hash = await bcrypt.hash(adminPassword, 10);
     await query('INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)', ['Admin', normalizeEmail(adminEmail), hash, 'admin']);
   }
-
-  const compCount = await query('SELECT COUNT(*)::int AS count FROM competitions');
-  if (compCount.rows[0].count === 0) {
-    await seedDemoCompetitions();
-  }
 }
 
-async function seedDemoCompetitions() {
-  const demoComps = [
-    ['£50,000 Cash Mega Drop', 'demo-50000-cash-mega-drop', '£50,000 final draw prize with £50,000 worth of instant wins ready to drop.', 'What colour is the sky on a clear day?', 'blue', 10, 99999, 100, 'active', '£50,000 final draw plus huge instant wins. Low entry price, big prize feel, and plenty of tickets to make the page feel alive.'],
-    ['£7,500 Instant Wins plus £200 Final Draw', 'demo-7500-instant-wins', 'Fast-moving instant win competition with a final cash draw.', 'How many wheels does a standard car have?', '4', 10, 49999, 50, 'active', 'Instant cash prizes are pre-assigned to winning ticket numbers and revealed after checkout.'],
-    ['5p A Pop Cash Blast', 'demo-5p-cash-blast', 'Low-cost ticket competition with lots of ticket volume for testing.', 'What is 2 + 2?', '4', 5, 249999, 250, 'active', 'A low-price demo competition for testing large ticket counts and progress bars.'],
-    ['High Roller £4,999 Cash', 'demo-high-roller-4999', 'Low odds, higher price demo competition with fewer tickets.', 'What month comes after January?', 'february', 499, 4999, 25, 'active', 'High roller style card with fewer tickets and clearer odds.'],
-    ['Monday Night £1,000 Cash', 'demo-monday-night-1000', 'Quick-fire live draw demo ending soon.', 'What day comes after Sunday?', 'monday', 200, 701, 25, 'active', 'Quick fire comp style with small ticket pool and live draw wording.'],
-    ['Ticket Takeover Bonus Comp', 'demo-ticket-takeover', 'Win bonus tickets into other competitions with a small final prize.', 'What is the first letter of Prizetown?', 'p', 20, 59999, 100, 'active', 'Demo for ticket takeover style prizes and instant ticket bundles.'],
-    ['£10,000 Final Draw Prize', 'demo-10000-final-draw', 'Straight final draw competition with no instant wins.', 'What is the capital of England?', 'london', 100, 19999, 50, 'active', 'Final draw focused competition for testing non-instant-win pages.'],
-    ['Coming Soon Supercar Cash Alt', 'demo-coming-soon-supercar', 'Draft/coming-soon example for admin testing.', 'What colour is grass?', 'green', 199, 9999, 25, 'draft', 'Draft demo competition so the admin page has something inactive to edit.']
-  ];
-
-  for (const [title, slug, description, question, answer, price, maxTickets, maxPerUser, status, rules] of demoComps) {
-    const draw = new Date(Date.now() + 1000 * 60 * 60 * 24 * (status === 'draft' ? 21 : 7 + Math.floor(Math.random() * 14))).toISOString();
-    const closes = new Date(Date.now() + 1000 * 60 * 60 * 24 * (status === 'draft' ? 20 : 6 + Math.floor(Math.random() * 10))).toISOString();
-    const comp = await query(`
-      INSERT INTO competitions
-      (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,18,true,$9,$10,$11,$12,$13,'')
-      ON CONFLICT (slug) DO NOTHING
-      RETURNING id, max_tickets
-    `, [title, slug, description, question, answer, 'Free postal/manual entry route: add your final legal wording in Admin Settings before public launch.', rules, closes, price, maxTickets, maxPerUser, draw, status]);
-    if (comp.rows[0]) {
-      const id = comp.rows[0].id;
-      const max = comp.rows[0].max_tickets;
-      const prizes = title.includes('Final Draw Prize') && !title.includes('Instant') ? [] : [
-        ['£100 Instant Win', 10000, Math.max(1, Math.floor(max * 0.08))],
-        ['£250 Instant Win', 25000, Math.max(2, Math.floor(max * 0.22))],
-        ['£50 Instant Win', 5000, Math.max(3, Math.floor(max * 0.41))],
-        ['Bonus Ticket Bundle', 0, Math.max(4, Math.floor(max * 0.67))]
-      ];
-      for (const [prizeTitle, value, ticket] of prizes) {
-        await query('INSERT INTO instant_win_prizes (competition_id, prize_title, prize_value_pence, winning_ticket_number) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING', [id, prizeTitle, value, ticket]);
-      }
-    }
-  }
-}
-
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v9' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v15' }));
 
 
 async function getSettingsObject() {
@@ -348,11 +338,13 @@ app.get('/competitions', async (_req, res) => {
   const result = await query(`
     SELECT c.*,
       COUNT(DISTINCT e.id)::int AS entries_sold,
-      COUNT(DISTINCT i.id)::int AS instant_win_total,
-      COUNT(DISTINCT i.id) FILTER (WHERE i.status = 'claimed')::int AS instant_win_claimed
+      COUNT(DISTINCT iwp.id)::int AS instant_prize_types,
+      COALESCE(SUM(iwp.quantity_total), 0)::int AS instant_prize_total,
+      COUNT(DISTINCT iwc.id)::int AS instant_prize_found
     FROM competitions c
     LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test','free_manual')
-    LEFT JOIN instant_win_prizes i ON i.competition_id = c.id
+    LEFT JOIN instant_win_prizes iwp ON iwp.competition_id = c.id AND iwp.active = TRUE
+    LEFT JOIN instant_win_claims iwc ON iwc.prize_id = iwp.id
     GROUP BY c.id
     ORDER BY c.created_at DESC
   `);
@@ -363,11 +355,13 @@ app.get('/competitions/:slug', async (req, res) => {
   const result = await query(`
     SELECT c.*,
       COUNT(DISTINCT e.id)::int AS entries_sold,
-      COUNT(DISTINCT i.id)::int AS instant_win_total,
-      COUNT(DISTINCT i.id) FILTER (WHERE i.status = 'claimed')::int AS instant_win_claimed
+      COUNT(DISTINCT iwp.id)::int AS instant_prize_types,
+      COALESCE(SUM(iwp.quantity_total), 0)::int AS instant_prize_total,
+      COUNT(DISTINCT iwc.id)::int AS instant_prize_found
     FROM competitions c
     LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test','free_manual')
-    LEFT JOIN instant_win_prizes i ON i.competition_id = c.id
+    LEFT JOIN instant_win_prizes iwp ON iwp.competition_id = c.id AND iwp.active = TRUE
+    LEFT JOIN instant_win_claims iwc ON iwc.prize_id = iwp.id
     WHERE c.slug = $1
     GROUP BY c.id
   `, [req.params.slug]);
@@ -385,67 +379,6 @@ app.get('/competitions/:id/entries', async (req, res) => {
   res.json(result.rows);
 });
 
-
-app.get('/competitions/:id/instant-wins', async (req, res) => {
-  const result = await query(`
-    SELECT id, prize_title, prize_value_pence, winning_ticket_number,
-      CASE WHEN status = 'claimed' THEN 'claimed' ELSE 'available' END AS public_status,
-      winner_name, claimed_at
-    FROM instant_win_prizes
-    WHERE competition_id = $1
-    ORDER BY prize_value_pence DESC, winning_ticket_number ASC
-  `, [req.params.id]);
-  res.json(result.rows);
-});
-
-app.get('/instant-winners', async (_req, res) => {
-  const result = await query(`
-    SELECT i.*, c.title AS competition_title
-    FROM instant_win_prizes i
-    JOIN competitions c ON c.id = i.competition_id
-    WHERE i.status = 'claimed'
-    ORDER BY i.claimed_at DESC NULLS LAST
-    LIMIT 100
-  `);
-  res.json(result.rows);
-});
-
-app.get('/admin/instant-wins', auth('admin'), async (_req, res) => {
-  const result = await query(`
-    SELECT i.*, c.title AS competition_title
-    FROM instant_win_prizes i
-    JOIN competitions c ON c.id = i.competition_id
-    ORDER BY c.created_at DESC, i.winning_ticket_number ASC
-  `);
-  res.json(result.rows);
-});
-
-app.post('/admin/instant-wins', auth('admin'), async (req, res) => {
-  const competitionId = toInt(req.body.competition_id);
-  const prizeTitle = String(req.body.prize_title || '').trim();
-  const prizeValue = toInt(req.body.prize_value_pence, 0);
-  const winningTicket = toInt(req.body.winning_ticket_number);
-  if (!competitionId || !prizeTitle || !winningTicket) return res.status(400).json({ error: 'Competition, prize title and winning ticket are required' });
-  const comp = (await query('SELECT * FROM competitions WHERE id=$1', [competitionId])).rows[0];
-  if (!comp) return res.status(404).json({ error: 'Competition not found' });
-  if (winningTicket > comp.max_tickets) return res.status(400).json({ error: 'Winning ticket cannot be higher than max tickets' });
-  const result = await query('INSERT INTO instant_win_prizes (competition_id, prize_title, prize_value_pence, winning_ticket_number) VALUES ($1,$2,$3,$4) RETURNING *', [competitionId, prizeTitle, prizeValue, winningTicket]);
-  await audit(req.user, 'instant_win_created', `Added ${prizeTitle} to ${comp.title} on ticket #${winningTicket}`);
-  res.json(result.rows[0]);
-});
-
-app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
-  await query('DELETE FROM instant_win_prizes WHERE id=$1 AND status <> $2', [req.params.id, 'claimed']);
-  await audit(req.user, 'instant_win_deleted', `Deleted instant win ${req.params.id}`);
-  res.json({ ok: true });
-});
-
-app.post('/admin/seed-demo', auth('admin'), async (req, res) => {
-  await seedDemoCompetitions();
-  await audit(req.user, 'demo_seeded', 'Seeded demo Prizetown competitions');
-  res.json({ ok: true });
-});
-
 app.post('/admin/upload', auth('admin'), upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   res.json({ url: `/uploads/${req.file.filename}` });
@@ -455,10 +388,10 @@ app.post('/admin/competitions', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     INSERT INTO competitions
-    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
     RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '']);
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins']);
   await audit(req.user, 'competition_created', `Created competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
@@ -469,9 +402,10 @@ app.patch('/admin/competitions/:id', auth('admin'), async (req, res) => {
     UPDATE competitions SET
       title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6, rules_text=$7,
       closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13, draw_at=$14, status=$15, image_url=$16,
+      prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20,
       updated_at=NOW()
-    WHERE id=$17 RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', req.params.id]);
+    WHERE id=$21 RETURNING *
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Competition not found' });
   await audit(req.user, 'competition_updated', `Updated competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
@@ -496,17 +430,48 @@ async function allocateTickets(client, { competition, user, orderId, quantity, p
       INSERT INTO entries (competition_id,user_id,order_id,customer_name,customer_email,ticket_number,payment_status)
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
     `, [competition.id, user?.id || null, orderId, user?.name || '', user?.email || '', n, paymentStatus]);
-    const entry = inserted.rows[0];
-    const claimed = await client.query(`
-      UPDATE instant_win_prizes
-      SET status='claimed', entry_id=$1, winner_name=$2, winner_email=$3, claimed_at=NOW()
-      WHERE competition_id=$4 AND winning_ticket_number=$5 AND status='pending'
-      RETURNING *
-    `, [entry.id, user?.name || '', user?.email || '', competition.id, entry.ticket_number]);
-    entries.push({ ...entry, instant_win: claimed.rows[0] || null });
+    entries.push(inserted.rows[0]);
   }
   if (entries.length !== quantity) throw new Error('Not enough tickets remaining');
   return entries;
+}
+
+function ticketListContains(csv, ticketNumber) {
+  return String(csv || '')
+    .split(/[,\n\r ]+/)
+    .map(v => Number(String(v).trim()))
+    .filter(Boolean)
+    .includes(Number(ticketNumber));
+}
+
+async function claimInstantWins(client, entries) {
+  const claims = [];
+  for (const entry of entries) {
+    const prizes = await client.query(`
+      SELECT p.*, COUNT(c.id)::int AS found_count
+      FROM instant_win_prizes p
+      LEFT JOIN instant_win_claims c ON c.prize_id = p.id
+      WHERE p.competition_id=$1 AND p.active=TRUE
+      GROUP BY p.id
+      ORDER BY p.sort_order ASC, p.id ASC
+    `, [entry.competition_id]);
+    for (const prize of prizes.rows) {
+      if (Number(prize.found_count || 0) >= Number(prize.quantity_total || 0)) continue;
+      if (!ticketListContains(prize.winning_tickets, entry.ticket_number)) continue;
+      try {
+        const claim = (await client.query(`
+          INSERT INTO instant_win_claims (prize_id, competition_id, entry_id, user_id, customer_name, customer_email, ticket_number, prize_title)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+          RETURNING *
+        `, [prize.id, entry.competition_id, entry.id, entry.user_id || null, entry.customer_name || '', entry.customer_email || '', entry.ticket_number, prize.prize_title])).rows[0];
+        claims.push({ ...claim, prize_value_pence: prize.prize_value_pence, prize_image_url: prize.prize_image_url });
+      } catch {
+        // Another prize already claimed for this ticket; ignore safely.
+      }
+      break;
+    }
+  }
+  return claims;
 }
 
 app.post('/orders', auth(), async (req, res) => {
@@ -530,10 +495,10 @@ app.post('/orders', auth(), async (req, res) => {
 
     for (const item of items) {
       const competitionId = toInt(item.competition_id);
-      const quantity = Math.min(50, Math.max(1, toInt(item.quantity, 1)));
       const answerGiven = String(item.answer || '').trim();
       const competition = (await client.query('SELECT * FROM competitions WHERE id=$1', [competitionId])).rows[0];
       ensureCompetitionOpen(competition);
+      const quantity = Math.min(toInt(competition.max_per_order, 2500) || 2500, Math.max(1, toInt(item.quantity, 1)));
       if (competition.answer && answerGiven.toLowerCase() !== competition.answer.trim().toLowerCase()) {
         throw new Error(`Answer is incorrect for ${competition.title}`);
       }
@@ -566,7 +531,8 @@ app.post('/orders', auth(), async (req, res) => {
         VALUES ($1,$2,$3,$4,$5,$6)
       `, [order.id, item.competition.id, item.quantity, item.competition.ticket_price_pence, item.lineTotal, item.answerGiven]);
       const entries = await allocateTickets(client, { competition: item.competition, user, orderId: order.id, quantity: item.quantity, paymentStatus: 'paid_test' });
-      allEntries.push(...entries.map(e => ({ ...e, competition_title: item.competition.title })));
+      const instantClaims = await claimInstantWins(client, entries);
+      allEntries.push(...entries.map(e => ({ ...e, competition_title: item.competition.title, instant_wins: instantClaims.filter(claim => claim.entry_id === e.id) })));
     }
 
     await client.query('COMMIT');
@@ -604,8 +570,9 @@ app.post('/competitions/:id/entries/free', auth(), async (req, res) => {
 
     const user = (await client.query('SELECT id,name,email FROM users WHERE id=$1', [req.user.id])).rows[0];
     const entries = await allocateTickets(client, { competition: comp, user, orderId: null, quantity: 1, paymentStatus: 'free' });
+    const instant_wins = await claimInstantWins(client, entries);
     await client.query('COMMIT');
-    res.json(entries[0]);
+    res.json({ ...entries[0], instant_wins });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     res.status(400).json({ error: err.message || 'Entry failed' });
@@ -698,19 +665,142 @@ app.post('/admin/free-entry', auth('admin'), async (req, res) => {
 
     const manualUser = { id: null, name: customerName, email: customerEmail };
     const [entry] = await allocateTickets(client, { competition, user: manualUser, orderId: null, quantity: 1, paymentStatus: 'free_manual' });
+    const instant_wins = await claimInstantWins(client, [entry]);
     const freeReq = (await client.query(`
       INSERT INTO free_entry_requests (competition_id, entry_id, customer_name, customer_email, postal_reference, notes, processed_by)
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
     `, [competition.id, entry.id, customerName, customerEmail, postalReference, notes, req.user.id])).rows[0];
     await client.query('COMMIT');
     await audit(req.user, 'manual_free_entry_created', `Manual/free entry #${entry.id} for ${customerEmail} on ${competition.title}`);
-    res.json({ request: freeReq, entry });
+    res.json({ request: freeReq, entry: { ...entry, instant_wins } });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     res.status(400).json({ error: err.message || 'Free entry failed' });
   } finally {
     client.release();
   }
+});
+
+
+app.get('/competitions/:id/instant-wins', async (req, res) => {
+  const result = await query(`
+    SELECT p.*, COUNT(c.id)::int AS found_count
+    FROM instant_win_prizes p
+    LEFT JOIN instant_win_claims c ON c.prize_id = p.id
+    WHERE p.competition_id=$1 AND p.active=TRUE
+    GROUP BY p.id
+    ORDER BY p.sort_order ASC, p.id ASC
+  `, [req.params.id]);
+  res.json(result.rows.map(row => ({ ...row, winning_tickets: undefined })));
+});
+
+app.get('/instant-winners', async (_req, res) => {
+  const result = await query(`
+    SELECT c.*, comp.title AS competition_title, p.prize_image_url, p.prize_value_pence
+    FROM instant_win_claims c
+    JOIN competitions comp ON comp.id = c.competition_id
+    JOIN instant_win_prizes p ON p.id = c.prize_id
+    ORDER BY c.claimed_at DESC
+    LIMIT 200
+  `);
+  res.json(result.rows);
+});
+
+app.get('/admin/instant-wins', auth('admin'), async (_req, res) => {
+  const result = await query(`
+    SELECT p.*, comp.title AS competition_title, COUNT(c.id)::int AS found_count
+    FROM instant_win_prizes p
+    JOIN competitions comp ON comp.id = p.competition_id
+    LEFT JOIN instant_win_claims c ON c.prize_id = p.id
+    GROUP BY p.id, comp.title
+    ORDER BY p.created_at DESC
+    LIMIT 500
+  `);
+  res.json(result.rows);
+});
+
+app.post('/admin/instant-wins', auth('admin'), async (req, res) => {
+  const body = req.body || {};
+  const competitionId = toInt(body.competition_id);
+  const prizeTitle = String(body.prize_title || '').trim();
+  if (!competitionId || !prizeTitle) return res.status(400).json({ error: 'Competition and prize title are required' });
+  const result = await query(`
+    INSERT INTO instant_win_prizes (competition_id, prize_title, prize_value_pence, prize_image_url, quantity_total, winning_tickets, sort_order, active)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
+  `, [competitionId, prizeTitle, toInt(body.prize_value_pence), body.prize_image_url || '', toInt(body.quantity_total, 1) || 1, body.winning_tickets || '', toInt(body.sort_order), body.active !== false]);
+  await audit(req.user, 'instant_win_prize_created', `Created instant win ${prizeTitle}`);
+  res.json(result.rows[0]);
+});
+
+app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
+  await query('DELETE FROM instant_win_prizes WHERE id=$1', [req.params.id]);
+  await audit(req.user, 'instant_win_prize_deleted', `Deleted instant win prize ${req.params.id}`);
+  res.json({ ok: true });
+});
+
+
+app.get('/admin/competitions/:id/draw-entries', auth('admin'), async (req, res) => {
+  const competition = (await query('SELECT * FROM competitions WHERE id=$1', [req.params.id])).rows[0];
+  if (!competition) return res.status(404).json({ error: 'Competition not found' });
+  const result = await query(`
+    SELECT e.id, e.ticket_number, e.customer_name, e.customer_email, e.payment_status, e.created_at,
+           COALESCE(o.status, e.payment_status) AS order_status
+    FROM entries e
+    LEFT JOIN orders o ON o.id = e.order_id
+    WHERE e.competition_id=$1 AND e.payment_status IN ('paid','free','paid_test','free_manual')
+    ORDER BY e.ticket_number ASC
+  `, [req.params.id]);
+  const wheelEntries = result.rows.map(e => `Ticket #${e.ticket_number} - ${e.customer_name || e.customer_email || 'Customer'}`);
+  const wheelUrl = `https://wheelofnames.com/?entries=${encodeURIComponent(wheelEntries.join(','))}&title=${encodeURIComponent(`${competition.title} Draw`)}`;
+  res.json({ competition, entries: result.rows, wheel_entries: wheelEntries, wheel_url: wheelUrl });
+});
+
+app.post('/admin/draw-results', auth('admin'), async (req, res) => {
+  const competitionId = toInt(req.body.competition_id);
+  const entryId = toInt(req.body.entry_id);
+  const notes = String(req.body.notes || '').trim();
+  if (!competitionId || !entryId) return res.status(400).json({ error: 'Competition and winning entry are required' });
+  const entry = (await query(`
+    SELECT e.*, c.title AS competition_title
+    FROM entries e
+    JOIN competitions c ON c.id = e.competition_id
+    WHERE e.id=$1 AND e.competition_id=$2 AND e.payment_status IN ('paid','free','paid_test','free_manual')
+  `, [entryId, competitionId])).rows[0];
+  if (!entry) return res.status(404).json({ error: 'Eligible winning entry not found' });
+  const existing = await query('SELECT id FROM draw_results WHERE competition_id=$1 LIMIT 1', [competitionId]);
+  if (existing.rowCount > 0) return res.status(400).json({ error: 'A final draw winner has already been recorded for this competition' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = (await client.query(`
+      INSERT INTO draw_results (competition_id, entry_id, ticket_number, winner_name, winner_email, draw_method, notes, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
+    `, [competitionId, entryId, entry.ticket_number, entry.customer_name || 'Customer', entry.customer_email || '', 'wheel_of_names', notes, req.user.id])).rows[0];
+    const winner = (await client.query(`
+      INSERT INTO winners (competition_id, entry_id, winner_name, prize_title)
+      VALUES ($1,$2,$3,$4) RETURNING *
+    `, [competitionId, entryId, entry.customer_name || 'Customer', entry.competition_title])).rows[0];
+    await client.query('UPDATE competitions SET status=$1, updated_at=NOW() WHERE id=$2', ['closed', competitionId]);
+    await client.query('COMMIT');
+    await audit(req.user, 'final_draw_recorded', `Winner ticket #${entry.ticket_number} recorded for ${entry.competition_title}`);
+    res.json({ draw_result: result, winner });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    res.status(400).json({ error: err.message || 'Could not record draw result' });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/admin/draw-results', auth('admin'), async (_req, res) => {
+  const result = await query(`
+    SELECT d.*, c.title AS competition_title
+    FROM draw_results d
+    JOIN competitions c ON c.id = d.competition_id
+    ORDER BY d.created_at DESC
+    LIMIT 200
+  `);
+  res.json(result.rows);
 });
 
 app.get('/winners', async (_req, res) => {
@@ -724,7 +814,7 @@ app.get('/winners', async (_req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v9 competition pages + instant wins)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v15 draw wheel)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

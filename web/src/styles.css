@@ -365,3 +365,15 @@ details { margin-top: 1rem; color: #c8cada; }
   .footer-terms { margin: 0 1.1rem 1rem; }
   .footer-bottom { align-items: flex-start; flex-direction: column; padding: .9rem 1.1rem; }
 }
+
+
+/* v15 final draw / Wheel of Names admin tools */
+.draw-admin .panel { min-width: 0; }
+.draw-actions { display: flex; flex-wrap: wrap; gap: .55rem; margin: .75rem 0 1rem; }
+.draw-actions button { margin-top: 0; }
+.draw-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.draw-summary { display: inline-grid; gap: .2rem; padding: .9rem 1rem; border-radius: 1rem; background: rgba(250,204,21,.12); border: 1px solid rgba(250,204,21,.22); margin: .3rem 0 .8rem; }
+.draw-summary strong { font-size: 2rem; color: #fde047; }
+.draw-summary span { color: #fef3c7; font-weight: 850; }
+.draw-summary p { margin: 0; color: #c8cada; }
+.draw-list { min-height: 260px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: .9rem; }
