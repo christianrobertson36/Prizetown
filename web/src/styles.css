@@ -545,3 +545,8 @@ details { margin-top: 1rem; color: #c8cada; }
   .competition-poster { width: 285px; grid-template-rows: 165px auto; }
   .poster-image { height: 165px; }
 }
+
+/* v27 poster click fix */
+#competition-details {
+  scroll-margin-top: 5.5rem;
+}

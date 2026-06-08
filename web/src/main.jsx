@@ -95,6 +95,13 @@ function App() {
 }
 
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
+  function openCompetition(c) {
+    setSelected(c);
+    setTimeout(() => {
+      document.getElementById('competition-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }
+
   return <main>
     <section className="hero compact-hero northern-hero">
       <div>
@@ -110,9 +117,9 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
       </div>
     </section>
 
-    <CompetitionScroller competitions={competitions} setSelected={setSelected} />
+    <CompetitionScroller competitions={competitions} setSelected={openCompetition} />
 
-    {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} />}
+    {selected && <div id="competition-details"><CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} /></div>}
 
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
 
@@ -137,7 +144,7 @@ function CompetitionPost({ c, onOpen }) {
   const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100));
   const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
   const theme = competitionTheme(c);
-  return <button className="competition-poster" onClick={onOpen} title={`Open ${c.title}`}>
+  return <button type="button" className="competition-poster" onClick={onOpen} title={`Open ${c.title}`}>
     <div className={`poster-image theme-${theme.key}`}>
       {c.image_url ? <img src={imageUrl(c.image_url)} alt="" /> : <div className="generated-poster"><span className="poster-kicker">{theme.label}</span><strong>{shortPrizeLabel(c)}</strong><small>{money(c.ticket_price_pence)} Per Entry</small></div>}
       <span className="poster-status">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'Live Now'}</span>

@@ -14,7 +14,7 @@ env:
   REGISTRY: ghcr.io
   OWNER: christianrobertson36
   WEB_IMAGE: prizetown-web
-  WEB_TAG: v26
+  WEB_TAG: v27
   VITE_API_URL: http://192.168.1.177:5051
 
 jobs:
