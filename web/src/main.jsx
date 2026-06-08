@@ -70,6 +70,7 @@ function App() {
   useEffect(() => { if (user?.role === 'admin') loadAdminData().catch(() => {}); }, [user]);
   function logout() { localStorage.removeItem('prizetown_token'); localStorage.removeItem('prizetown_user'); setUser(null); setEntries([]); setOrders([]); setPage('home'); }
   const active = competitions.filter(c => c.status === 'active');
+  const homepageCompetitions = active.length > 0 ? active : competitions;
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   return <div>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
@@ -81,7 +82,7 @@ function App() {
       {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => setPage('login')}><User size={16} /> Login</button>}
     </nav></header>
     {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
-    {page === 'home' && <Home settings={settings} competitions={active} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
+    {page === 'home' && <Home settings={settings} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
@@ -93,53 +94,18 @@ function App() {
 
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   return <main>
-    <section className="hero compact-hero"><div><p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p><h1>{settings.hero_title}</h1><p>{settings.hero_text}</p>{!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}</div><div className="hero-card"><Zap size={40} /><h3>Pick a competition</h3><p>Use the scrolling competition posts below to jump straight into prize details, ticket choices, entry lists and instant-win prizes without cluttering the homepage.</p></div></section>
+    <section className="hero compact-hero"><div><p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p><h1>{settings.hero_title}</h1><p>{settings.hero_text}</p>{!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}</div><div className="hero-card"><Zap size={40} /><h3>Pick a competition</h3><p>Use the scrolling prize posts or the live competition grid below to open prize details, ticket choices, entry lists and instant-win prizes.</p></div></section>
     <CompetitionScroller competitions={competitions} setSelected={setSelected} />
     {selected && <CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} />}
+    <section className="grid-section competition-grid-fallback"><div className="section-head"><div><p className="eyebrow"><Trophy size={16} /> Live competitions</p><h2>All competitions</h2></div><span className="muted">If the scroller is moving too fast, use these cards instead.</span></div>{competitions.length === 0 ? <div className="panel info-panel"><p className="muted">No competitions found. In admin, make sure competitions are set to active or use Seed demo competitions.</p></div> : <div className="cards">{competitions.map(c => <CompetitionCard key={c.id} c={c} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} setSelected={setSelected} />)}</div>}</section>
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
-    <WebsiteFooter settings={settings} setPage={setPage} />
+    {typeof WebsiteFooter === 'function' ? <WebsiteFooter settings={settings} setPage={setPage} /> : <section className="panel info-panel"><h2>Free entry and terms</h2><p>{settings.free_entry_global}</p><p className="muted">{settings.responsible_play_text}</p><details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details><p className="muted">{settings.footer_text}</p></section>}
   </main>;
 }
 
-function WebsiteFooter({ settings, setPage }) {
-  return <footer className="site-footer">
-    <div className="footer-grid">
-      <div className="footer-brand">
-        <div className="footer-logo"><Gift size={24} /> <strong>{settings.site_name || 'Prizetown'}</strong></div>
-        <p>{settings.footer_text || 'Prize competitions, instant wins and final draw prizes. Please enter responsibly.'}</p>
-        <p className="footer-responsible">{settings.responsible_play_text || '18+ only. Please enter responsibly.'}</p>
-      </div>
-      <div className="footer-col">
-        <h3>Explore</h3>
-        <button onClick={() => setPage('home')}>Live competitions</button>
-        <button onClick={() => setPage('winners')}>Winners</button>
-        <button onClick={() => setPage('cart')}>Basket</button>
-        <button onClick={() => setPage('account')}>My entries</button>
-      </div>
-      <div className="footer-col">
-        <h3>Help & contact</h3>
-        <p>Support email</p>
-        <a href={`mailto:${settings.support_email || 'support@prizetown.local'}`}>{settings.support_email || 'support@prizetown.local'}</a>
-        <p className="muted">For account, entry or prize questions, contact support with your order details.</p>
-      </div>
-      <div className="footer-col footer-legal">
-        <h3>Free entry route</h3>
-        <p>{settings.free_entry_global || 'Free-entry route details can be added from Admin Settings.'}</p>
-      </div>
-    </div>
-    <details className="footer-terms">
-      <summary>Terms, legal and competition rules</summary>
-      <p>{settings.terms_text || 'Add your terms and legal wording from Admin Settings before going public.'}</p>
-    </details>
-    <div className="footer-bottom">
-      <span>© {new Date().getFullYear()} {settings.site_name || 'Prizetown'}</span>
-      <span>Custom competition platform</span>
-    </div>
-  </footer>;
-}
 
 function CompetitionScroller({ competitions, setSelected }) {
-  if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No active competitions yet. Use Admin → Seed demo competitions to fill this page.</p></section>;
+  if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No competitions are available yet. In admin, set a competition to active or use Seed demo competitions.</p></section>;
   const scrolling = competitions.length > 1 ? [...competitions, ...competitions] : competitions;
   function openCompetition(c) { setSelected(c); setTimeout(() => window.scrollTo({ top: 180, behavior: 'smooth' }), 0); }
   return <section className="competition-scroll-section"><div className="section-head"><div><p className="eyebrow"><Ticket size={16} /> Live competitions</p><h2>Tap a prize post to enter</h2></div><span className="muted">Hover or touch to pause the scroll</span></div><div className="competition-marquee"><div className="competition-track">{scrolling.map((c, idx) => <CompetitionPost key={`${c.id}-${idx}`} c={c} onOpen={() => openCompetition(c)} />)}</div></div></section>;

@@ -379,3 +379,7 @@ details { margin-top: 1rem; color: #c8cada; }
 .draw-list { min-height: 260px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: .9rem; }
 
 /* v17 recovery: competition posts open safely inside the homepage, no broken /competition route */
+
+/* v18 restore visible competitions */
+.competition-grid-fallback { margin-top: 1.5rem; }
+.competition-grid-fallback .cards { margin-top: .75rem; }
