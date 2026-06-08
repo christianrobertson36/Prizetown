@@ -1,4 +1,4 @@
-name: Build and Push Prizetown API Image
+name: Build and Push Prizetown Web Image
 
 on:
   push:
@@ -13,11 +13,12 @@ permissions:
 env:
   REGISTRY: ghcr.io
   OWNER: christianrobertson36
-  API_IMAGE: prizetown-api
-  API_TAG: v30
+  WEB_IMAGE: prizetown-web
+  WEB_TAG: v31
+  VITE_API_URL: http://192.168.1.177:5051
 
 jobs:
-  build-api:
+  build-web:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -30,8 +31,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build API image
-        run: docker build -t $REGISTRY/$OWNER/$API_IMAGE:$API_TAG ./api
+      - name: Build web image
+        run: |
+          docker build \
+            --build-arg VITE_API_URL=$VITE_API_URL \
+            -t $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG \
+            ./web
 
-      - name: Push API image
-        run: docker push $REGISTRY/$OWNER/$API_IMAGE:$API_TAG
+      - name: Push web image
+        run: docker push $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG

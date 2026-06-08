@@ -79,7 +79,7 @@ function App() {
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   return <div>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
-    <header className="topbar"><button className="brand" onClick={() => setPage('home')}><Gift /> {settings.site_name || 'Prizetown'}</button><nav>
+    <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src="/prizetown-logo.png" alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
       <button onClick={() => setPage('home')}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
@@ -119,6 +119,8 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
         <p>Tap a scrolling competition poster below to open the full prize page, ticket choices, entry list and instant wins.</p>
       </div>
     </section>
+
+    <section className="hero-logo-strip"><img src="/prizetown-logo.png" alt="Prizetown" /></section>
 
     <CompetitionScroller competitions={competitions} setSelected={openCompetition} />
 
