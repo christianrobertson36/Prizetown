@@ -262,6 +262,22 @@ async function initDb() {
   await pool.query(`UPDATE instant_win_prizes SET quantity_total = 1 WHERE quantity_total IS NULL`).catch(() => {});
   await pool.query(`UPDATE instant_win_prizes SET winning_tickets = '' WHERE winning_tickets IS NULL`).catch(() => {});
 
+  
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS prize_image_url TEXT NOT NULL DEFAULT ''`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS quantity_total INTEGER NOT NULL DEFAULT 1`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS winning_tickets TEXT NOT NULL DEFAULT ''`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS prize_value_pence INTEGER NOT NULL DEFAULT 0`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS winning_ticket_number INTEGER`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'available'`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS claimed_entry_id INTEGER`).catch(() => {});
+  await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`).catch(() => {});
+  await pool.query(`UPDATE instant_win_prizes SET active = TRUE WHERE active IS NULL`).catch(() => {});
+  await pool.query(`UPDATE instant_win_prizes SET quantity_total = 1 WHERE quantity_total IS NULL`).catch(() => {});
+  await pool.query(`UPDATE instant_win_prizes SET winning_tickets = '' WHERE winning_tickets IS NULL`).catch(() => {});
+  await pool.query(`UPDATE instant_win_prizes SET status = 'available' WHERE status IS NULL`).catch(() => {});
+
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@prizetown.local';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const existing = await query('SELECT id FROM users WHERE email = $1', [normalizeEmail(adminEmail)]);
@@ -271,7 +287,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v29' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v30' }));
 
 
 async function getSettingsObject() {
@@ -728,53 +744,11 @@ app.get('/instant-winners', async (_req, res) => {
   res.json(result.rows);
 });
 
-app.get('/admin/instant-wins', auth('admin'), async (_req, res) => {
-  try {
-    const { rows } = await pool.query(`
-      SELECT
-        iwp.id,
-        iwp.competition_id,
-        iwp.prize_title,
-        COALESCE(iwp.prize_value_pence, 0) AS prize_value_pence,
-        COALESCE(iwp.winning_ticket_number, 0) AS winning_ticket_number,
-        COALESCE(iwp.status, 'available') AS status,
-        COALESCE(iwp.active, TRUE) AS active,
-        COALESCE(iwp.prize_image_url, '') AS prize_image_url,
-        COALESCE(iwp.quantity_total, 1) AS quantity_total,
-        COALESCE(iwp.winning_tickets, '') AS winning_tickets,
-        COALESCE(iwp.sort_order, 0) AS sort_order,
-        iwp.claimed_entry_id,
-        iwp.claimed_at,
-        c.title AS competition_title
-      FROM instant_win_prizes iwp
-      LEFT JOIN competitions c ON c.id = iwp.competition_id
-      ORDER BY c.title NULLS LAST, iwp.sort_order ASC, iwp.id DESC
-    `);
-    res.json(rows);
-  } catch (err) {
-    console.error('Failed to load admin instant wins', err);
-    res.json([]);
-  }
-});
 
-app.post('/admin/instant-wins', auth('admin'), async (req, res) => {
-  const body = req.body || {};
-  const competitionId = toInt(body.competition_id);
-  const prizeTitle = String(body.prize_title || '').trim();
-  if (!competitionId || !prizeTitle) return res.status(400).json({ error: 'Competition and prize title are required' });
-  const result = await query(`
-    INSERT INTO instant_win_prizes (competition_id, prize_title, prize_value_pence, prize_image_url, quantity_total, winning_tickets, sort_order, active)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
-  `, [competitionId, prizeTitle, toInt(body.prize_value_pence), body.prize_image_url || '', toInt(body.quantity_total, 1) || 1, body.winning_tickets || '', toInt(body.sort_order), body.active !== false]);
-  await audit(req.user, 'instant_win_prize_created', `Created instant win ${prizeTitle}`);
-  res.json(result.rows[0]);
-});
 
-app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
-  await query('DELETE FROM instant_win_prizes WHERE id=$1', [req.params.id]);
-  await audit(req.user, 'instant_win_prize_deleted', `Deleted instant win prize ${req.params.id}`);
-  res.json({ ok: true });
-});
+
+
+
 
 
 app.get('/admin/competitions/:id/draw-entries', auth('admin'), async (req, res) => {
@@ -851,8 +825,93 @@ app.get('/winners', async (_req, res) => {
   res.json(result.rows);
 });
 
+
+
+app.get('/admin/instant-wins', auth('admin'), async (_req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        iwp.id,
+        iwp.competition_id,
+        iwp.prize_title,
+        COALESCE(iwp.prize_value_pence, 0) AS prize_value_pence,
+        COALESCE(iwp.winning_ticket_number, 0) AS winning_ticket_number,
+        COALESCE(iwp.status, 'available') AS status,
+        COALESCE(iwp.active, TRUE) AS active,
+        COALESCE(iwp.prize_image_url, '') AS prize_image_url,
+        COALESCE(iwp.quantity_total, 1) AS quantity_total,
+        COALESCE(iwp.winning_tickets, '') AS winning_tickets,
+        COALESCE(iwp.sort_order, 0) AS sort_order,
+        c.title AS competition_title
+      FROM instant_win_prizes iwp
+      LEFT JOIN competitions c ON c.id = iwp.competition_id
+      ORDER BY iwp.id DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('admin instant wins list failed', err);
+    res.status(500).json({ error: 'Instant wins could not be loaded', detail: err.message });
+  }
+});
+
+app.post('/admin/instant-wins', auth('admin'), async (req, res) => {
+  try {
+    const competitionId = Number(req.body.competition_id);
+    const prizeTitle = String(req.body.prize_title || '').trim();
+    const prizeValuePence = Number(req.body.prize_value_pence || 0);
+    const winningTicketNumber = Number(req.body.winning_ticket_number || 0);
+
+    if (!competitionId) return res.status(400).json({ error: 'Choose a competition.' });
+    if (!prizeTitle) return res.status(400).json({ error: 'Prize title is required.' });
+    if (!winningTicketNumber || winningTicketNumber < 1) return res.status(400).json({ error: 'Winning ticket number is required.' });
+
+    const comp = await pool.query('SELECT id, max_tickets FROM competitions WHERE id = $1', [competitionId]);
+    if (comp.rowCount === 0) return res.status(404).json({ error: 'Competition not found.' });
+    if (winningTicketNumber > Number(comp.rows[0].max_tickets || 0)) {
+      return res.status(400).json({ error: 'Winning ticket is above this competition max tickets.' });
+    }
+
+    const existing = await pool.query(
+      'SELECT id FROM instant_win_prizes WHERE competition_id = $1 AND winning_ticket_number = $2',
+      [competitionId, winningTicketNumber]
+    );
+    if (existing.rowCount > 0) return res.status(409).json({ error: 'That winning ticket already has an instant prize.' });
+
+    const { rows } = await pool.query(
+      `INSERT INTO instant_win_prizes
+        (competition_id, prize_title, prize_value_pence, winning_ticket_number, status, active, quantity_total, winning_tickets, sort_order)
+       VALUES ($1, $2, $3, $4, 'available', TRUE, 1, $5, 0)
+       RETURNING *`,
+      [competitionId, prizeTitle, prizeValuePence, winningTicketNumber, String(winningTicketNumber)]
+    );
+
+    await pool.query(
+      `INSERT INTO audit_logs (user_email, action, details)
+       VALUES ($1, 'instant_win_created', $2)`,
+      [req.user?.email || 'admin', `Added instant win "${prizeTitle}" on ticket #${winningTicketNumber}`]
+    ).catch(() => {});
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('admin instant wins add failed', err);
+    res.status(500).json({ error: 'Instant win could not be added', detail: err.message });
+  }
+});
+
+app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Invalid instant win id.' });
+    await pool.query(`DELETE FROM instant_win_prizes WHERE id = $1 AND COALESCE(status, 'available') <> 'claimed'`, [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('admin instant wins delete failed', err);
+    res.status(500).json({ error: 'Instant win could not be deleted', detail: err.message });
+  }
+});
+
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v29 instant wins safe)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v30 instant wins routes)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
