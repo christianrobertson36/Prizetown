@@ -287,7 +287,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v30' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v32' }));
 
 
 async function getSettingsObject() {
@@ -426,10 +426,19 @@ app.post('/admin/competitions', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     INSERT INTO competitions
-    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted,
+     ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets,
+     max_per_order, category, prize_value_pence, running_cost_pence, prizetown_margin_pence, community_pot_pence, transparency_note)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
     RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins']);
+  `, [
+    c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '',
+    c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence),
+    toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '',
+    c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500),
+    c.category || 'Instant Wins', toInt(c.prize_value_pence, 0), toInt(c.running_cost_pence, 0),
+    toInt(c.prizetown_margin_pence, 0), toInt(c.community_pot_pence, 0), c.transparency_note || ''
+  ]);
   await audit(req.user, 'competition_created', `Created competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
@@ -439,11 +448,19 @@ app.patch('/admin/competitions/:id', auth('admin'), async (req, res) => {
   const result = await query(`
     UPDATE competitions SET
       title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6, rules_text=$7,
-      closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13, draw_at=$14, status=$15, image_url=$16,
-      prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20,
+      closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13,
+      draw_at=$14, status=$15, image_url=$16, prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20,
+      prize_value_pence=$21, running_cost_pence=$22, prizetown_margin_pence=$23, community_pot_pence=$24, transparency_note=$25,
       updated_at=NOW()
-    WHERE id=$21 RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', req.params.id]);
+    WHERE id=$26 RETURNING *
+  `, [
+    c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '',
+    c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence),
+    toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '',
+    c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500),
+    c.category || 'Instant Wins', toInt(c.prize_value_pence, 0), toInt(c.running_cost_pence, 0),
+    toInt(c.prizetown_margin_pence, 0), toInt(c.community_pot_pence, 0), c.transparency_note || '', req.params.id
+  ]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Competition not found' });
   await audit(req.user, 'competition_updated', `Updated competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
@@ -911,7 +928,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v30 instant wins routes)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v32 fund calculator)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
