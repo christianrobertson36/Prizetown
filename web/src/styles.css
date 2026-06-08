@@ -550,3 +550,14 @@ details { margin-top: 1rem; color: #c8cada; }
 #competition-details {
   scroll-margin-top: 5.5rem;
 }
+
+/* v28 matched built-in competition poster images */
+.poster-image img,
+.comp-card > img,
+.detail-img,
+.basket-row img {
+  background: rgba(255,255,255,.06);
+}
+.poster-image img {
+  filter: saturate(1.08) contrast(1.03);
+}
