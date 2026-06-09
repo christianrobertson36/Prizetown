@@ -98,6 +98,7 @@ function App() {
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
+    {page === 'admin' && <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />}
     {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
@@ -208,6 +209,151 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
 
 function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
 
+
+function BuiltInDrawWheel({ competitions, setMessage }) {
+  const [competitionId, setCompetitionId] = useState('');
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [winner, setWinner] = useState(null);
+  const [spinning, setSpinning] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [drawTime, setDrawTime] = useState(new Date());
+
+  const competition = competitions.find(c => String(c.id) === String(competitionId));
+  const visualEntries = entries.length <= 80 ? entries : entries.filter((_, i) => i % Math.ceil(entries.length / 80) === 0).slice(0, 80);
+
+  useEffect(() => {
+    const t = setInterval(() => setDrawTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  async function loadEntries() {
+    if (!competitionId) return setMessage('Choose a competition first.');
+    try {
+      setLoading(true);
+      setWinner(null);
+      const rows = await api(`/admin/competitions/${competitionId}/draw-entries`);
+      setEntries(rows || []);
+      setMessage(`${rows.length} eligible draw tickets loaded.`);
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function spinDraw() {
+    if (entries.length === 0) return setMessage('Load entries before spinning.');
+    if (spinning) return;
+    const picked = entries[Math.floor(Math.random() * entries.length)];
+    const extra = 360 * 7 + Math.floor(Math.random() * 360);
+    setWinner(null);
+    setSpinning(true);
+    setRotation(prev => prev + extra);
+    setTimeout(() => {
+      setWinner(picked);
+      setSpinning(false);
+      setMessage(`Winner selected: ticket #${picked.ticket_number} - ${picked.customer_name || picked.email || 'Customer'}`);
+    }, 5200);
+  }
+
+  function csvDownload() {
+    if (entries.length === 0) return setMessage('Load entries first.');
+    const header = ['competition_id','competition_title','ticket_number','customer_name','customer_email','order_id','payment_status','created_at'];
+    const rows = entries.map(e => [
+      competitionId,
+      competition?.title || '',
+      e.ticket_number,
+      e.customer_name || '',
+      e.email || e.customer_email || '',
+      e.order_id || '',
+      e.payment_status || '',
+      e.created_at || ''
+    ]);
+    const csv = [header, ...rows].map(r => r.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `prizetown-draw-${competitionId || 'competition'}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return <section className="panel draw-room">
+    <div className="draw-room-head">
+      <div>
+        <h2>Built-in Final Draw Wheel</h2><p className="draw-official-note"><strong>Official Prizetown draw tool:</strong> this replaces the old external wheel link and runs directly inside the site.</p>
+        <p className="muted">Runs inside Prizetown. Suitable for large draws: the winner is picked from the full eligible ticket list, while the wheel display is optimised for browser performance.</p>
+      </div>
+      <div className="draw-clock">
+        <strong>{drawTime.toLocaleDateString()}</strong>
+        <span>{drawTime.toLocaleTimeString()}</span>
+      </div>
+    </div>
+
+    <div className="two">
+      <label>Competition
+        <select value={competitionId} onChange={e => { setCompetitionId(e.target.value); setEntries([]); setWinner(null); }}>
+          <option value="">Choose competition</option>
+          {competitions.map(c => <option key={c.id} value={c.id}>#{c.id} - {c.title}</option>)}
+        </select>
+      </label>
+      <label>Competition number / ID
+        <input readOnly value={competition ? `#${competition.id}` : ''} />
+      </label>
+    </div>
+
+    {competition && <div className="draw-meta">
+      <span><strong>Competition:</strong> #{competition.id} {competition.title}</span>
+      <span><strong>Draw date:</strong> {fmtDate(competition.draw_at)}</span>
+      <span><strong>Tickets sold:</strong> {competition.entries_sold || 0}/{competition.max_tickets}</span>
+      <span><strong>Capacity:</strong> {competition.max_tickets}</span>
+    </div>}
+
+    <div className="draw-actions">
+      <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
+      <button className="primary" onClick={spinDraw} disabled={spinning || entries.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
+      <button className="secondary" onClick={csvDownload} disabled={entries.length === 0}>Download entries CSV</button>
+    </div>
+
+    <div className="draw-stats">
+      <div><strong>{entries.length}</strong><span>eligible tickets loaded</span></div>
+      <div><strong>{visualEntries.length}</strong><span>visual wheel slices</span></div>
+      <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
+    </div>
+
+    <div className="wheel-stage">
+      <div className="wheel-pointer">▼</div>
+      <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
+        {visualEntries.length === 0 ? <div className="wheel-empty">Load tickets</div> : visualEntries.map((e, i) => {
+          const angle = (360 / visualEntries.length) * i;
+          return <div className="wheel-label" key={`${e.ticket_number}-${i}`} style={{ transform: `rotate(${angle}deg) translateY(-8.9rem)` }}>
+            #{e.ticket_number}
+          </div>;
+        })}
+        <div className="wheel-centre">PRIZETOWN<br/><small>FINAL DRAW</small></div>
+      </div>
+    </div>
+
+    {winner && <div className="winner-card">
+      <h2>Winner selected</h2>
+      <p><strong>Competition:</strong> #{competition?.id} {competition?.title}</p>
+      <p><strong>Winning ticket:</strong> #{winner.ticket_number}</p>
+      <p><strong>Name:</strong> {winner.customer_name || winner.name || 'Customer'}</p>
+      <p><strong>Email:</strong> {winner.email || winner.customer_email || 'Not shown'}</p>
+      <p><strong>Draw timestamp:</strong> {new Date().toLocaleString()}</p>
+    </div>}
+
+    <details>
+      <summary>Loaded ticket list preview</summary>
+      {entries.length === 0 ? <p className="muted">No entries loaded.</p> : <div className="entry-chip-list">{entries.slice(0, 1000).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}
+      {entries.length > 1000 && <p className="muted">Showing first 1000 tickets only. The draw still uses all {entries.length} loaded tickets.</p>}
+    </details>
+  </section>;
+}
+
+
 function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, reload, setMessage }) {
   const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '' };
   const [form, setForm] = useState(empty);
@@ -246,12 +392,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     setMessage(`Loaded ${data.entries.length} eligible draw entries.`);
   }
   function drawText() { return (drawData?.wheel_entries || []).join('\n'); }
-  async function copyDrawList() { await navigator.clipboard.writeText(drawText()); setMessage('Draw list copied. Paste it into Wheel of Names if needed.'); }
-  function openWheel() {
-    if (!drawData) return setMessage('Load a draw list first.');
-    if ((drawData.wheel_url || '').length > 7500) { copyDrawList(); window.open('https://wheelofnames.com/', '_blank'); setMessage('Large draw list copied. Paste it into Wheel of Names because the URL is too long.'); return; }
-    window.open(drawData.wheel_url, '_blank');
-  }
+  async function copyDrawList() { await navigator.clipboard.writeText(drawText()); setMessage('Draw list copied. Paste it into Built-in external wheel removed if needed.'); }
+
   function downloadDrawCsv() {
     if (!drawData) return setMessage('Load a draw list first.');
     const header = 'ticket_number,customer_name,customer_email,payment_status\n';
@@ -289,7 +431,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
-        {activeTab === 'draws' && <div className="admin-split draw-admin"><div className="panel"><h1>Final draw wheel</h1><p className="muted">Load all eligible paid/test/free entries, then open Wheel of Names pre-filled or copy the list for livestream/manual draw use.</p><label>Competition<select value={drawCompetitionId} onChange={e => { setDrawCompetitionId(e.target.value); setDrawData(null); setDrawWinnerEntryId(''); }}><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title} · {c.status}</option>)}</select></label><div className="draw-actions"><button type="button" className="primary" onClick={loadDraw}>Load draw entries</button><button type="button" className="secondary" disabled={!drawData} onClick={openWheel}>Open Wheel of Names</button><button type="button" className="secondary" disabled={!drawData} onClick={copyDrawList}>Copy list</button><button type="button" className="secondary" disabled={!drawData} onClick={downloadDrawCsv}>Download CSV</button></div>{drawData && <div className="draw-summary"><strong>{drawData.entries.length}</strong><span>eligible entries loaded</span><p>{drawData.competition.title}</p></div>}{drawData && <label>Wheel import list<textarea className="draw-list" readOnly value={drawText()} /></label>}<p className="muted">Tip: for very large draws, use Copy list then paste into Wheel of Names. The automatic URL works best while the browser URL stays a sensible size.</p></div><form className="panel" onSubmit={recordDrawWinner}><h1>Record winner</h1><p className="muted">After the wheel selects a winning ticket, choose it below to save the final result, publish it to Winners, close the competition and record an audit log.</p>{!drawData && <p>Load a competition draw first.</p>}{drawData && <><label>Winning ticket<select value={drawWinnerEntryId} onChange={e => setDrawWinnerEntryId(e.target.value)} required><option value="">Choose winning ticket</option>{drawData.entries.map(e => <option key={e.id} value={e.id}>Ticket #{e.ticket_number} · {e.customer_name || e.customer_email || 'Customer'}</option>)}</select></label><label>Draw notes<textarea value={drawNotes} onChange={e => setDrawNotes(e.target.value)} placeholder="Example: Draw completed live using Wheel of Names." /></label><button className="primary full">Record final draw winner</button></>}<h2>Recent draw results</h2>{drawResults.length === 0 && <p className="muted">No final draw results recorded yet.</p>}{drawResults.slice(0, 6).map(d => <div className="list-row entry-row" key={d.id}><div><strong>{d.competition_title}</strong><p>Ticket #{d.ticket_number} · {d.winner_name} · {new Date(d.created_at).toLocaleString()}</p></div></div>)}</form></div>}
+        {activeTab === 'draws' && <div className="admin-split draw-admin"><div className="panel"><h1>Final draw wheel</h1><p className="muted">Load all eligible paid/test/free entries, then open Built-in external wheel removed pre-filled or copy the list for livestream/manual draw use.</p><label>Competition<select value={drawCompetitionId} onChange={e => { setDrawCompetitionId(e.target.value); setDrawData(null); setDrawWinnerEntryId(''); }}><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title} · {c.status}</option>)}</select></label><div className="draw-actions"><button type="button" className="primary" onClick={loadDraw}>Load draw entries</button><button type="button" className="secondary" disabled={!drawData} onClick={copyDrawList}>Copy list</button><button type="button" className="secondary" disabled={!drawData} onClick={downloadDrawCsv}>Download CSV</button></div>{drawData && <div className="draw-summary"><strong>{drawData.entries.length}</strong><span>eligible entries loaded</span><p>{drawData.competition.title}</p></div>}{drawData && <label>Wheel import list<textarea className="draw-list" readOnly value={drawText()} /></label>}<p className="muted">Tip: for very large draws, use Copy list then paste into Built-in external wheel removed. The automatic URL works best while the browser URL stays a sensible size.</p></div><form className="panel" onSubmit={recordDrawWinner}><h1>Record winner</h1><p className="muted">After the wheel selects a winning ticket, choose it below to save the final result, publish it to Winners, close the competition and record an audit log.</p>{!drawData && <p>Load a competition draw first.</p>}{drawData && <><label>Winning ticket<select value={drawWinnerEntryId} onChange={e => setDrawWinnerEntryId(e.target.value)} required><option value="">Choose winning ticket</option>{drawData.entries.map(e => <option key={e.id} value={e.id}>Ticket #{e.ticket_number} · {e.customer_name || e.customer_email || 'Customer'}</option>)}</select></label><label>Draw notes<textarea value={drawNotes} onChange={e => setDrawNotes(e.target.value)} placeholder="Example: Draw completed live using Built-in external wheel removed." /></label><button className="primary full">Record final draw winner</button></>}<h2>Recent draw results</h2>{drawResults.length === 0 && <p className="muted">No final draw results recorded yet.</p>}{drawResults.slice(0, 6).map(d => <div className="list-row entry-row" key={d.id}><div><strong>{d.competition_title}</strong><p>Ticket #{d.ticket_number} · {d.winner_name} · {new Date(d.created_at).toLocaleString()}</p></div></div>)}</form></div>}
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
 
@@ -303,5 +445,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v34';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v36';
 createRoot(document.getElementById('root')).render(<App />);
