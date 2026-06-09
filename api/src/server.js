@@ -287,7 +287,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v47' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v48' }));
 
 
 async function getSettingsObject() {
@@ -969,7 +969,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v47 Arnold homepage build fix)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v48 Arnold clean build fix)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
