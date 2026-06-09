@@ -770,7 +770,7 @@ function DrawBroadcastPage({ setPage }) {
       </header>
 
       <div className="broadcast-main">
-        <ArnoldBroadcastHost mode={mode} winner={winner} />
+        {state?.show_arnold !== false && <ArnoldBroadcastHost mode={mode} winner={winner} />}
         <div className="broadcast-wheel-wrap">
           <div className="broadcast-pointer">▼</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
@@ -792,8 +792,9 @@ function DrawBroadcastPage({ setPage }) {
 
           {winner ? <div className="broadcast-winner">
             <h2>Winner</h2>
-            <p className="winning-ticket">#{winner.ticket_number}</p>
-            <p className="winner-name">{winner.customer_name || 'Customer'}</p>
+            <p className="winning-ticket">Ticket #{winner.ticket_number}</p>
+            <p className="winner-name">{winner.customer_name || winner.name || 'Customer'}</p>
+            <p className="muted">Final draw winner confirmed</p>
           </div> : <div className="broadcast-waiting">
             <h2>Awaiting spin</h2>
             <p>Use the admin draw controls to load tickets and start the live draw.</p>
@@ -819,6 +820,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
+  const [showArnold, setShowArnold] = useState(() => localStorage.getItem('prizetown_draw_show_arnold') !== 'false');
   const spinAudioRef = useRef(null);
 
   const competitionList = safeArray(competitions);
@@ -872,7 +874,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         ticket_number: picked?.ticket_number ?? '',
         customer_name: picked?.customer_name || picked?.name || 'Customer',
         email: picked?.email || picked?.customer_email || ''
-      } : null
+      } : null,
+      show_arnold: showArnold
     };
   }
 
@@ -888,6 +891,14 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     } catch (err) {
       setMessage(err.message);
     }
+  }
+
+  function toggleArnold() {
+    const next = !showArnold;
+    setShowArnold(next);
+    localStorage.setItem('prizetown_draw_show_arnold', String(next));
+    publishBroadcastState({ ...broadcastBase(entryList, winner ? 'winner' : entryList.length ? 'ready' : 'idle', winner), show_arnold: next });
+    setMessage(next ? 'Arnold host shown on draw screen.' : 'Arnold host hidden for cleaner text/overlay.');
   }
 
   async function uploadSpinSound(e) {
@@ -945,7 +956,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       setLoading(true);
       setWinner(null);
       const result = await api(`/admin/competitions/${competitionId}/draw-entries`);
-      const rows = safeArray(result);
+      const rows = safeArray(result.entries || result);
       setEntries(rows);
       setMessage(`${rows.length} eligible draw tickets loaded.`);
       publishBroadcastState(broadcastBase(rows, 'ready', null));
@@ -999,12 +1010,12 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   return <section className="panel draw-room"><audio ref={spinAudioRef} src={spinSoundUrl || undefined} preload="auto" />
-    <div className="draw-arnold-row">
+    {showArnold && <div className="draw-arnold-row">
       <ArnoldHost
         stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
-        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
+        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} — ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
       />
-    </div>
+    </div>}
     <div className="draw-room-head">
       <div>
         <h2>Built-in Final Draw Wheel</h2><p className="draw-official-note"><strong>Official Prizetown draw tool:</strong> this replaces the old external wheel link and runs directly inside the site.</p>
@@ -1038,7 +1049,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     <div className="draw-actions">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
+      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
     </div>
 
     <div className="draw-stats">
@@ -1064,7 +1075,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <h2>Winner selected</h2>
       <p><strong>Competition:</strong> #{competition?.id} {competition?.title}</p>
       <p><strong>Winning ticket:</strong> #{winner.ticket_number}</p>
-      <p><strong>Name:</strong> {winner.customer_name || winner.name || 'Customer'}</p>
+      <p className="winner-big-name"><strong>Winner:</strong> {winner.customer_name || winner.name || 'Customer'}</p>
       <p><strong>Email:</strong> {winner.email || winner.customer_email || 'Not shown'}</p>
       <p><strong>Draw timestamp:</strong> {new Date().toLocaleString()}</p>
     </div>}
@@ -1079,7 +1090,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
 
 function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, postcodeZones = [], postcodeAssignments = [], reload, setMessage, setPage }) {
-  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all', prize_cost_pence: 0, marketing_budget_pence: 0, other_buffer_pence: 0, payment_fee_percent: 4, vat_enabled: false };
+  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all', prize_cost_pence: 0, marketing_budget_pence: 0, other_buffer_pence: 0, payment_fee_percent: 4, vat_enabled: false, auto_draw_enabled: false };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -1299,11 +1310,16 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
                 <label>Payment fee %<input type="number" step="0.1" value={form.payment_fee_percent || 4} onChange={e => updateField('payment_fee_percent', Number(e.target.value))} /></label>
                 <label className="check-row"><input type="checkbox" checked={form.vat_enabled === true} onChange={e => updateField('vat_enabled', e.target.checked)} /> Include VAT estimate</label>
               </div>
-            </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label></div><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
+            </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /><small className="muted">Used for scheduled final draws.</small></label></div><label className="check-row important-check"><input type="checkbox" checked={form.auto_draw_enabled === true} onChange={e => updateField('auto_draw_enabled', e.target.checked)} /> <span>Auto-run final draw at scheduled draw date/time once sold out or closed</span></label><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
 
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
         {activeTab === 'draws' && <div className="final-draw-only">
+          <div className="panel auto-draw-note">
+            <h1>Scheduled Auto Draws</h1>
+            <p className="muted">For each competition, set a draw date/time and enable auto draw in Add/Edit Competition. When the competition is sold out or closed and the draw time arrives, Prizetown safely records the winner once and updates the OBS broadcast screen.</p>
+            <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Run due auto draws now</button>
+          </div>
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
           <BroadcastMenuPanel setPage={setPage} />
         </div>}
@@ -1543,5 +1559,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v64';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v65';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

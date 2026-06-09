@@ -417,6 +417,8 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS other_buffer_pence INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS payment_fee_percent NUMERIC NOT NULL DEFAULT 4;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS vat_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS auto_draw_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS draw_auto_started_at TIMESTAMPTZ;
 
     INSERT INTO site_settings (key, value) VALUES
       ('site_name', 'Prizetown'),
@@ -446,6 +448,8 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS other_buffer_pence INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS payment_fee_percent NUMERIC NOT NULL DEFAULT 4;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS vat_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS auto_draw_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS draw_auto_started_at TIMESTAMPTZ;
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
@@ -509,7 +513,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v64' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v65' }));
 
 
 async function getSettingsObject() {
@@ -625,10 +629,12 @@ let drawBroadcastState = {
   eligible_count: 0,
   visual_tickets: [],
   winner: null,
+  show_arnold: true,
   updated_at: new Date().toISOString()
 };
 
-app.get('/draw/broadcast-state', (_req, res) => {
+app.get('/draw/broadcast-state', async (_req, res) => {
+  await runDueAutoDraws();
   res.json(drawBroadcastState);
 });
 
@@ -640,6 +646,7 @@ app.post('/admin/draw/broadcast-state', auth('admin'), (req, res) => {
       ...body,
       visual_tickets: Array.isArray(body.visual_tickets) ? body.visual_tickets.slice(0, 150) : [],
       winner: body.winner || null,
+      show_arnold: body.show_arnold !== false,
       updated_at: new Date().toISOString()
     };
     res.json(drawBroadcastState);
@@ -647,6 +654,11 @@ app.post('/admin/draw/broadcast-state', auth('admin'), (req, res) => {
     console.error('Broadcast state update failed', err);
     res.status(400).json({ error: err.message || 'Broadcast state update failed' });
   }
+});
+
+app.post('/admin/draw/run-due-auto', auth('admin'), async (_req, res) => {
+  const completed = await runDueAutoDraws();
+  res.json({ ok: true, completed });
 });
 
 app.post('/admin/draw/broadcast-reset', auth('admin'), (_req, res) => {
@@ -660,10 +672,124 @@ app.post('/admin/draw/broadcast-reset', auth('admin'), (_req, res) => {
     eligible_count: 0,
     visual_tickets: [],
     winner: null,
+    show_arnold: true,
     updated_at: new Date().toISOString()
   };
   res.json(drawBroadcastState);
 });
+
+
+function publicWinnerName(name = '') {
+  const cleaned = String(name || '').trim();
+  if (!cleaned) return 'Customer';
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0] || ''}`.trim();
+}
+
+async function recordFinalDrawWinner(client, { competitionId, entry, createdBy = null, method = 'auto_scheduled', notes = '' }) {
+  const existing = await client.query('SELECT id FROM draw_results WHERE competition_id=$1 LIMIT 1', [competitionId]);
+  if (existing.rowCount > 0) return null;
+
+  const result = (await client.query(`
+    INSERT INTO draw_results (competition_id, entry_id, ticket_number, winner_name, winner_email, draw_method, notes, created_by)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
+  `, [competitionId, entry.id, entry.ticket_number, entry.customer_name || 'Customer', entry.customer_email || '', method, notes, createdBy])).rows[0];
+
+  const winner = (await client.query(`
+    INSERT INTO winners (competition_id, entry_id, winner_name, prize_title)
+    VALUES ($1,$2,$3,$4) RETURNING *
+  `, [competitionId, entry.id, publicWinnerName(entry.customer_name || 'Customer'), entry.competition_title])).rows[0];
+
+  await client.query('UPDATE competitions SET status=$1, draw_auto_started_at=COALESCE(draw_auto_started_at, NOW()), updated_at=NOW() WHERE id=$2', ['closed', competitionId]);
+
+  return { draw_result: result, winner };
+}
+
+async function runDueAutoDraws() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const due = await client.query(`
+      SELECT c.*,
+             COUNT(e.id)::int AS eligible_count
+      FROM competitions c
+      LEFT JOIN entries e ON e.competition_id = c.id AND e.payment_status IN ('paid','free','paid_test','free_manual')
+      LEFT JOIN draw_results d ON d.competition_id = c.id
+      WHERE c.auto_draw_enabled = TRUE
+        AND c.draw_at IS NOT NULL
+        AND c.draw_at <= NOW()
+        AND d.id IS NULL
+        AND c.status IN ('active','sold_out','closed')
+      GROUP BY c.id
+      HAVING COUNT(e.id) > 0
+      ORDER BY c.draw_at ASC
+      LIMIT 3
+    `);
+
+    const completed = [];
+
+    for (const comp of due.rows) {
+      const eligibleCount = Number(comp.eligible_count || 0);
+      const soldOut = eligibleCount >= Number(comp.max_tickets || 0);
+      const closedByDate = comp.closes_at && new Date(comp.closes_at).getTime() <= Date.now();
+      if (!soldOut && !closedByDate) continue;
+
+      const entry = (await client.query(`
+        SELECT e.*, c.title AS competition_title
+        FROM entries e
+        JOIN competitions c ON c.id = e.competition_id
+        WHERE e.competition_id=$1 AND e.payment_status IN ('paid','free','paid_test','free_manual')
+        ORDER BY random()
+        LIMIT 1
+      `, [comp.id])).rows[0];
+      if (!entry) continue;
+
+      const saved = await recordFinalDrawWinner(client, {
+        competitionId: comp.id,
+        entry,
+        method: 'auto_scheduled',
+        notes: 'Automatic scheduled draw'
+      });
+      if (!saved) continue;
+
+      drawBroadcastState = {
+        mode: 'winner',
+        competition_id: comp.id,
+        competition_title: comp.title,
+        competition_number: `#${comp.id}`,
+        draw_date: comp.draw_at || '',
+        ticket_capacity: Number(comp.max_tickets || 0),
+        eligible_count: eligibleCount,
+        visual_tickets: [],
+        winner: {
+          ticket_number: entry.ticket_number,
+          customer_name: publicWinnerName(entry.customer_name || 'Customer'),
+          email: entry.customer_email || ''
+        },
+        show_arnold: drawBroadcastState.show_arnold !== false,
+        updated_at: new Date().toISOString()
+      };
+
+      completed.push({ competition_id: comp.id, title: comp.title, ticket_number: entry.ticket_number, winner_name: publicWinnerName(entry.customer_name || 'Customer') });
+    }
+
+    await client.query('COMMIT');
+    return completed;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Auto draw failed', err);
+    return [];
+  } finally {
+    client.release();
+  }
+}
+
+setInterval(() => {
+  runDueAutoDraws().catch(err => console.error('Scheduled auto draw interval failed', err));
+}, 30000);
+
 
 app.get('/competitions', async (_req, res) => {
   const result = await query(`
@@ -943,10 +1069,10 @@ app.post('/admin/competitions', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     INSERT INTO competitions
-    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category, postcode_mode, prize_cost_pence, marketing_budget_pence, other_buffer_pence, payment_fee_percent, vat_enabled)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
+    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category, postcode_mode, prize_cost_pence, marketing_budget_pence, other_buffer_pence, payment_fee_percent, vat_enabled, auto_draw_enabled)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
     RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', toInt(c.prize_cost_pence), toInt(c.marketing_budget_pence), toInt(c.other_buffer_pence), Number(c.payment_fee_percent ?? 4), c.vat_enabled === true]);
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', toInt(c.prize_cost_pence), toInt(c.marketing_budget_pence), toInt(c.other_buffer_pence), Number(c.payment_fee_percent ?? 4), c.vat_enabled === true, c.auto_draw_enabled === true]);
   await audit(req.user, 'competition_created', `Created competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
@@ -958,10 +1084,10 @@ app.patch('/admin/competitions/:id', auth('admin'), async (req, res) => {
       title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6, rules_text=$7,
       closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13, draw_at=$14, status=$15, image_url=$16,
       prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20, postcode_mode=$21,
-      prize_cost_pence=$22, marketing_budget_pence=$23, other_buffer_pence=$24, payment_fee_percent=$25, vat_enabled=$26,
+      prize_cost_pence=$22, marketing_budget_pence=$23, other_buffer_pence=$24, payment_fee_percent=$25, vat_enabled=$26, auto_draw_enabled=$27,
       updated_at=NOW()
-    WHERE id=$27 RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', toInt(c.prize_cost_pence), toInt(c.marketing_budget_pence), toInt(c.other_buffer_pence), Number(c.payment_fee_percent ?? 4), c.vat_enabled === true, req.params.id]);
+    WHERE id=$28 RETURNING *
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', toInt(c.prize_cost_pence), toInt(c.marketing_budget_pence), toInt(c.other_buffer_pence), Number(c.payment_fee_percent ?? 4), c.vat_enabled === true, c.auto_draw_enabled === true, req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Competition not found' });
   await audit(req.user, 'competition_updated', `Updated competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
@@ -1298,29 +1424,44 @@ app.post('/admin/draw-results', auth('admin'), async (req, res) => {
   const notes = String(req.body.notes || '').trim();
   if (!competitionId || !entryId) return res.status(400).json({ error: 'Competition and winning entry are required' });
   const entry = (await query(`
-    SELECT e.*, c.title AS competition_title
+    SELECT e.*, c.title AS competition_title, c.draw_at, c.max_tickets
     FROM entries e
     JOIN competitions c ON c.id = e.competition_id
     WHERE e.id=$1 AND e.competition_id=$2 AND e.payment_status IN ('paid','free','paid_test','free_manual')
   `, [entryId, competitionId])).rows[0];
   if (!entry) return res.status(404).json({ error: 'Eligible winning entry not found' });
-  const existing = await query('SELECT id FROM draw_results WHERE competition_id=$1 LIMIT 1', [competitionId]);
-  if (existing.rowCount > 0) return res.status(400).json({ error: 'A final draw winner has already been recorded for this competition' });
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const result = (await client.query(`
-      INSERT INTO draw_results (competition_id, entry_id, ticket_number, winner_name, winner_email, draw_method, notes, created_by)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *
-    `, [competitionId, entryId, entry.ticket_number, entry.customer_name || 'Customer', entry.customer_email || '', 'wheel_of_names', notes, req.user.id])).rows[0];
-    const winner = (await client.query(`
-      INSERT INTO winners (competition_id, entry_id, winner_name, prize_title)
-      VALUES ($1,$2,$3,$4) RETURNING *
-    `, [competitionId, entryId, entry.customer_name || 'Customer', entry.competition_title])).rows[0];
-    await client.query('UPDATE competitions SET status=$1, updated_at=NOW() WHERE id=$2', ['closed', competitionId]);
+    const saved = await recordFinalDrawWinner(client, {
+      competitionId,
+      entry,
+      createdBy: req.user.id,
+      method: 'wheel_of_names',
+      notes
+    });
+    if (!saved) throw new Error('A final draw winner has already been recorded for this competition');
+
+    drawBroadcastState = {
+      ...drawBroadcastState,
+      mode: 'winner',
+      competition_id: competitionId,
+      competition_title: entry.competition_title,
+      competition_number: `#${competitionId}`,
+      draw_date: entry.draw_at || '',
+      ticket_capacity: Number(entry.max_tickets || 0),
+      winner: {
+        ticket_number: entry.ticket_number,
+        customer_name: publicWinnerName(entry.customer_name || 'Customer'),
+        email: entry.customer_email || ''
+      },
+      updated_at: new Date().toISOString()
+    };
+
     await client.query('COMMIT');
     await audit(req.user, 'final_draw_recorded', `Winner ticket #${entry.ticket_number} recorded for ${entry.competition_title}`);
-    res.json({ draw_result: result, winner });
+    res.json(saved);
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     res.status(400).json({ error: err.message || 'Could not record draw result' });
@@ -1436,7 +1577,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v64 cookie and legal popups)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v65 scheduled auto draw)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

@@ -2313,3 +2313,23 @@ label small.muted {
     flex: 1;
   }
 }
+
+
+/* v65 scheduled auto draw and Arnold toggle */
+.winner-big-name {
+  font-size: 1.25rem;
+  color: #facc15;
+}
+.auto-draw-note {
+  border: 1px solid rgba(250,204,21,.22);
+  background: rgba(250,204,21,.08);
+}
+.broadcast-winner .winner-name {
+  font-size: clamp(2rem, 4vw, 4rem);
+  color: #facc15;
+  font-weight: 1000;
+  text-shadow: 0 0 28px rgba(250,204,21,.4);
+}
+.broadcast-winner .winning-ticket {
+  font-size: clamp(1.3rem, 3vw, 2.2rem);
+}
