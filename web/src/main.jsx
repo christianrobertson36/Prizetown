@@ -46,6 +46,41 @@ function fallbackPosterUrl(c) {
   return `/demo-posters/${competitionTheme(c).key}.svg`;
 }
 
+function WheelNumberLabels({ tickets = [], radius = 42 }) {
+  const rows = safeArray(tickets).slice(0, 80);
+  const total = Math.max(1, rows.length);
+  return <div className="wheel-number-labels" aria-hidden="true">
+    {rows.map((e, i) => {
+      const angle = (360 / total) * i;
+      return <span
+        key={`${e.ticket_number || e.ticket || i}-${i}`}
+        className="wheel-number-label"
+        style={{ transform: `rotate(${angle}deg) translateY(-${radius}%) rotate(${-angle}deg)` }}
+      >#{e.ticket_number || e.ticket || i + 1}</span>;
+    })}
+  </div>;
+}
+
+function buildWheelTickets(rows = [], winner = null) {
+  const safeRows = safeArray(rows);
+  if (safeRows.length <= 80) return safeRows.map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
+  const pickedTicket = Number(winner?.ticket_number || 0);
+  const selected = safeRows.filter(e => Number(e.ticket_number) === pickedTicket);
+  const step = Math.max(1, Math.ceil(safeRows.length / 79));
+  const sampled = safeRows.filter((_, i) => i % step === 0).slice(0, 79);
+  const merged = [...selected, ...sampled].filter((e, idx, arr) => arr.findIndex(x => Number(x.ticket_number) === Number(e.ticket_number)) === idx);
+  return merged.slice(0, 80).map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
+}
+
+function wheelRotationForWinner(tickets = [], winnerTicket) {
+  const rows = safeArray(tickets);
+  const total = Math.max(1, rows.length);
+  const index = Math.max(0, rows.findIndex(e => Number(e.ticket_number) === Number(winnerTicket)));
+  const angle = (360 / total) * index;
+  return 360 * 8 - angle;
+}
+
+
 
 const defaultSettings = {
   site_name: 'Prizetown',
@@ -732,7 +767,10 @@ function DrawBroadcastPage({ setPage }) {
         const spinKey = data.spin_id || `${data.competition_id || ''}-${data.updated_at || ''}`;
         if (data.mode === 'spinning' && spinKey !== lastSpinKey) {
           setLastSpinKey(spinKey);
-          setRotation(prev => prev + 360 * 8 + 180);
+          setRotation(Number(data.target_rotation || 0));
+        }
+        if (data.mode === 'winner' && Number.isFinite(Number(data.target_rotation))) {
+          setRotation(Number(data.target_rotation || 0));
         }
       } catch {
         if (active) setState(s => s || { mode: 'offline', visual_tickets: [] });
@@ -804,8 +842,9 @@ function DrawBroadcastPage({ setPage }) {
           <div className="broadcast-pointer">▼</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
             <div className="wheel-colour-slices" aria-hidden="true"></div>
+            {tickets.length > 0 && <WheelNumberLabels tickets={tickets} radius={43} />}
             {tickets.length === 0 && <div className="broadcast-wheel-empty">Load tickets in admin</div>}
-            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'VISUAL DRAW WHEEL'}</small></div>
+            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'SYNCED DRAW WHEEL'}</small></div>
           </div>
         </div>
 
@@ -853,7 +892,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const competitionList = safeArray(competitions);
   const entryList = safeArray(entries);
   const competition = competitionList.find(c => String(c.id) === String(competitionId));
-  const visualEntries = entryList.length <= 80 ? entryList : entryList.filter((_, i) => i % Math.max(1, Math.ceil(entryList.length / 80)) === 0).slice(0, 80);
+  const visualEntries = buildWheelTickets(entryList, winner);
 
   useEffect(() => {
     const t = setInterval(() => setDrawTime(new Date()), 1000);
@@ -871,18 +910,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     }
   }
 
-  function visualTicketSample(rows) {
-    const safeRows = safeArray(rows);
-    if (safeRows.length === 0) return [];
-    const limit = 120;
-    const step = Math.max(1, Math.ceil(safeRows.length / limit));
-    return safeRows
-      .filter((_, i) => i % step === 0)
-      .slice(0, limit)
-      .map((e, i) => ({
-        ticket_number: e?.ticket_number ?? e?.ticket ?? i + 1,
-        customer_name: e?.customer_name || e?.name || ''
-      }));
+  function visualTicketSample(rows, picked = winner) {
+    return buildWheelTickets(rows, picked);
   }
 
   function broadcastBase(rows = entries, mode = 'ready', picked = winner, extra = {}) {
@@ -896,7 +925,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       draw_date: c.draw_at || '',
       ticket_capacity: Number(c.max_tickets || 0),
       eligible_count: safeRows.length,
-      visual_tickets: visualTicketSample(safeRows),
+      visual_tickets: visualTicketSample(safeRows, picked),
       winner: picked ? {
         ticket_number: picked?.ticket_number ?? '',
         customer_name: picked?.customer_name || picked?.name || 'Customer',
@@ -1057,35 +1086,44 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     if (spinning) return;
 
     const picked = entryList[Math.floor(Math.random() * entryList.length)];
-    const spinMs = 11000;
-    const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
-    const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
     const finalWinner = {
       ticket_number: picked.ticket_number,
       customer_name: picked.customer_name || picked.name || 'Customer',
       email: picked.email || picked.customer_email || ''
     };
+    const wheelTickets = buildWheelTickets(entryList, finalWinner);
+    const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number);
+    const spinMs = 11000;
+    const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
+    const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
 
-    const extra = 360 * 8 + 180;
     setWinner(null);
     setSpinning(true);
     playSpinSound();
-    setRotation(prev => prev + extra);
+    setRotation(targetRotation);
 
-    publishBroadcastState(broadcastBase(entryList, 'spinning', finalWinner, {
-      spin_id: spinId,
-      reveal_at: revealAt,
-      locked_ticket_number: picked.ticket_number
-    }));
+    publishBroadcastState({
+      ...broadcastBase(wheelTickets, 'spinning', finalWinner, {
+        spin_id: spinId,
+        reveal_at: revealAt,
+        locked_ticket_number: picked.ticket_number,
+        target_rotation: targetRotation
+      }),
+      visual_tickets: wheelTickets
+    });
 
     setTimeout(() => {
       setWinner(finalWinner);
       setSpinning(false);
-      publishBroadcastState(broadcastBase(entryList, 'winner', finalWinner, {
-        spin_id: spinId,
-        reveal_at: new Date(Date.now() - 1000).toISOString(),
-        locked_ticket_number: picked.ticket_number
-      }));
+      publishBroadcastState({
+        ...broadcastBase(wheelTickets, 'winner', finalWinner, {
+          spin_id: spinId,
+          reveal_at: new Date(Date.now() - 1000).toISOString(),
+          locked_ticket_number: picked.ticket_number,
+          target_rotation: targetRotation
+        }),
+        visual_tickets: wheelTickets
+      });
       setMessage(`Winner selected: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'}`);
       stopSpinSound();
     }, spinMs + 700);
@@ -1162,14 +1200,15 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{visualEntries.length}</strong><span>visual draw slices</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">The wheel is now a clean visual spinner. The actual winning ticket is selected once from the full eligible ticket list and shown in the winner reveal, so admin and OBS do not display conflicting wheel numbers.</p>
+    <p className="muted draw-sync-note">Admin and OBS now use the same ticket labels and the same final wheel rotation. The pointer should land on the same locked winning ticket shown in the reveal.</p>
 
     <div className="wheel-stage">
       <div className="wheel-pointer">▼</div>
       <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
         <div className="wheel-colour-slices" aria-hidden="true"></div>
+        {visualEntries.length > 0 && <WheelNumberLabels tickets={visualEntries} radius={43} />}
         {visualEntries.length === 0 && <div className="wheel-empty">Load tickets</div>}
-        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'VISUAL DRAW WHEEL'}</small></div>
+        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'SYNCED DRAW WHEEL'}</small></div>
       </div>
     </div>
 
@@ -1661,5 +1700,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v73';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v74';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
