@@ -3573,3 +3573,14 @@ body.broadcast-body #root {
 .trusted-wheel-svg .trusted-wheel-label {
   dominant-baseline: middle;
 }
+
+
+/* v84 move labels toward outer edge */
+.trusted-wheel-label-oriented {
+  font-size: clamp(7px, .85vw, 12px) !important;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: rgba(255,255,255,.55);
+  stroke-width: .7px;
+  stroke-linejoin: round;
+}
