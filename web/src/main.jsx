@@ -120,7 +120,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
 
   return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
     <div className="trusted-wheel-wrap">
-      <div className="trusted-wheel-pointer"><span>STOP POINT</span></div>
+      <div className="trusted-wheel-pointer" aria-label="Stop point"></div>
       <svg className="trusted-wheel-svg" viewBox="0 0 500 500" role="img" aria-label="Prizetown draw wheel">
         <defs>
           <clipPath id="trustedWheelLogoClip">
@@ -1056,6 +1056,85 @@ function DrawBroadcastPage({ setPage }) {
 }
 
 
+
+function SystemCheckPanel({ setMessage }) {
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState(null);
+
+  async function runCheck() {
+    try {
+      setLoading(true);
+      const result = await api('/admin/system-check');
+      setReport(result);
+      setMessage(result.summary || 'System check completed.');
+    } catch (err) {
+      setMessage(err.message);
+      setReport({
+        ok: false,
+        summary: `System check failed: ${err.message}`,
+        checks: [{ status: 'error', title: 'System check request', detail: err.message }]
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function copyReport() {
+    const text = JSON.stringify(report || {}, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      setMessage('System check report copied.');
+    } catch {
+      setMessage('Could not copy report. Select and copy the report manually.');
+    }
+  }
+
+  const checks = safeArray(report?.checks);
+  const grouped = {
+    error: checks.filter(c => c.status === 'error'),
+    warning: checks.filter(c => c.status === 'warning'),
+    ok: checks.filter(c => c.status === 'ok')
+  };
+
+  return <section className="panel system-check-panel">
+    <div className="draw-room-head">
+      <div>
+        <h2>System Check / AI Debug</h2>
+        <p className="muted">Runs a smart diagnostic across API, database, uploads, draw state, settings and key records. This is rule-based for reliability and works without an external AI key.</p>
+      </div>
+      <button className="primary" onClick={runCheck} disabled={loading}>{loading ? 'Checking...' : 'Run Smart Debug'}</button>
+    </div>
+
+    {report && <div className={`system-summary ${report.ok ? 'ok' : 'warn'}`}>
+      <strong>{report.ok ? 'System looks healthy' : 'Review recommended'}</strong>
+      <p>{report.summary}</p>
+      {report.totals && <div className="system-totals">
+        <span>Competitions: {report.totals.competitions}</span>
+        <span>Orders: {report.totals.orders}</span>
+        <span>Entries: {report.totals.entries}</span>
+        <span>Winners: {report.totals.winners}</span>
+        <span>Warnings: {report.totals.warnings}</span>
+        <span>Errors: {report.totals.errors}</span>
+      </div>}
+      <button className="secondary" onClick={copyReport}>Copy debug report</button>
+    </div>}
+
+    {report && <div className="system-check-grid">
+      {['error','warning','ok'].map(group => grouped[group].length > 0 && <div className={`system-check-column ${group}`} key={group}>
+        <h3>{group === 'ok' ? 'OK' : group === 'warning' ? 'Warnings' : 'Needs fixing'}</h3>
+        {grouped[group].map((item, idx) => <article className={`system-check-card ${item.status}`} key={`${group}-${idx}`}>
+          <strong>{item.status === 'ok' ? '✅' : item.status === 'warning' ? '⚠️' : '❌'} {item.title}</strong>
+          <p>{item.detail}</p>
+        </article>)}
+      </div>)}
+    </div>}
+
+    {!report && <div className="empty-state">
+      <p>Click <strong>Run Smart Debug</strong> to check Prizetown before going live or before a draw.</p>
+    </div>}
+  </section>;
+}
+
 function BuiltInDrawWheel({ competitions, setMessage }) {
   const [competitionId, setCompetitionId] = useState('');
   const [entries, setEntries] = useState([]);
@@ -1667,7 +1746,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['system-check', 'System Check', Shield], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -1709,6 +1788,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
           <BroadcastMenuPanel setPage={setPage} />
         </div>}
+
+        {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
 
@@ -1945,5 +2026,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v86';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v87';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

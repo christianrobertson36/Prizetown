@@ -513,7 +513,120 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v86' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v87' }));
+app.get('/admin/system-check', requireAdmin, async (_req, res) => {
+  const checks = [];
+  const warnings = [];
+  const errors = [];
+
+  function add(status, title, detail, meta = {}) {
+    const row = { status, title, detail, meta };
+    checks.push(row);
+    if (status === 'warning') warnings.push(row);
+    if (status === 'error') errors.push(row);
+  }
+
+  try {
+    const dbPing = await pool.query('SELECT NOW() AS now');
+    add('ok', 'Database connection', `Database responded at ${dbPing.rows?.[0]?.now || 'now'}.`);
+  } catch (err) {
+    add('error', 'Database connection', err.message);
+  }
+
+  try {
+    await fs.promises.mkdir(uploadDir, { recursive: true });
+    const testFile = path.join(uploadDir, `.prizetown-health-${Date.now()}.tmp`);
+    await fs.promises.writeFile(testFile, 'ok');
+    await fs.promises.unlink(testFile);
+    add('ok', 'Uploads folder', `Uploads folder is writable: ${uploadDir}`);
+  } catch (err) {
+    add('error', 'Uploads folder', `Uploads folder is not writable: ${err.message}`);
+  }
+
+  async function countTable(table, label) {
+    try {
+      const result = await pool.query(`SELECT COUNT(*)::int AS count FROM ${table}`);
+      add('ok', label, `${result.rows[0].count} records found.`, { count: result.rows[0].count });
+      return result.rows[0].count;
+    } catch (err) {
+      add('warning', label, `Could not count ${table}: ${err.message}`);
+      return 0;
+    }
+  }
+
+  const competitionCount = await countTable('competitions', 'Competitions');
+  const orderCount = await countTable('orders', 'Orders');
+  const entryCount = await countTable('entries', 'Entries');
+  const winnerCount = await countTable('winners', 'Winners');
+
+  try {
+    const open = await pool.query("SELECT COUNT(*)::int AS count FROM competitions WHERE COALESCE(status, '') NOT IN ('closed', 'archived')");
+    add(open.rows[0].count > 0 ? 'ok' : 'warning', 'Open competitions', `${open.rows[0].count} open/live competitions found.`, { count: open.rows[0].count });
+  } catch (err) {
+    add('warning', 'Open competitions', err.message);
+  }
+
+  try {
+    const missingDraw = await pool.query("SELECT COUNT(*)::int AS count FROM competitions WHERE draw_at IS NULL");
+    add(missingDraw.rows[0].count === 0 ? 'ok' : 'warning', 'Draw dates', `${missingDraw.rows[0].count} competitions are missing a draw date/time.`, { count: missingDraw.rows[0].count });
+  } catch (err) {
+    add('warning', 'Draw dates', err.message);
+  }
+
+  try {
+    const settings = await pool.query("SELECT key, value FROM settings WHERE key IN ('terms_text','privacy_text','free_entry_global','cookie_notice_text','legal_disclaimer_text','site_name')");
+    const keys = new Set(settings.rows.map(r => r.key));
+    ['terms_text','privacy_text','free_entry_global','cookie_notice_text','legal_disclaimer_text'].forEach(key => {
+      add(keys.has(key) ? 'ok' : 'warning', `Legal setting: ${key}`, keys.has(key) ? 'Present.' : 'Missing or not saved yet.');
+    });
+  } catch (err) {
+    add('warning', 'Legal/settings text', err.message);
+  }
+
+  try {
+    const state = await pool.query("SELECT value FROM settings WHERE key = 'draw_broadcast_state' LIMIT 1");
+    if (state.rows.length) {
+      let parsed = {};
+      try { parsed = JSON.parse(state.rows[0].value || '{}'); } catch {}
+      add('ok', 'Live draw broadcast state', `Broadcast state is reachable. Current mode: ${parsed.mode || 'unknown'}.`, { mode: parsed.mode || 'unknown' });
+    } else {
+      add('warning', 'Live draw broadcast state', 'No broadcast state has been saved yet. Open the Live Draw Window or send a test.');
+    }
+  } catch (err) {
+    add('warning', 'Live draw broadcast state', err.message);
+  }
+
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v87' });
+  add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
+  add('ok', 'Configured upload directory', uploadDir);
+
+  const summaryParts = [];
+  if (errors.length === 0 && warnings.length === 0) {
+    summaryParts.push('Prizetown looks healthy. The API, database and uploads checks passed, and no warnings were found.');
+  } else {
+    summaryParts.push(`Prizetown system check completed with ${errors.length} error(s) and ${warnings.length} warning(s).`);
+    if (errors.length) summaryParts.push(`Fix first: ${errors.map(e => e.title).join(', ')}.`);
+    if (warnings.length) summaryParts.push(`Review next: ${warnings.slice(0, 5).map(w => w.title).join(', ')}.`);
+  }
+
+  res.json({
+    ok: errors.length === 0,
+    generated_at: new Date().toISOString(),
+    app: 'Prizetown',
+    version: 'v87',
+    totals: {
+      competitions: competitionCount,
+      orders: orderCount,
+      entries: entryCount,
+      winners: winnerCount,
+      warnings: warnings.length,
+      errors: errors.length
+    },
+    summary: summaryParts.join(' '),
+    checks
+  });
+});
+
 
 
 async function getSettingsObject() {
@@ -1577,7 +1690,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v86 clean live draw controls)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v87 system check debug)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
