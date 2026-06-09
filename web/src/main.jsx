@@ -453,7 +453,7 @@ function App() {
     {featureEnabled(settings, 'module_cookie_legal_enabled') && !cookieChoice && <CookieConsent settings={settings} setPage={setPage} onChoice={saveCookieChoice} showPrefs={showCookiePrefs} setShowPrefs={setShowCookiePrefs} />}
     {featureEnabled(settings, 'module_cookie_legal_enabled') && !legalAccepted && <LegalDisclaimer settings={settings} setPage={setPage} onAccept={acceptLegalDisclaimer} />}
     {page === 'home' && <Home settings={settings} resetCookieChoice={resetCookieChoice} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
-    {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
+    {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} settings={settings} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'terms' && <LegalPage title="Terms and Conditions" text={settings.terms_text || defaultSettings.terms_text} settings={settings} setPage={setPage} />}
     {page === 'privacy' && <LegalPage title="Privacy Notice" text={settings.privacy_text || defaultSettings.privacy_text} settings={settings} setPage={setPage} />}
@@ -463,7 +463,7 @@ function App() {
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
     {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} postcodeZones={adminPostcodeZones} postcodeAssignments={adminPostcodeAssignments} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} setPage={setPage} />}
-    {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
+    {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} settings={settings} />}
   </div>;
 }
 
@@ -522,6 +522,12 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
   const arnoldEnabled = featureEnabled(settings, 'module_arnold_enabled');
   const instantWinsEnabled = featureEnabled(settings, 'module_instant_wins_enabled');
 
+  const homepageEyebrow = postcodesEnabled ? settings.hero_eyebrow : (settings.hero_eyebrow || 'Online prize competitions').replace(/postcode/ig, 'online');
+  const homepageTitle = settings.hero_title || 'Win big prizes';
+  const homepageText = postcodesEnabled
+    ? settings.hero_text
+    : (settings.hero_text || 'Browse live prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.').replace(/postcode /ig, '').replace(/local /ig, '');
+
 
   const demoBaseTickets = useMemo(() => [
     { ticket_number: 1, customer_name: 'Alex' },
@@ -577,9 +583,9 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
 return <main>
     <section className="hero compact-hero northern-hero">
       <div>
-        <p className="eyebrow"><Sparkles size={16} /> {settings.hero_eyebrow}</p>
-        <h1>{settings.hero_title}</h1>
-        <p>{settings.hero_text}</p>
+        <p className="eyebrow"><Sparkles size={16} /> {homepageEyebrow}</p>
+        <h1>{homepageTitle}</h1>
+        <p>{homepageText}</p>
         {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
 
         {postcodesEnabled && <div className="postcode-hero-note">
@@ -629,9 +635,9 @@ return <main>
       </div>
     </section>
 
-    <section className="homepage-arnold panel">
+    {arnoldEnabled && <section className="homepage-arnold panel">
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
-    </section>
+    </section>}
 
     {wheelDemoEnabled && (
       <>
@@ -820,9 +826,10 @@ function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
   return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button>Facebook</button><button>Instagram</button><button>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong> · {c.entries_sold || 0}/{c.max_tickets} · {remaining} tickets remaining · max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<div className="quick-picks"><button type="button" onClick={() => setQuantity(1)}>1 ticket</button><button type="button" onClick={() => setQuantity(5)}>5 tickets</button><button type="button" onClick={() => setQuantity(10)}>10 tickets</button><button type="button" onClick={() => setQuantity(25)}>25 tickets</button></div><p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => setPage('cart')}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'} · ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
 }
 
-function Login({ setUser, setPage, setMessage }) {
+function Login({ setUser, setPage, setMessage, settings = {} }) {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ name: '', email: '', password: '', postcode: '' });
+  const postcodesEnabled = featureEnabled(settings, 'module_postcodes_enabled');
 
   async function submit(e) {
     e.preventDefault();
@@ -843,7 +850,7 @@ function Login({ setUser, setPage, setMessage }) {
     {mode === 'register' && <label>Name<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>}
     <label>Email<input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></label>
     <label>Password<input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></label>
-    {mode === 'register' && <label>Your postcode<input value={form.postcode} onChange={e => setForm({ ...form, postcode: e.target.value.toUpperCase() })} placeholder="BB1 2AB" required /><small className="muted">We use this to show competitions available in your postcode area.</small></label>}
+    {mode === 'register' && <label>{postcodesEnabled ? 'Your postcode' : 'Postcode (optional)'}<input value={form.postcode} onChange={e => setForm({ ...form, postcode: e.target.value.toUpperCase() })} placeholder="BB1 2AB" required={postcodesEnabled} />{postcodesEnabled ? <small className="muted">We use this to show competitions available in your postcode area.</small> : <small className="muted">Optional when postcode competitions are switched off.</small>}</label>}
     <button className="primary full">{mode === 'login' ? 'Login' : 'Register'}</button>
     <button type="button" className="link" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>{mode === 'login' ? 'Need an account?' : 'Already registered?'}</button>
   </form></main>;
@@ -1130,6 +1137,18 @@ function BrandingPanel({ settingsForm, setSettingsForm, saveSettings, setMessage
     }
   }
 
+  function applyThemePreset(name) {
+    const presets = {
+      gold: { brand_primary_color: '#facc15', brand_accent_color: '#f97316', brand_background_color: '#08101f', brand_button_text_color: '#08101f' },
+      blue: { brand_primary_color: '#38bdf8', brand_accent_color: '#2563eb', brand_background_color: '#07111f', brand_button_text_color: '#06101f' },
+      green: { brand_primary_color: '#86efac', brand_accent_color: '#22c55e', brand_background_color: '#071a12', brand_button_text_color: '#052e16' },
+      pink: { brand_primary_color: '#f9a8d4', brand_accent_color: '#db2777', brand_background_color: '#190713', brand_button_text_color: '#260617' },
+      dark: { brand_primary_color: '#e5e7eb', brand_accent_color: '#64748b', brand_background_color: '#020617', brand_button_text_color: '#020617' }
+    };
+    setSettingsForm({ ...settingsForm, ...(presets[name] || presets.gold) });
+    setMessage(`Theme preset applied: ${name}. Save branding to publish it.`);
+  }
+
   return <form className="panel branding-panel" onSubmit={saveSettings}>
     <h1>Branding</h1>
     <p className="muted">Change Prizetown into your own competition brand without editing code.</p>
@@ -1141,6 +1160,18 @@ function BrandingPanel({ settingsForm, setSettingsForm, saveSettings, setMessage
         <span>{settingsForm.hero_title || 'Win big prizes'}</span>
       </div>
       <button type="button" className="primary">Sample button</button>
+    </div>
+
+    <div className="theme-preset-panel">
+      <strong>Quick theme presets</strong>
+      <div className="theme-preset-buttons">
+        <button type="button" className="theme-preset gold" onClick={() => applyThemePreset('gold')}>Gold</button>
+        <button type="button" className="theme-preset blue" onClick={() => applyThemePreset('blue')}>Blue</button>
+        <button type="button" className="theme-preset green" onClick={() => applyThemePreset('green')}>Green</button>
+        <button type="button" className="theme-preset pink" onClick={() => applyThemePreset('pink')}>Pink</button>
+        <button type="button" className="theme-preset dark" onClick={() => applyThemePreset('dark')}>Dark</button>
+      </div>
+      <p className="muted">Preset colours are only applied after you press <strong>Save branding</strong>.</p>
     </div>
 
     <div className="two">
@@ -1402,7 +1433,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=94', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=95', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1441,7 +1472,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=94 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=95 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -2246,5 +2277,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v94';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v95';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
