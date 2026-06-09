@@ -802,10 +802,10 @@ function DrawBroadcastPage({ setPage }) {
             <span><strong>Live:</strong> {liveTimeText}</span>
           </div>
           <div className="broadcast-pointer">▼</div>
-          <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
+          <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
             <div className="wheel-colour-slices" aria-hidden="true"></div>
             {tickets.length === 0 && <div className="broadcast-wheel-empty">Load tickets in admin</div>}
-            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'LIVE FINAL DRAW'}</small></div>
+            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'VISUAL DRAW WHEEL'}</small></div>
           </div>
         </div>
 
@@ -1166,10 +1166,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
     <div className="wheel-stage">
       <div className="wheel-pointer">▼</div>
-      <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
+      <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
         <div className="wheel-colour-slices" aria-hidden="true"></div>
         {visualEntries.length === 0 && <div className="wheel-empty">Load tickets</div>}
-        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'LIVE FINAL DRAW'}</small></div>
+        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'VISUAL DRAW WHEEL'}</small></div>
       </div>
     </div>
 
@@ -1661,5 +1661,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v72';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v73';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

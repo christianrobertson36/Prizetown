@@ -2736,3 +2736,45 @@ body.broadcast-body #root {
 .broadcast-waiting p {
   text-align: center;
 }
+
+
+/* v73 visual-only draw wheel: no misleading ticket numbers */
+.draw-wheel,
+.broadcast-wheel {
+  transform: none !important;
+}
+.draw-wheel .wheel-colour-slices,
+.broadcast-wheel .wheel-colour-slices {
+  transform: rotate(var(--spin-rotation, 0deg));
+  transition: transform 11s cubic-bezier(.08,.78,.08,1);
+  will-change: transform;
+}
+.draw-wheel.spinning .wheel-colour-slices,
+.broadcast-wheel.is-spinning .wheel-colour-slices {
+  transform: rotate(var(--spin-rotation, 0deg));
+}
+.wheel-label,
+.broadcast-ticket,
+.draw-wheel [class*="ticket"],
+.broadcast-wheel [class*="ticket"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+.draw-wheel .wheel-centre,
+.broadcast-wheel .broadcast-centre {
+  transform: translate(-50%, -50%) !important;
+  rotate: 0deg !important;
+  z-index: 10;
+}
+.broadcast-pointer,
+.wheel-pointer {
+  opacity: .75;
+}
+.broadcast-pointer::after,
+.wheel-pointer::after {
+  content: " visual";
+  font-size: .65rem;
+  color: rgba(254,243,199,.8);
+  vertical-align: middle;
+}
