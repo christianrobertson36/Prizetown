@@ -218,11 +218,53 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
     </section>
 
+
+    <section className="highlife-showcase">
+      <div className="highlife-lead">
+        <p className="eyebrow"><Sparkles size={16} /> Live the high life</p>
+        <h2>Prizes with proper dream-big energy</h2>
+        <p>Cars, cash, tech and luxury lifestyle moments — Arnold brings the VIP feeling while the competition posters do the selling.</p>
+        <div className="highlife-points">
+          <span>Live draws</span>
+          <span>Instant wins</span>
+          <span>Big prize nights</span>
+          <span>Winner moments</span>
+        </div>
+      </div>
+      <div className="highlife-grid">
+        <article className="highlife-card feature">
+          <img src="/arnold-rooftop-celebration.png" alt="Arnold celebrating a winner on a luxury rooftop" />
+          <div><strong>Winner night</strong><span>Big reveal energy for draws and results</span></div>
+        </article>
+        <article className="highlife-card">
+          <img src="/arnold-supercar-nightlife.png" alt="Arnold beside a luxury car" />
+          <div><strong>Dream cars</strong><span>Hero visuals for car competitions</span></div>
+        </article>
+        <article className="highlife-card">
+          <img src="/arnold-yacht-golden-hour.png" alt="Arnold on a luxury yacht" />
+          <div><strong>Luxury lifestyle</strong><span>VIP prizes, experiences and cash vibes</span></div>
+        </article>
+        <article className="highlife-card">
+          <img src="/arnold-private-jet.png" alt="Arnold in a private jet" />
+          <div><strong>Premium travel</strong><span>High-end campaign imagery</span></div>
+        </article>
+      </div>
+    </section>
+
     <section id="competitions" className="competitions-anchor"><CompetitionScroller competitions={competitions} setSelected={openCompetition} /></section>
 
     {selected && <div id="competition-details"><CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} /></div>}
 
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
+
+
+    <section className="footer-pre-cta">
+      <div>
+        <p className="eyebrow"><Trophy size={16} /> Ready for the next winner?</p>
+        <h2>Check the live competitions and pick your prize poster.</h2>
+      </div>
+      <button className="primary" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth' })}>View competitions</button>
+    </section>
 
     {typeof WebsiteFooter === 'function' ? <WebsiteFooter settings={settings} setPage={setPage} /> : <footer className="site-footer">
       <div className="footer-brand">
@@ -914,5 +956,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v51';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v52';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
