@@ -99,6 +99,7 @@ function App() {
   const [adminOrders, setAdminOrders] = useState([]);
   const [adminAudit, setAdminAudit] = useState([]);
   const [adminInstantWins, setAdminInstantWins] = useState([]);
+  const [adminPostcodeZones, setAdminPostcodeZones] = useState([]);
   const [message, setMessage] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('prizetown_cart') || '[]'));
   const [selected, setSelected] = useState(null);
@@ -116,7 +117,7 @@ function App() {
     setCompetitions(comps); setWinners(wins); setSettings({ ...defaultSettings, ...siteSettings }); setInstantWinners(iw);
   }
   async function loadAccount() { if (!user) return; const [myEntries, myOrders] = await Promise.all([api('/me/entries'), api('/me/orders')]); setEntries(myEntries); setOrders(myOrders); }
-  async function loadAdminData() { if (user?.role !== 'admin') return; const [rows, orderRows, auditRows, iw] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs'), api('/admin/instant-wins')]); setAdminEntries(rows); setAdminOrders(orderRows); setAdminAudit(auditRows); setAdminInstantWins(iw); }
+  async function loadAdminData() { if (user?.role !== 'admin') return; const [rows, orderRows, auditRows, iw, zones] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs'), api('/admin/instant-wins'), api('/admin/postcode-zones')]); setAdminEntries(rows); setAdminOrders(orderRows); setAdminAudit(auditRows); setAdminInstantWins(iw); setAdminPostcodeZones(zones); }
   useEffect(() => { load().catch(err => setMessage(err.message)); }, []);
   useEffect(() => { if (user) loadAccount().catch(() => {}); }, [user]);
   useEffect(() => { if (user?.role === 'admin') loadAdminData().catch(() => {}); }, [user]);
@@ -140,7 +141,7 @@ function App() {
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
     {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
-    {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} setPage={setPage} />}
+    {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} postcodeZones={adminPostcodeZones} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} setPage={setPage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
 }
@@ -201,6 +202,12 @@ return <main>
         <h1>{settings.hero_title}</h1>
         <p>{settings.hero_text}</p>
         {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
+
+        <div className="postcode-hero-note">
+          <strong>Your postcode unlocks your local prize board.</strong>
+          <p>Create an account with your UK postcode and Prizetown will be able to show area-based competitions, small starter prizes and limited-ticket local draws.</p>
+        </div>
+
 
         <div className="hero-prize-board">
           <div className="hero-prize-head">
@@ -380,7 +387,34 @@ function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
   return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button>Facebook</button><button>Instagram</button><button>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong> · {c.entries_sold || 0}/{c.max_tickets} · {remaining} tickets remaining · max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<div className="quick-picks"><button type="button" onClick={() => setQuantity(1)}>1 ticket</button><button type="button" onClick={() => setQuantity(5)}>5 tickets</button><button type="button" onClick={() => setQuantity(10)}>10 tickets</button><button type="button" onClick={() => setQuantity(25)}>25 tickets</button></div><p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => setPage('cart')}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'} · ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
 }
 
-function Login({ setUser, setPage, setMessage }) { const [mode, setMode] = useState('login'); const [form, setForm] = useState({ name: '', email: '', password: '' }); async function submit(e) { e.preventDefault(); try { const data = await api(mode === 'login' ? '/auth/login' : '/auth/register', { method: 'POST', body: JSON.stringify(form) }); localStorage.setItem('prizetown_token', data.token); localStorage.setItem('prizetown_user', JSON.stringify(data.user)); setUser(data.user); setMessage(`Logged in as ${data.user.email}`); setPage(data.user.role === 'admin' ? 'admin' : 'home'); } catch (err) { setMessage(err.message); } } return <main className="narrow"><form className="panel" onSubmit={submit}><h2>{mode === 'login' ? 'Login' : 'Create account'}</h2>{mode === 'register' && <label>Name<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>}<label>Email<input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></label><label>Password<input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></label><button className="primary full">{mode === 'login' ? 'Login' : 'Register'}</button><button type="button" className="link" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>{mode === 'login' ? 'Need an account?' : 'Already registered?'}</button></form></main>; }
+function Login({ setUser, setPage, setMessage }) {
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({ name: '', email: '', password: '', postcode: '' });
+
+  async function submit(e) {
+    e.preventDefault();
+    try {
+      const data = await api(mode === 'login' ? '/auth/login' : '/auth/register', { method: 'POST', body: JSON.stringify(form) });
+      localStorage.setItem('prizetown_token', data.token);
+      localStorage.setItem('prizetown_user', JSON.stringify(data.user));
+      setUser(data.user);
+      setMessage(data.user.postcode_full ? `Logged in for ${data.user.postcode_full}` : `Logged in as ${data.user.email}`);
+      setPage(data.user.role === 'admin' ? 'admin' : 'home');
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  return <main className="narrow"><form className="panel" onSubmit={submit}>
+    <h2>{mode === 'login' ? 'Login' : 'Create account'}</h2>
+    {mode === 'register' && <label>Name<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>}
+    <label>Email<input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></label>
+    <label>Password<input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></label>
+    {mode === 'register' && <label>Your postcode<input value={form.postcode} onChange={e => setForm({ ...form, postcode: e.target.value.toUpperCase() })} placeholder="BB1 2AB" required /><small className="muted">We use this to show competitions available in your postcode area.</small></label>}
+    <button className="primary full">{mode === 'login' ? 'Login' : 'Register'}</button>
+    <button type="button" className="link" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>{mode === 'login' ? 'Need an account?' : 'Already registered?'}</button>
+  </form></main>;
+}
 
 function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, setMessage }) {
   const [busy, setBusy] = useState(false);
@@ -891,7 +925,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 }
 
 
-function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, reload, setMessage, setPage }) {
+function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, postcodeZones = [], reload, setMessage, setPage }) {
   const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '' };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
@@ -904,6 +938,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [drawWinnerEntryId, setDrawWinnerEntryId] = useState('');
   const [drawNotes, setDrawNotes] = useState('');
   const [drawResults, setDrawResults] = useState([]);
+  const [postcodeForm, setPostcodeForm] = useState({ code: '', label: '', notes: '', active: true });
   useEffect(() => { setSettingsForm({ ...defaultSettings, ...settings }); }, [settings]);
 
   const liveCount = competitions.filter(c => c.status === 'active').length;
@@ -921,6 +956,28 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
   async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Demo competitions added.'); reload(); }
+  async function savePostcodeZone(e) {
+    e.preventDefault();
+    try {
+      const saved = await api('/admin/postcode-zones', { method: 'POST', body: JSON.stringify(postcodeForm) });
+      setMessage(`Postcode zone saved: ${saved.code}`);
+      setPostcodeForm({ code: '', label: '', notes: '', active: true });
+      reload();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+  async function togglePostcodeZone(zone) {
+    const saved = await api(`/admin/postcode-zones/${zone.id}`, { method: 'PATCH', body: JSON.stringify({ ...zone, active: !zone.active }) });
+    setMessage(`${saved.code} is now ${saved.active ? 'active' : 'inactive'}`);
+    reload();
+  }
+  async function deletePostcodeZone(id) {
+    if (!confirm('Delete this postcode zone?')) return;
+    await api(`/admin/postcode-zones/${id}`, { method: 'DELETE' });
+    setMessage('Postcode zone deleted.');
+    reload();
+  }
   async function loadDraw() {
     if (!drawCompetitionId) return setMessage('Choose a competition first.');
     const data = await api(`/admin/competitions/${drawCompetitionId}/draw-entries`);
@@ -948,7 +1005,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -975,6 +1032,28 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
 
+
+        {activeTab === 'postcode-zones' && <div className="admin-split postcode-admin">
+          <form className="panel" onSubmit={savePostcodeZone}>
+            <h1>Postcode Zones</h1>
+            <p className="muted">Add areas like <strong>BB</strong> or outcodes like <strong>BB1</strong>. Later, competitions can be assigned to all zones or selected zones.</p>
+            <label>Area or outcode<input value={postcodeForm.code} onChange={e => setPostcodeForm({ ...postcodeForm, code: e.target.value.toUpperCase() })} placeholder="BB or BB1" required /></label>
+            <label>Display label<input value={postcodeForm.label} onChange={e => setPostcodeForm({ ...postcodeForm, label: e.target.value })} placeholder="Blackburn area" /></label>
+            <label>Notes<textarea value={postcodeForm.notes} onChange={e => setPostcodeForm({ ...postcodeForm, notes: e.target.value })} placeholder="Starter local draw area, launch area, etc." /></label>
+            <label className="check-row"><input type="checkbox" checked={postcodeForm.active !== false} onChange={e => setPostcodeForm({ ...postcodeForm, active: e.target.checked })} /> <span>Active zone</span></label>
+            <button className="primary full">Save postcode zone</button>
+          </form>
+          <div className="panel list-panel">
+            <h1>Listed zones</h1>
+            {postcodeZones.length === 0 && <p className="muted">No postcode zones yet. Add your first postcode area or outcode.</p>}
+            {postcodeZones.map(z => <div className="list-row postcode-zone-row" key={z.id}>
+              <div><strong>{z.code}</strong><p>{z.label || (z.type === 'area' ? 'Postcode area' : 'Postcode outcode')} · {z.type} · {z.active ? 'active' : 'inactive'}{z.notes ? ` · ${z.notes}` : ''}</p></div>
+              <button type="button" onClick={() => togglePostcodeZone(z)}>{z.active ? 'Deactivate' : 'Activate'}</button>
+              <button type="button" className="danger" onClick={() => deletePostcodeZone(z.id)}><Trash2 size={16} /></button>
+            </div>)}
+          </div>
+        </div>}
+
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}><h1>Site settings</h1><div className="two"><label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label><label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label></div><label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label><label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label><label>Global free entry route<textarea value={settingsForm.free_entry_global || ''} onChange={e => setSettingsForm({ ...settingsForm, free_entry_global: e.target.value })} /></label><label>Terms / legal text<textarea value={settingsForm.terms_text || ''} onChange={e => setSettingsForm({ ...settingsForm, terms_text: e.target.value })} /></label><label>Responsible play text<textarea value={settingsForm.responsible_play_text || ''} onChange={e => setSettingsForm({ ...settingsForm, responsible_play_text: e.target.value })} /></label><button className="primary full">Save site settings</button></form>}
 
         {activeTab === 'audit' && <div className="panel list-panel"><h1>Audit log</h1>{(auditLogs || []).length === 0 && <p className="muted">No audit log entries yet.</p>}{(auditLogs || []).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} · {a.details} · {new Date(a.created_at).toLocaleString()}</p></div></div>)}</div>}
@@ -985,5 +1064,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v56';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v57';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

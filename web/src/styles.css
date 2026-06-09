@@ -1921,3 +1921,36 @@ details { margin-top: 1rem; color: #c8cada; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v57 postcode signup and admin zones */
+.postcode-hero-note {
+  margin-top: .9rem;
+  padding: .85rem 1rem;
+  border-radius: 1rem;
+  background: rgba(250,204,21,.10);
+  border: 1px solid rgba(250,204,21,.22);
+  color: #fef3c7;
+}
+.postcode-hero-note strong {
+  display: block;
+  margin-bottom: .25rem;
+  color: #fde68a;
+}
+.postcode-hero-note p {
+  margin: 0;
+  color: rgba(254,243,199,.78);
+  font-size: .95rem;
+}
+.postcode-admin .postcode-zone-row strong {
+  font-size: 1.25rem;
+  letter-spacing: .06em;
+}
+.postcode-admin .postcode-zone-row p {
+  max-width: 42rem;
+}
+label small.muted {
+  display: block;
+  margin-top: .35rem;
+  color: rgba(254,243,199,.62);
+}

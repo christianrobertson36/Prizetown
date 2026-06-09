@@ -58,6 +58,18 @@ function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
 }
 
+function normalizeUkPostcode(value) {
+  const raw = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (!raw) return { full: '', area: '', outcode: '' };
+  const match = raw.match(/^([A-Z]{1,2})([0-9][0-9A-Z]?)([0-9][A-Z]{2})$/);
+  if (!match) throw new Error('Enter a valid UK postcode, for example BB1 2AB');
+  const area = match[1];
+  const outcode = `${match[1]}${match[2]}`;
+  const inward = match[3];
+  return { full: `${outcode} ${inward}`, area, outcode };
+}
+
+
 function toInt(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
@@ -72,6 +84,18 @@ async function initDb() {
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'customer',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+
+    CREATE TABLE IF NOT EXISTS postcode_zones (
+      id SERIAL PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL DEFAULT '',
+      type TEXT NOT NULL DEFAULT 'outcode',
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS competitions (
@@ -238,6 +262,13 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS postcode_full TEXT NOT NULL DEFAULT '';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS postcode_area TEXT NOT NULL DEFAULT '';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS postcode_outcode TEXT NOT NULL DEFAULT '';
+    CREATE INDEX IF NOT EXISTS idx_users_postcode_area ON users(postcode_area);
+    CREATE INDEX IF NOT EXISTS idx_users_postcode_outcode ON users(postcode_outcode);
+    CREATE INDEX IF NOT EXISTS idx_postcode_zones_active ON postcode_zones(active);
   `);
 
   await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`).catch(() => {});
@@ -287,7 +318,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v56' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v57' }));
 
 
 async function getSettingsObject() {
@@ -331,13 +362,24 @@ app.patch('/admin/settings', auth('admin'), async (req, res) => {
 });
 
 app.post('/auth/register', async (req, res) => {
-  const { name = '', email, password } = req.body;
+  const { name = '', email, password, postcode = '' } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  if (!postcode) return res.status(400).json({ error: 'Postcode required so we can show local competitions' });
+
+  let pc;
+  try {
+    pc = normalizeUkPostcode(postcode);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
   const hash = await bcrypt.hash(password, 10);
   try {
     const result = await query(
-      'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
-      [name, normalizeEmail(email), hash, 'customer']
+      `INSERT INTO users (name, email, password_hash, role, postcode_full, postcode_area, postcode_outcode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, email, role, postcode_full, postcode_area, postcode_outcode`,
+      [name, normalizeEmail(email), hash, 'customer', pc.full, pc.area, pc.outcode]
     );
     const user = result.rows[0];
     res.json({ user, token: signToken(user) });
@@ -353,7 +395,7 @@ app.post('/auth/login', async (req, res) => {
   if (!user) return res.status(401).json({ error: 'Invalid login' });
   const ok = await bcrypt.compare(password || '', user.password_hash);
   if (!ok) return res.status(401).json({ error: 'Invalid login' });
-  res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role }, token: signToken(user) });
+  res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, postcode_full: user.postcode_full || '', postcode_area: user.postcode_area || '', postcode_outcode: user.postcode_outcode || '' }, token: signToken(user) });
 });
 
 
@@ -466,6 +508,73 @@ app.get('/competitions/:id/entries', async (req, res) => {
     ORDER BY ticket_number ASC
   `, [req.params.id]);
   res.json(result.rows);
+});
+
+
+app.get('/admin/postcode-zones', auth('admin'), async (_req, res) => {
+  const result = await query('SELECT * FROM postcode_zones ORDER BY active DESC, type ASC, code ASC');
+  res.json(result.rows);
+});
+
+app.post('/admin/postcode-zones', auth('admin'), async (req, res) => {
+  try {
+    const input = String(req.body.code || '').trim().toUpperCase().replace(/\s+/g, '');
+    if (!input) return res.status(400).json({ error: 'Postcode area or outcode required' });
+
+    let code = input;
+    let type = 'area';
+
+    if (/^[A-Z]{1,2}[0-9][0-9A-Z]?$/.test(input)) {
+      type = 'outcode';
+    } else if (/^[A-Z]{1,2}$/.test(input)) {
+      type = 'area';
+    } else {
+      const pc = normalizeUkPostcode(input);
+      code = pc.outcode;
+      type = 'outcode';
+    }
+
+    const label = String(req.body.label || '').trim();
+    const notes = String(req.body.notes || '').trim();
+
+    const result = await query(`
+      INSERT INTO postcode_zones (code, label, type, active, notes)
+      VALUES ($1,$2,$3,$4,$5)
+      ON CONFLICT (code) DO UPDATE SET
+        label=EXCLUDED.label,
+        type=EXCLUDED.type,
+        active=EXCLUDED.active,
+        notes=EXCLUDED.notes,
+        updated_at=NOW()
+      RETURNING *
+    `, [code, label, type, req.body.active !== false, notes]);
+
+    await audit(req.user, 'postcode_zone_saved', `Saved postcode zone ${code}`);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Could not save postcode zone' });
+  }
+});
+
+app.patch('/admin/postcode-zones/:id', auth('admin'), async (req, res) => {
+  const result = await query(`
+    UPDATE postcode_zones SET
+      label=$1,
+      active=$2,
+      notes=$3,
+      updated_at=NOW()
+    WHERE id=$4
+    RETURNING *
+  `, [String(req.body.label || '').trim(), req.body.active !== false, String(req.body.notes || '').trim(), req.params.id]);
+  if (!result.rows[0]) return res.status(404).json({ error: 'Postcode zone not found' });
+  await audit(req.user, 'postcode_zone_updated', `Updated postcode zone ${result.rows[0].code}`);
+  res.json(result.rows[0]);
+});
+
+app.delete('/admin/postcode-zones/:id', auth('admin'), async (req, res) => {
+  await query('DELETE FROM postcode_zones WHERE id=$1', [req.params.id]);
+  await audit(req.user, 'postcode_zone_deleted', `Deleted postcode zone ${req.params.id}`);
+  res.json({ ok: true });
 });
 
 app.post('/admin/upload', auth('admin'), upload.single('file'), (req, res) => {
@@ -969,7 +1078,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v56 scroll helper build fix)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v57 postcode signup and zones)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
