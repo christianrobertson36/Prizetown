@@ -1369,3 +1369,168 @@ details { margin-top: 1rem; color: #c8cada; }
 .sound-upload-button:hover {
   background: rgba(250,204,21,.20);
 }
+
+
+/* v46 Arnold Blackndeckka host mode */
+.homepage-arnold {
+  margin-top: 1rem;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(250,204,21,.16), transparent 18rem),
+    rgba(255,255,255,.045);
+}
+.arnold-host {
+  display: grid;
+  grid-template-columns: 7.2rem 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: .85rem;
+  border-radius: 1.2rem;
+  background: rgba(0,0,0,.26);
+  border: 1px solid rgba(250,204,21,.20);
+}
+.arnold-host.compact {
+  grid-template-columns: 5.5rem 1fr;
+}
+.arnold-image-wrap {
+  width: 7.2rem;
+  height: 7.2rem;
+  border-radius: 1.4rem;
+  overflow: hidden;
+  border: 2px solid rgba(250,204,21,.55);
+  background: #111827;
+  box-shadow: 0 .8rem 1.8rem rgba(0,0,0,.32), 0 0 1.4rem rgba(250,204,21,.18);
+}
+.arnold-host.compact .arnold-image-wrap {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+.arnold-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.arnold-speech {
+  position: relative;
+  padding: .9rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(250,204,21,.16), rgba(255,255,255,.06));
+  border: 1px solid rgba(250,204,21,.24);
+}
+.arnold-speech::before {
+  content: "";
+  position: absolute;
+  left: -.55rem;
+  top: 2rem;
+  border-top: .55rem solid transparent;
+  border-bottom: .55rem solid transparent;
+  border-right: .55rem solid rgba(250,204,21,.24);
+}
+.arnold-speech strong {
+  display: block;
+  color: #fde68a;
+  font-size: 1.05rem;
+}
+.arnold-speech p {
+  margin: .25rem 0 0;
+  color: #fff7ed;
+  font-weight: 750;
+}
+.draw-arnold-row {
+  margin-bottom: 1rem;
+}
+.arnold-host.spinning .arnold-image-wrap,
+.arnold-broadcast-host.spinning img {
+  animation: arnoldHostBounce .7s ease-in-out infinite alternate;
+}
+.arnold-host.winner .arnold-image-wrap,
+.arnold-broadcast-host.winner img {
+  animation: arnoldWinnerPop .9s ease-in-out infinite alternate;
+}
+@keyframes arnoldHostBounce {
+  from { transform: translateY(0) rotate(-1deg); }
+  to { transform: translateY(-.45rem) rotate(1deg); }
+}
+@keyframes arnoldWinnerPop {
+  from { transform: scale(1); filter: drop-shadow(0 0 .5rem rgba(250,204,21,.45)); }
+  to { transform: scale(1.06); filter: drop-shadow(0 0 1.6rem rgba(34,197,94,.72)); }
+}
+
+/* Arnold on OBS broadcast screen */
+.arnold-broadcast-host {
+  position: absolute;
+  left: 3.4vw;
+  bottom: 8vh;
+  z-index: 8;
+  display: grid;
+  grid-template-columns: 12rem minmax(18rem, 27rem);
+  align-items: end;
+  gap: 1rem;
+  pointer-events: none;
+}
+.arnold-broadcast-host img {
+  width: 12rem;
+  height: 12rem;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 2rem;
+  border: .35rem solid rgba(250,204,21,.85);
+  box-shadow:
+    0 1.5rem 3rem rgba(0,0,0,.55),
+    0 0 2.2rem rgba(250,204,21,.35);
+  background: #111827;
+}
+.arnold-broadcast-bubble {
+  position: relative;
+  padding: 1.05rem 1.2rem;
+  border-radius: 1.2rem;
+  background: rgba(0,0,0,.72);
+  border: 1px solid rgba(250,204,21,.36);
+  box-shadow: 0 1rem 3rem rgba(0,0,0,.38);
+}
+.arnold-broadcast-bubble::before {
+  content: "";
+  position: absolute;
+  left: -.7rem;
+  bottom: 2.1rem;
+  border-top: .7rem solid transparent;
+  border-bottom: .7rem solid transparent;
+  border-right: .7rem solid rgba(250,204,21,.36);
+}
+.arnold-broadcast-bubble strong {
+  display: block;
+  color: #fde68a;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.arnold-broadcast-bubble span {
+  display: block;
+  margin-top: .35rem;
+  font-size: clamp(1.1rem, 1.5vw, 1.55rem);
+  color: white;
+  font-weight: 900;
+}
+.broadcast-main {
+  position: relative;
+}
+@media (max-width: 1050px) {
+  .arnold-broadcast-host {
+    position: static;
+    grid-template-columns: 7rem 1fr;
+    margin-bottom: .7rem;
+  }
+  .arnold-broadcast-host img {
+    width: 7rem;
+    height: 7rem;
+    border-radius: 1.2rem;
+  }
+}
+@media (max-width: 700px) {
+  .arnold-host {
+    grid-template-columns: 1fr;
+  }
+  .arnold-speech::before {
+    display: none;
+  }
+}

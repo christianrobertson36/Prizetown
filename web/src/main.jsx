@@ -74,7 +74,11 @@ class AppErrorBoundary extends React.Component {
         <h1>Screen error</h1>
         <p>{this.state.message}</p>
         <button className="primary" onClick={() => window.location.reload()}>Reload Prizetown</button>
-      </section></main>;
+      </section>
+    <section className="homepage-arnold panel">
+      <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
+    </section>
+    <section className="trust-strip"></main>;
     }
     return this.props.children;
   }
@@ -138,6 +142,49 @@ function App() {
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
 }
+
+
+function ArnoldHost({ stage = 'idle', caption, compact = false }) {
+  const stageText = {
+    idle: 'Arnold is ready.',
+    welcome: 'Arnold Blackndeckka welcomes you to Prizetown.',
+    tickets: 'Tickets loaded. We are ready for the draw.',
+    ready: 'Final checks complete. Time to spin.',
+    spinning: 'The wheel is spinning. Good luck everyone!',
+    suspense: 'Hold tight… Arnold is watching the wheel.',
+    winner: 'We have a winner!',
+    celebration: 'Congratulations from Arnold Blackndeckka!'
+  };
+
+  return <div className={`arnold-host ${compact ? 'compact' : ''} ${stage}`}>
+    <div className="arnold-image-wrap">
+      <img src="/arnold-blackndeckka.jpg" alt="Arnold Blackndeckka mascot" />
+    </div>
+    <div className="arnold-speech">
+      <strong>Arnold Blackndeckka</strong>
+      <p>{caption || stageText[stage] || stageText.idle}</p>
+    </div>
+  </div>;
+}
+
+function ArnoldBroadcastHost({ mode = 'idle', winner }) {
+  const caption = mode === 'winner'
+    ? `Winner selected: ticket #${winner?.ticket_number || '—'}`
+    : mode === 'spinning'
+      ? 'The live draw is spinning now!'
+      : mode === 'ready'
+        ? 'Tickets are loaded. We are ready to draw.'
+        : 'Waiting for the live draw to begin.';
+
+  return <div className={`arnold-broadcast-host ${mode}`}>
+    <img src="/arnold-blackndeckka.jpg" alt="Arnold Blackndeckka" />
+    <div className="arnold-broadcast-bubble">
+      <strong>Arnold says</strong>
+      <span>{caption}</span>
+    </div>
+  </div>;
+}
+
 
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   function openCompetition(c) {
@@ -353,7 +400,7 @@ function Account({ user, entries, orders, setPage, reload }) { if (!user) return
 function BroadcastMenuPanel({ setPage }) {
   return <section className="panel broadcast-menu-panel">
     <h1>OBS Draw Screen</h1>
-    <p className="muted">Use this page for live broadcasts. Add the broadcast URL to OBS as a Browser Source, or open it in a separate window.</p>
+    <p className="muted">Use this page for live broadcasts. Add the broadcast URL to OBS as a Browser Source, or open it in a separate window. Arnold appears as the built-in draw host.</p>
     <div className="broadcast-menu-grid">
       <button className="primary" onClick={() => setPage('draw-broadcast')}>Open broadcast screen in this browser</button>
       <button className="secondary" onClick={() => window.open('/draw-broadcast', 'prizetown_draw_broadcast')}>Open broadcast screen in new window</button>
@@ -441,6 +488,7 @@ function DrawBroadcastPage({ setPage }) {
       </header>
 
       <div className="broadcast-main">
+        <ArnoldBroadcastHost mode={mode} winner={winner} />
         <div className="broadcast-wheel-wrap">
           <div className="broadcast-pointer">▼</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
@@ -669,6 +717,12 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   return <section className="panel draw-room"><audio ref={spinAudioRef} src={spinSoundUrl || undefined} preload="auto" />
+    <div className="draw-arnold-row">
+      <ArnoldHost
+        stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
+        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
+      />
+    </div>
     <div className="draw-room-head">
       <div>
         <h2>Built-in Final Draw Wheel</h2><p className="draw-official-note"><strong>Official Prizetown draw tool:</strong> this replaces the old external wheel link and runs directly inside the site.</p>
@@ -836,5 +890,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v45';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v46';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
