@@ -820,7 +820,7 @@ function DrawBroadcastPage({ setPage }) {
             <p className="muted">Final draw winner confirmed</p>
           </div> : <div className="broadcast-waiting">
             <h2>Awaiting spin</h2>
-            <p>Draw date and live clock are shown on this broadcast screen for OBS. Use Admin → Final Draw → Send OBS Test to check the source.</p>
+            <p>Draw date and live clock are shown on this broadcast screen for OBS. Use Admin → Final Draw → Send OBS Test to check the source, then OBS Test Off to clear it.</p>
           </div>}
         </aside>
       </div>
@@ -941,6 +941,30 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       });
       setWinner(testWinner);
       setMessage('OBS test sent. Open /draw-broadcast or refresh the OBS Browser Source.');
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  async function clearObsTest() {
+    try {
+      await api('/admin/draw/broadcast-state', {
+        method: 'POST',
+        body: JSON.stringify({
+          mode: 'idle',
+          competition_id: null,
+          competition_title: 'Waiting for competition',
+          competition_number: '',
+          draw_date: '',
+          ticket_capacity: 0,
+          eligible_count: 0,
+          visual_tickets: [],
+          winner: null,
+          show_arnold: showArnold
+        })
+      });
+      setWinner(null);
+      setMessage('OBS test switched off. Broadcast screen returned to waiting mode.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1102,7 +1126,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     <div className="draw-actions">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="primary" onClick={sendObsTest}>Send OBS Test</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
+      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="primary" onClick={sendObsTest}>Send OBS Test</button><button className="secondary obs-test-off" onClick={clearObsTest}>OBS Test Off</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
     </div>
 
     <div className="draw-stats">
@@ -1612,5 +1636,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v69';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v70';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

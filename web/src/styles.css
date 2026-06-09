@@ -2650,3 +2650,13 @@ body.broadcast-body #root {
     height: min(62vh, 600px, 55vw);
   }
 }
+
+
+/* v70 OBS test off switch */
+.draw-actions .obs-test-off {
+  border-color: rgba(248,113,113,.35);
+  color: #fecaca;
+}
+.draw-actions .obs-test-off:hover {
+  background: rgba(248,113,113,.14);
+}
