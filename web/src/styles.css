@@ -3225,12 +3225,12 @@ body.broadcast-body #root {
   stroke-width: 1.4;
 }
 .trusted-wheel-label {
-  fill: #fff;
+  fill: #111111;
   font-weight: 1000;
   font-size: 15px;
   paint-order: stroke;
-  stroke: rgba(0,0,0,.72);
-  stroke-width: 4px;
+  stroke: rgba(255,255,255,.96);
+  stroke-width: 5px;
   stroke-linejoin: round;
 }
 .trusted-wheel-centre {
@@ -3868,4 +3868,16 @@ body.broadcast-body #root {
   content: " Official draws use server-side crypto random selection.";
   color: #bbf7d0;
   font-weight: 900;
+}
+
+
+/* v89 wheel label contrast + Arnold visibility polish */
+.draw-arnold-row,
+.arnold-broadcast-host {
+  position: relative;
+  z-index: 2;
+}
+.arnold-broadcast-host img,
+.draw-arnold-row img {
+  filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
 }

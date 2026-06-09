@@ -1144,7 +1144,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
-  const [showArnold, setShowArnold] = useState(() => localStorage.getItem('prizetown_draw_show_arnold') !== 'false');
+  const [showArnold, setShowArnold] = useState(() => {
+    const saved = localStorage.getItem('prizetown_draw_show_arnold');
+    return saved === null ? true : saved !== 'false';
+  });
   const [spinSpeed, setSpinSpeed] = useState(() => localStorage.getItem('prizetown_draw_spin_speed') || 'standard');
   const spinAudioRef = useRef(null);
 
@@ -1232,7 +1235,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=88', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=89', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1271,7 +1274,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=88 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=89 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1482,7 +1485,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     </div>}
     <div className="draw-room-head">
       <div>
-        <h2>Built-in Final Draw Wheel</h2><p className="draw-official-note"><strong>Official Prizetown draw tool:</strong> this replaces the old external wheel link and runs directly inside the site.</p>
+        <h2>Built-in Final Draw Wheel</h2><p className="muted">Arnold is back on the admin preview and the OBS/live draw screen.</p><p className="draw-official-note"><strong>Official Prizetown draw tool:</strong> this replaces the old external wheel link and runs directly inside the site.</p>
         <p className="muted">Runs inside Prizetown. Suitable for large draws: the winner is picked from the full eligible ticket list. The wheel now spins for around 10 seconds and can play your uploaded spin sound.</p>
       </div>
       <div className="draw-clock">
@@ -2047,5 +2050,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v88';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v89';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
