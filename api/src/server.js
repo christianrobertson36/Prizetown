@@ -515,7 +515,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v97' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v98' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -598,7 +598,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v97' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v98' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add('ok', 'Configured upload directory', uploadDir);
 
@@ -615,7 +615,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v97',
+    version: 'v98',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -1810,7 +1810,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v97 footer alignment)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v98 grouped admin menu)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

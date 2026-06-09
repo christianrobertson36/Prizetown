@@ -4109,3 +4109,51 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+/* v98 grouped admin menu */
+.admin-menu-groups {
+  display: grid;
+  gap: .65rem;
+}
+.admin-menu-group {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.045);
+}
+.admin-menu-group summary {
+  cursor: pointer;
+  list-style: none;
+  padding: .75rem .85rem;
+  color: #facc15;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-menu-group summary::-webkit-details-marker {
+  display: none;
+}
+.admin-menu-group summary::after {
+  content: "▾";
+  color: rgba(254,243,199,.78);
+  font-size: .9rem;
+}
+.admin-menu-group:not([open]) summary::after {
+  content: "▸";
+}
+.admin-menu-group .admin-tabs {
+  display: grid;
+  gap: .45rem;
+  padding: 0 .65rem .75rem;
+}
+.admin-menu-group .admin-tabs button {
+  width: 100%;
+  justify-content: flex-start;
+}
+.admin-seed-button {
+  margin-top: .75rem;
+}

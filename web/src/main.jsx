@@ -1443,7 +1443,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=97', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=98', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1482,7 +1482,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=97 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=98 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1991,30 +1991,68 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     await reload(); await loadDraw();
   }
 
-  const tabs = [
-    ['overview', 'Overview', ClipboardList],
-    ['competitions', 'Competitions', Trophy],
-    ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    moduleInstantWins && ['instant-wins', 'Instant wins', Zap],
-    moduleLiveDraw && ['draws', 'Final draw', ListChecks],
-    ['free-entries', 'Free entries', Ticket],
-    modulePostcodes && ['postcode-zones', 'Postcode Zones', Shield],
-    modulePostcodes && ['postcode-assign', 'Assign Postcodes', Ticket],
-    moduleProfitPlanner && ['profit-planner', 'Profit Planner', Ticket],
-    ['modules', 'Modules', Shield],
-    ['branding', 'Branding', Sparkles],
-    ['system-check', 'System Check', Shield],
-    ['legal-text', 'Legal Text', Shield],
-    ['settings', 'Site settings', Shield],
-    ['audit', 'Audit log', ListChecks]
-  ].filter(Boolean);
+  const menuGroups = [
+    {
+      title: 'Core',
+      items: [
+        ['overview', 'Overview', ClipboardList],
+        ['competitions', 'Competitions', Trophy],
+        ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus]
+      ]
+    },
+    {
+      title: 'Sales',
+      items: [
+        ['orders-entries', 'Orders & entries', Ticket],
+        ['free-entries', 'Free entries', Ticket]
+      ]
+    },
+    {
+      title: 'Draws',
+      items: [
+        moduleLiveDraw && ['draws', 'Final draw', ListChecks],
+        moduleInstantWins && ['instant-wins', 'Instant wins', Zap]
+      ].filter(Boolean)
+    },
+    {
+      title: 'Growth',
+      items: [
+        modulePostcodes && ['postcode-zones', 'Postcode Zones', Shield],
+        modulePostcodes && ['postcode-assign', 'Assign Postcodes', Ticket],
+        moduleProfitPlanner && ['profit-planner', 'Profit Planner', Ticket]
+      ].filter(Boolean)
+    },
+    {
+      title: 'Site',
+      items: [
+        ['branding', 'Branding', Sparkles],
+        ['modules', 'Modules', Shield],
+        ['legal-text', 'Legal Text', Shield],
+        ['settings', 'Site settings', Shield]
+      ]
+    },
+    {
+      title: 'Tools',
+      items: [
+        ['system-check', 'System Check', Shield],
+        ['audit', 'Audit log', ListChecks]
+      ]
+    }
+  ].filter(group => group.items.length > 0);
 
   return <main className="admin-main">
     <section className="admin-shell">
       <aside className="admin-menu panel">
-        <h2>Admin</h2><p className="muted">Use the menu buttons to manage one area at a time.</p>
-        <div className="admin-tabs">{tabs.map(([key, label, Icon]) => <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)}><Icon size={17} /> {label}</button>)}</div>
-        <button type="button" className="secondary full" onClick={seedDemo}>Add starter competitions</button>
+        <h2>Admin</h2><p className="muted">Grouped controls keep the dashboard easier to manage.</p>
+        <div className="admin-menu-groups">
+          {menuGroups.map(group => <details className="admin-menu-group" key={group.title} open>
+            <summary>{group.title}</summary>
+            <div className="admin-tabs">
+              {group.items.map(([key, label, Icon]) => <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)}><Icon size={17} /> {label}</button>)}
+            </div>
+          </details>)}
+        </div>
+        <button type="button" className="secondary full admin-seed-button" onClick={seedDemo}>Add starter competitions</button>
       </aside>
 
       <section className="admin-content">
@@ -2036,6 +2074,19 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
                 <label className="check-row"><input type="checkbox" checked={form.vat_enabled === true} onChange={e => updateField('vat_enabled', e.target.checked)} /> Include VAT estimate</label>
               </div>
             </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /><small className="muted">Used for scheduled final draws.</small></label></div><label className="check-row important-check"><input type="checkbox" checked={form.auto_draw_enabled === true} onChange={e => updateField('auto_draw_enabled', e.target.checked)} /> <span>Auto-run final draw at scheduled draw date/time once sold out or closed</span></label><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
+
+        {activeTab === 'orders-entries' && <div className="admin-split">
+          <div className="panel list-panel">
+            <h1>Recent orders</h1>
+            {orders.length === 0 && <p className="muted">No orders yet.</p>}
+            {orders.slice(0, 60).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}
+          </div>
+          <div className="panel list-panel">
+            <h1>Recent entries</h1>
+            {entries.length === 0 && <p className="muted">No entries yet.</p>}
+            {entries.slice(0, 60).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}
+          </div>
+        </div>}
 
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
@@ -2290,5 +2341,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v97';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
