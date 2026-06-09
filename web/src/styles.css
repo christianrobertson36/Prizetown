@@ -626,3 +626,23 @@ details { margin-top: 1rem; color: #c8cada; }
 #competition-details {
   scroll-margin-top: 5.5rem;
 }
+
+
+/* v33 customer flow fixes */
+.competitions-anchor {
+  scroll-margin-top: 5.5rem;
+}
+.small-help,
+.test-account-help {
+  font-size: .92rem;
+  line-height: 1.45;
+}
+.test-account-help {
+  padding: .75rem .9rem;
+  border-radius: .85rem;
+  background: rgba(250,204,21,.10);
+  border: 1px solid rgba(250,204,21,.28);
+}
+.quick-picks button {
+  min-width: 7rem;
+}
