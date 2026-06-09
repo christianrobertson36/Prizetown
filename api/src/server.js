@@ -287,7 +287,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v37' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v38' }));
 
 
 async function getSettingsObject() {
@@ -575,20 +575,26 @@ app.post('/orders', auth(), async (req, res) => {
     let total = 0;
 
     for (const item of items) {
-      const competitionId = toInt(item.competition_id);
+      const competitionId = toInt(item.competition_id || item.id || item.competitionId);
       const answerGiven = String(item.answer || '').trim();
+      if (!competitionId) throw new Error('A basket item is missing its competition ID. Please remove it and add it again.');
       const competition = (await client.query('SELECT * FROM competitions WHERE id=$1', [competitionId])).rows[0];
+      if (!competition) throw new Error('One basket competition no longer exists. Please remove it and add it again.');
       ensureCompetitionOpen(competition);
       const quantity = Math.min(toInt(competition.max_per_order, 2500) || 2500, Math.max(1, toInt(item.quantity, 1)));
+      if (competition.question && !answerGiven) {
+        throw new Error(`Please answer the entry question for ${competition.title}`);
+      }
       if (competition.answer && answerGiven.toLowerCase() !== competition.answer.trim().toLowerCase()) {
-        throw new Error(`Answer is incorrect for ${competition.title}`);
+        throw new Error(`Answer is incorrect for ${competition.title}. Please check the entry question answer.`);
       }
       const already = (await client.query(
         "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND user_id=$2 AND payment_status IN ('paid','free','paid_test','free_manual')",
         [competition.id, user.id]
       )).rows[0].count;
       if (already + quantity > competition.max_per_user) {
-        throw new Error(`Max entries reached for ${competition.title}`);
+        const remainingForUser = Math.max(0, Number(competition.max_per_user || 0) - Number(already || 0));
+        throw new Error(`${competition.title}: max entries reached. Max per user is ${competition.max_per_user}. You already have ${already}; you can add ${remainingForUser} more.`);
       }
       const sold = (await client.query(
         "SELECT COUNT(*)::int AS count FROM entries WHERE competition_id=$1 AND payment_status IN ('paid','free','paid_test','free_manual')",
@@ -621,6 +627,7 @@ app.post('/orders', auth(), async (req, res) => {
     res.json({ order, entries: allEntries });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
+    console.error('Checkout failed', err);
     res.status(400).json({ error: err.message || 'Checkout failed' });
   } finally {
     client.release();
@@ -954,7 +961,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v37 OBS draw broadcast)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v38 checkout errors)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

@@ -206,7 +206,110 @@ function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
 
 function Login({ setUser, setPage, setMessage }) { const [mode, setMode] = useState('login'); const [form, setForm] = useState({ name: '', email: '', password: '' }); async function submit(e) { e.preventDefault(); try { const data = await api(mode === 'login' ? '/auth/login' : '/auth/register', { method: 'POST', body: JSON.stringify(form) }); localStorage.setItem('prizetown_token', data.token); localStorage.setItem('prizetown_user', JSON.stringify(data.user)); setUser(data.user); setMessage(`Logged in as ${data.user.email}`); setPage(data.user.role === 'admin' ? 'admin' : 'home'); } catch (err) { setMessage(err.message); } } return <main className="narrow"><form className="panel" onSubmit={submit}><h2>{mode === 'login' ? 'Login' : 'Create account'}</h2>{mode === 'register' && <label>Name<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>}<label>Email<input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></label><label>Password<input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></label><button className="primary full">{mode === 'login' ? 'Login' : 'Register'}</button><button type="button" className="link" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>{mode === 'login' ? 'Need an account?' : 'Already registered?'}</button></form></main>; }
 
-function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, setMessage }) { const [busy, setBusy] = useState(false); const [ageConfirmed, setAgeConfirmed] = useState(false); const total = cart.reduce((sum, item) => sum + item.quantity * item.unit_price_pence, 0); function updateQty(id, quantity) { saveCart(cart.map(item => item.competition_id === id ? { ...item, quantity: Math.max(1, Number(quantity || 1)) } : item)); } function updateAnswer(id, answer) { saveCart(cart.map(item => item.competition_id === id ? { ...item, answer } : item)); } function remove(id) { saveCart(cart.filter(item => item.competition_id !== id)); } async function checkout() { if (!user) return setPage('login'); if (cart.length === 0) return setMessage('Basket is empty.'); try { setBusy(true); const data = await api('/orders', { method: 'POST', body: JSON.stringify({ items: cart, age_confirmed: ageConfirmed }) }); saveCart([]); const instant = data.entries.filter(e => e.instant_win).map(e => e.instant_win.prize_title); setMessage(`Order #${data.order.id} created. Tickets: ${data.entries.map(e => e.ticket_number).join(', ')}${instant.length ? ` Instant win: ${instant.join(', ')}` : ''}`); await reload(); await reloadAccount(); setPage('account'); } catch (err) { setMessage(err.message); } finally { setBusy(false); } } return <main><section className="panel"><h1>Basket</h1><p className="muted">This is still test checkout. Payment provider approval/integration comes later.</p>{cart.length === 0 && <p>Your basket is empty.</p>}{cart.map(item => <div className="basket-row" key={item.competition_id}><img src={item.image_url ? imageUrl(item.image_url) : fallbackPosterUrl(item)} alt="" /><div><strong>{item.title}</strong><p>{money(item.unit_price_pence)} each</p>{item.question && <label>Answer<input value={item.answer || ''} onChange={e => updateAnswer(item.competition_id, e.target.value)} placeholder={item.question} /></label>}</div><label>Qty<input type="number" min="1" value={item.quantity} onChange={e => updateQty(item.competition_id, e.target.value)} /></label><strong>{money(item.quantity * item.unit_price_pence)}</strong><button className="danger" onClick={() => remove(item.competition_id)}><Trash2 size={16} /></button></div>)}<div className="checkout-bar"><h2>Total: {money(total)}</h2><button className="secondary" onClick={() => setPage('home')}>Continue browsing</button><div className="checkout-compliance"><label className="check-row"><input type="checkbox" checked={ageConfirmed} onChange={e => setAgeConfirmed(e.target.checked)} /> <span>{settings.age_confirmation_text}</span></label><p className="muted">{settings.responsible_play_text}</p></div><button className="primary" disabled={busy || cart.length === 0} onClick={checkout}><Ticket size={16} /> {busy ? 'Creating order...' : 'Checkout and allocate tickets'}</button></div></section></main>; }
+function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, setMessage }) {
+  const [busy, setBusy] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
+  const total = cart.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price_pence || 0), 0);
+
+  function updateQty(id, quantity) {
+    setCheckoutError('');
+    saveCart(cart.map(item => item.competition_id === id ? { ...item, quantity: Math.max(1, Number(quantity || 1)) } : item));
+  }
+
+  function updateAnswer(id, answer) {
+    setCheckoutError('');
+    saveCart(cart.map(item => item.competition_id === id ? { ...item, answer } : item));
+  }
+
+  function remove(id) {
+    setCheckoutError('');
+    saveCart(cart.filter(item => item.competition_id !== id));
+  }
+
+  function clearBasket() {
+    setCheckoutError('');
+    saveCart([]);
+    setMessage('Basket cleared.');
+  }
+
+  async function checkout() {
+    setCheckoutError('');
+    if (!user) {
+      setMessage('Please login or register before checkout.');
+      return setPage('login');
+    }
+    if (cart.length === 0) {
+      setCheckoutError('Basket is empty.');
+      return setMessage('Basket is empty.');
+    }
+    if (!ageConfirmed) {
+      setCheckoutError('Please tick the age/rules confirmation before completing the order.');
+      return setMessage('Please confirm your age and acceptance of the competition rules.');
+    }
+
+    const missingAnswer = cart.find(item => item.question && !String(item.answer || '').trim());
+    if (missingAnswer) {
+      const msg = `Please answer the entry question for ${missingAnswer.title}.`;
+      setCheckoutError(msg);
+      return setMessage(msg);
+    }
+
+    const cleanedItems = cart.map(item => ({
+      competition_id: item.competition_id || item.id || item.competitionId,
+      title: item.title,
+      unit_price_pence: Number(item.unit_price_pence || 0),
+      quantity: Math.max(1, Number(item.quantity || 1)),
+      answer: String(item.answer || '').trim(),
+      question: item.question || '',
+      image_url: item.image_url || ''
+    }));
+
+    try {
+      setBusy(true);
+      const data = await api('/orders', { method: 'POST', body: JSON.stringify({ items: cleanedItems, age_confirmed: true }) });
+      saveCart([]);
+      const instant = (data.entries || []).flatMap(e => e.instant_wins || e.instant_win ? [e.instant_win?.prize_title].filter(Boolean) : []);
+      setMessage(`Order #${data.order.id} created. Tickets: ${(data.entries || []).map(e => e.ticket_number).join(', ')}${instant.length ? ` Instant win: ${instant.join(', ')}` : ''}`);
+      await reload();
+      await reloadAccount();
+      setPage('account');
+    } catch (err) {
+      const msg = err.message || 'Checkout failed.';
+      setCheckoutError(msg);
+      setMessage(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <main><section className="panel"><h1>Basket</h1>
+    <p className="muted">This is still test checkout. Payment provider approval/integration comes later.</p>
+    {checkoutError && <div className="checkout-error"><strong>Checkout problem:</strong><p>{checkoutError}</p></div>}
+    {cart.length === 0 && <p>Your basket is empty.</p>}
+    {cart.map(item => <div className="basket-row" key={item.competition_id}>
+      <img src={item.image_url ? imageUrl(item.image_url) : fallbackPosterUrl(item)} alt="" />
+      <div>
+        <strong>{item.title}</strong>
+        <p>{money(item.unit_price_pence)} each</p>
+        {item.question && <label>Answer<input value={item.answer || ''} onChange={e => updateAnswer(item.competition_id, e.target.value)} placeholder={item.question} /></label>}
+      </div>
+      <label>Qty<input type="number" min="1" value={item.quantity} onChange={e => updateQty(item.competition_id, e.target.value)} /></label>
+      <strong>{money(item.quantity * item.unit_price_pence)}</strong>
+      <button className="danger" onClick={() => remove(item.competition_id)}><Trash2 size={16} /></button>
+    </div>)}
+    <div className="checkout-bar">
+      <h2>Total: {money(total)}</h2>
+      <button className="secondary" onClick={() => setPage('home')}>Continue browsing</button>
+      <button className="secondary" onClick={clearBasket} disabled={cart.length === 0}>Clear basket</button>
+      <div className="checkout-compliance">
+        <label className="check-row important-check"><input type="checkbox" checked={ageConfirmed} onChange={e => { setAgeConfirmed(e.target.checked); setCheckoutError(''); }} /> <span>{settings.age_confirmation_text}</span></label>
+        <p className="muted">{settings.responsible_play_text}</p>
+      </div>
+      <button className="primary" disabled={busy || cart.length === 0} onClick={checkout}><Ticket size={16} /> {busy ? 'Creating order...' : 'Complete test order and allocate tickets'}</button>
+    </div>
+  </section></main>;
+}
 
 function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
 
@@ -607,5 +710,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v37';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v38';
 createRoot(document.getElementById('root')).render(<App />);
