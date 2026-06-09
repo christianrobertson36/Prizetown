@@ -49,8 +49,8 @@ function fallbackPosterUrl(c) {
 
 const defaultSettings = {
   site_name: 'Prizetown', support_email: 'support@prizetown.local', hero_eyebrow: 'Custom competition platform',
-  hero_title: 'Win big prizes with Prizetown', hero_text: 'Browse live competitions, add tickets to your basket, answer the entry question, and checkout to receive ticket numbers.',
-  footer_text: 'Please play responsibly. Free entry routes and terms should be checked before public launch.', free_entry_global: 'Postal/free entry route details can be added here from Admin Settings.',
+  hero_title: 'Win big prizes with Prizetown', hero_text: 'Browse live postcode prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.',
+  footer_text: 'Prizetown runs postcode-based prize competitions with clear entry limits, responsible play guidance and transparent draw information.', free_entry_global: 'Free postal entry is available for eligible competitions. Please read each competition page and site terms before entering.',
   terms_text: 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.', responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
   age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules and free-entry terms.'
 };
@@ -292,7 +292,7 @@ return <main>
 
     {selected && <div id="competition-details"><CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} /></div>}
 
-    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
+    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — instant-win prizes will appear here as they are claimed.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
 
 
     <section className="footer-pre-cta">
@@ -307,6 +307,7 @@ return <main>
       <div className="footer-brand">
         <img src="/prizetown-logo.png" alt="Prizetown" />
         <p>{settings.footer_text}</p>
+        <p className="footer-credit">Website by <strong>Neotech Designs</strong> · <a href="https://ctec-shop.co.uk" target="_blank" rel="noreferrer">ctec-shop.co.uk</a></p>
       </div>
       <div className="footer-column">
         <h3>Free entry</h3>
@@ -317,8 +318,9 @@ return <main>
         <p>{settings.responsible_play_text}</p>
       </div>
       <div className="footer-column">
-        <h3>Terms</h3>
-        <details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details>
+        <h3>Transparency</h3>
+        <p>Competition details, ticket limits, closing dates and draw information are shown clearly before entry.</p>
+        <details><summary>Site terms</summary><p>{settings.terms_text}</p></details>
       </div>
     </footer>}
   </main>;
@@ -326,7 +328,7 @@ return <main>
 
 
 function CompetitionScroller({ competitions, setSelected }) {
-  if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No competitions are available yet. In admin, set a competition to active or use Seed demo competitions.</p></section>;
+  if (competitions.length === 0) return <section className="panel info-panel"><h2>Live competitions</h2><p className="muted">No competitions are available right now. Please check back soon for the next Prizetown draw.</p></section>;
   const scrolling = competitions.length > 1 ? [...competitions, ...competitions] : competitions;
   return <section className="competition-scroll-section northern-competition-section">
     <div className="section-head">
@@ -495,7 +497,7 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
   }
 
   return <main><section className="panel"><h1>Basket</h1>
-    <p className="muted">This is still test checkout. Payment provider approval/integration comes later.</p>
+    <p className="muted">Review your basket, confirm your details and complete your entry.</p>
     {checkoutError && <div className="checkout-error"><strong>Checkout problem:</strong><p>{checkoutError}</p></div>}
     {cart.length === 0 && <p>Your basket is empty.</p>}
     {cart.map(item => <div className="basket-row" key={item.competition_id}>
@@ -517,7 +519,7 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
         <label className="check-row important-check"><input type="checkbox" checked={ageConfirmed} onChange={e => { setAgeConfirmed(e.target.checked); setCheckoutError(''); }} /> <span>{settings.age_confirmation_text}</span></label>
         <p className="muted">{settings.responsible_play_text}</p>
       </div>
-      <button className="primary" disabled={busy || cart.length === 0} onClick={checkout}><Ticket size={16} /> {busy ? 'Creating order...' : 'Complete test order and allocate tickets'}</button>
+      <button className="primary" disabled={busy || cart.length === 0} onClick={checkout}><Ticket size={16} /> {busy ? 'Creating order...' : 'Complete entry and allocate tickets'}</button>
     </div>
   </section></main>;
 }
@@ -959,7 +961,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function saveFreeEntry(e) { e.preventDefault(); try { const saved = await api('/admin/free-entry', { method: 'POST', body: JSON.stringify(freeForm) }); setMessage(`Manual/free entry recorded. Ticket #${saved.entry.ticket_number}`); setFreeForm({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
-  async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Demo competitions added.'); reload(); }
+  async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Starter competitions added.'); reload(); }
   function downloadPostcodeTemplate() {
     const headers = ['code','label','type','active','estimated_population','estimated_households','launch_priority','notes'];
     const sampleRows = [
@@ -1126,13 +1128,13 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       <aside className="admin-menu panel">
         <h2>Admin</h2><p className="muted">Use the menu buttons to manage one area at a time.</p>
         <div className="admin-tabs">{tabs.map(([key, label, Icon]) => <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)}><Icon size={17} /> {label}</button>)}</div>
-        <button type="button" className="secondary full" onClick={seedDemo}>Seed demo competitions</button>
+        <button type="button" className="secondary full" onClick={seedDemo}>Add starter competitions</button>
       </aside>
 
       <section className="admin-content">
         {activeTab === 'overview' && <div className="panel"><h1>Dashboard overview</h1><div className="stat-grid"><div><strong>{competitions.length}</strong><span>Total competitions</span></div><div><strong>{liveCount}</strong><span>Live competitions</span></div><div><strong>{totalTickets}</strong><span>Tickets allocated</span></div><div><strong>{money(revenue)}</strong><span>Test order value</span></div><div><strong>{instantClaimed}/{instantWins.length}</strong><span>Instant wins claimed</span></div></div><div className="admin-split"><div><h2>Recent orders</h2>{orders.slice(0, 8).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div><div><h2>Recent entries</h2>{entries.slice(0, 8).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div></div>}
 
-        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Seed demo competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} · {c.entries_sold || 0}/{c.max_tickets} tickets · postcode: {assignmentLabel(c.id)} · instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} · closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
+        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Add starter competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} · {c.entries_sold || 0}/{c.max_tickets} tickets · postcode: {assignmentLabel(c.id)} · instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} · closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
 
         {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><label>Postcode availability<select value={form.postcode_mode || 'all'} onChange={e => updateField('postcode_mode', e.target.value)}><option value="all">All postcodes</option><option value="selected">Selected postcode zones</option></select><small className="muted">Use Assign Postcodes for selecting the exact zones.</small></label>
             <div className="planner-inline">
@@ -1304,5 +1306,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v61';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v62';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
