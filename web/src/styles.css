@@ -2405,3 +2405,9 @@ label small.muted {
     font-size: .85rem;
   }
 }
+
+
+/* v67 OBS test button polish */
+.draw-actions .primary {
+  box-shadow: 0 10px 28px rgba(250,204,21,.18);
+}
