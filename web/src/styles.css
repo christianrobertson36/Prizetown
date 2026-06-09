@@ -3905,3 +3905,39 @@ body.broadcast-body #root {
 .arnold-broadcast-host {
   display: grid !important;
 }
+
+
+/* v91 Modules admin */
+.modules-panel {
+  display: grid;
+  gap: 1rem;
+}
+.modules-grid {
+  display: grid;
+  gap: .85rem;
+}
+.module-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 1.15rem;
+  background: rgba(15,23,42,.70);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.module-card.enabled {
+  border-color: rgba(34,197,94,.35);
+}
+.module-card.disabled {
+  opacity: .78;
+  border-color: rgba(248,113,113,.24);
+}
+.module-card strong {
+  color: #fef3c7;
+  font-size: 1.05rem;
+}
+.module-card p {
+  margin: .25rem 0 0;
+  color: rgba(255,255,255,.70);
+}

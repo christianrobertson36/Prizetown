@@ -299,8 +299,20 @@ If a competition is cancelled, Prizetown may refund eligible paid entries or off
   postal_entry_address: 'Add postal entry address in Admin → Legal Text.',
   cookie_banner_text: 'We use essential cookies/local storage to keep the basket, login and security features working. Optional analytics or marketing cookies will only be used if you accept them.',
   legal_disclaimer_text: 'Prizetown is for UK residents aged 18+. Please enter responsibly and only spend what you can afford. Free postal entry is available where offered, and all entries are subject to the competition rules, terms and privacy notice.',
-  popup_terms_label: 'I am 18 or over and understand Prizetown is a prize competition platform, not a guaranteed way to make money.'
+  popup_terms_label: 'I am 18 or over and understand Prizetown is a prize competition platform, not a guaranteed way to make money.',
+  module_postcodes_enabled: 'true',
+  module_instant_wins_enabled: 'true',
+  module_live_draw_enabled: 'true',
+  module_arnold_enabled: 'true',
+  module_wheel_demo_enabled: 'true',
+  module_profit_planner_enabled: 'true',
+  module_cookie_legal_enabled: 'true'
 };
+
+function featureEnabled(settings, key) {
+  return String((settings || {})[key] ?? 'true') !== 'false';
+}
+
 function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
@@ -405,8 +417,8 @@ function App() {
       {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => setPage('login')}><User size={16} /> Login</button>}
     </nav></header>
     {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
-    {!cookieChoice && <CookieConsent settings={settings} setPage={setPage} onChoice={saveCookieChoice} showPrefs={showCookiePrefs} setShowPrefs={setShowCookiePrefs} />}
-    {!legalAccepted && <LegalDisclaimer settings={settings} setPage={setPage} onAccept={acceptLegalDisclaimer} />}
+    {featureEnabled(settings, 'module_cookie_legal_enabled') && !cookieChoice && <CookieConsent settings={settings} setPage={setPage} onChoice={saveCookieChoice} showPrefs={showCookiePrefs} setShowPrefs={setShowCookiePrefs} />}
+    {featureEnabled(settings, 'module_cookie_legal_enabled') && !legalAccepted && <LegalDisclaimer settings={settings} setPage={setPage} onAccept={acceptLegalDisclaimer} />}
     {page === 'home' && <Home settings={settings} resetCookieChoice={resetCookieChoice} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
@@ -472,6 +484,12 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
     }, 80);
   }
 
+  const postcodesEnabled = featureEnabled(settings, 'module_postcodes_enabled');
+  const wheelDemoEnabled = featureEnabled(settings, 'module_wheel_demo_enabled');
+  const arnoldEnabled = featureEnabled(settings, 'module_arnold_enabled');
+  const instantWinsEnabled = featureEnabled(settings, 'module_instant_wins_enabled');
+
+
   const demoBaseTickets = useMemo(() => [
     { ticket_number: 1, customer_name: 'Alex' },
     { ticket_number: 2, customer_name: 'Sam' },
@@ -531,10 +549,10 @@ return <main>
         <p>{settings.hero_text}</p>
         {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
 
-        <div className="postcode-hero-note">
+        {postcodesEnabled && <div className="postcode-hero-note">
           <strong>Your postcode unlocks your local prize board.</strong>
           <p>Create an account with your UK postcode and Prizetown will be able to show area-based competitions, small starter prizes and limited-ticket local draws.</p>
-        </div>
+        </div>}
 
 
         <div className="hero-prize-board">
@@ -582,7 +600,7 @@ return <main>
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
     </section>
 
-    <section className="wheel-of-luck-section panel">
+    {wheelDemoEnabled && <section className="wheel-of-luck-section panel">
       <div className="wheel-of-luck-copy">
         <p className="eyebrow"><Trophy size={16} /> Wheel of Luck</p>
         <h2>Try the Prizetown Wheel of Luck</h2>
@@ -655,7 +673,7 @@ return <main>
           <div><strong>Premium travel</strong><span>High-end campaign imagery</span></div>
         </article>
       </div>
-    </section>
+    </section>}
 
     <section id="competitions" className="competitions-anchor"><CompetitionScroller competitions={competitions} setSelected={openCompetition} /></section>
 
@@ -905,7 +923,7 @@ function Account({ user, entries, orders, setPage, reload }) { if (!user) return
 
 
 
-function BroadcastMenuPanel({ setPage }) {
+function BroadcastMenuPanel({ setPage, settings = {} }) {
   return <section className="panel broadcast-menu-panel">
     <h1>OBS Draw Screen</h1>
     <p className="muted">Use this page for live broadcasts. Add the broadcast URL to OBS as a Browser Source, or open it in a separate window. Arnold appears as the built-in draw host.</p>
@@ -1059,6 +1077,43 @@ function DrawBroadcastPage({ setPage }) {
 
 
 
+
+function ModulesPanel({ settingsForm, setSettingsForm, saveSettings }) {
+  const modules = [
+    ['module_postcodes_enabled', 'Postcode competitions', 'Show postcode signup, postcode zones, and competition postcode assignment tools. Turn off for a simple national competition site.'],
+    ['module_instant_wins_enabled', 'Instant wins', 'Enable instant-win prize tools and instant-win admin menu sections.'],
+    ['module_live_draw_enabled', 'Live draw / OBS', 'Enable the built-in live draw wheel and OBS-ready broadcast screen.'],
+    ['module_arnold_enabled', 'Arnold host', 'Show Arnold host mode on homepage, admin draw preview and live draw screen.'],
+    ['module_wheel_demo_enabled', 'Wheel of Luck demo', 'Show the customer-facing demo wheel on the homepage.'],
+    ['module_profit_planner_enabled', 'Profit planner', 'Enable competition profit planning tools and margin warnings.'],
+    ['module_cookie_legal_enabled', 'Cookie/legal popups', 'Enable cookie consent and first-visit legal disclaimer popups.']
+  ];
+
+  function setModule(key, enabled) {
+    setSettingsForm({ ...settingsForm, [key]: enabled ? 'true' : 'false' });
+  }
+
+  return <form className="panel modules-panel" onSubmit={saveSettings}>
+    <h1>Modules</h1>
+    <p className="muted">Switch Prizetown features on or off. This makes the app usable as a simple national competition site or a fuller postcode/live-draw platform.</p>
+    <div className="modules-grid">
+      {modules.map(([key, title, description]) => {
+        const enabled = featureEnabled(settingsForm, key);
+        return <article className={`module-card ${enabled ? 'enabled' : 'disabled'}`} key={key}>
+          <div>
+            <strong>{title}</strong>
+            <p>{description}</p>
+          </div>
+          <button type="button" className={enabled ? 'primary' : 'secondary'} onClick={() => setModule(key, !enabled)}>
+            {enabled ? 'ON' : 'OFF'}
+          </button>
+        </article>;
+      })}
+    </div>
+    <button className="primary full">Save module settings</button>
+  </form>;
+}
+
 function SystemCheckPanel({ setMessage }) {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState(null);
@@ -1137,7 +1192,7 @@ function SystemCheckPanel({ setMessage }) {
   </section>;
 }
 
-function BuiltInDrawWheel({ competitions, setMessage }) {
+function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   const [competitionId, setCompetitionId] = useState('');
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1146,13 +1201,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
+  const arnoldModuleEnabled = featureEnabled(settings, 'module_arnold_enabled');
   const [showArnold, setShowArnold] = useState(() => {
     const saved = localStorage.getItem('prizetown_draw_show_arnold');
-    if (saved === 'false') {
-      localStorage.setItem('prizetown_draw_show_arnold', 'true');
-      return true;
-    }
-    return true;
+    return saved === null ? true : saved !== 'false';
   });
   const [spinSpeed, setSpinSpeed] = useState(() => localStorage.getItem('prizetown_draw_spin_speed') || 'standard');
   const spinAudioRef = useRef(null);
@@ -1241,13 +1293,13 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         customer_name: picked?.customer_name || picked?.name || 'Customer',
         email: picked?.email || picked?.customer_email || ''
       } : null,
-      show_arnold: showArnold,
+      show_arnold: arnoldModuleEnabled && showArnold,
       ...extra
     };
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=90', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=91', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1286,7 +1338,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=90 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=91 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1489,7 +1541,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   return <section className="panel draw-room"><audio ref={spinAudioRef} src={spinSoundUrl || undefined} preload="auto" />
-    {showArnold && <div className="draw-arnold-row">
+    {arnoldModuleEnabled && showArnold && <div className="draw-arnold-row">
       <ArnoldHost
         stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
         caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} — ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
@@ -1529,7 +1581,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary live-draw-start" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Live draw running...' : 'Start Live Draw'}</button>
       <button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button>
-      <button className={showArnold ? 'primary arnold-toggle-on' : 'secondary'} type="button" onClick={toggleArnold}>{showArnold ? 'Arnold On' : 'Arnold Off'}</button>
+      {arnoldModuleEnabled && <button className={showArnold ? 'primary arnold-toggle-on' : 'secondary'} type="button" onClick={toggleArnold}>{showArnold ? 'Arnold On' : 'Arnold Off'}</button>}
       <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button>
       <label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>
       {spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
@@ -1540,7 +1592,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div className="draw-testing-actions">
         <button className="primary" type="button" onClick={sendObsTest}>Send OBS Test</button>
         <button className="secondary obs-test-off" type="button" onClick={clearObsTest}>OBS Test Off</button>
-        <button className="secondary" type="button" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button>
+        {arnoldModuleEnabled && <button className="secondary" type="button" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button>}
         <button className="danger" type="button" onClick={resetBroadcast}>Reset Broadcast</button>
       </div>
     </details>
@@ -1611,6 +1663,15 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [profitForm, setProfitForm] = useState({ ticket_price_pence: 199, max_tickets: 500, prize_cost_pence: 25000, marketing_budget_pence: 10000, other_buffer_pence: 5000, payment_fee_percent: 4, vat_enabled: false });
   const [profitPlan, setProfitPlan] = useState(null);
   useEffect(() => { setSettingsForm({ ...defaultSettings, ...settings }); }, [settings]);
+
+  const modulePostcodes = featureEnabled(settingsForm, 'module_postcodes_enabled');
+  const moduleInstantWins = featureEnabled(settingsForm, 'module_instant_wins_enabled');
+  const moduleLiveDraw = featureEnabled(settingsForm, 'module_live_draw_enabled');
+  const moduleArnold = featureEnabled(settingsForm, 'module_arnold_enabled');
+  const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
+  const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
+  const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
+
 
   const liveCount = competitions.filter(c => c.status === 'active').length;
   const totalTickets = entries.length;
@@ -1784,9 +1845,21 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   }
 
   const tabs = [
-    ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['system-check', 'System Check', Shield], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
-  ];
+    ['overview', 'Overview', ClipboardList],
+    ['competitions', 'Competitions', Trophy],
+    ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
+    moduleInstantWins && ['instant-wins', 'Instant wins', Zap],
+    moduleLiveDraw && ['draws', 'Final draw', ListChecks],
+    ['free-entries', 'Free entries', Ticket],
+    modulePostcodes && ['postcode-zones', 'Postcode Zones', Shield],
+    modulePostcodes && ['postcode-assign', 'Assign Postcodes', Ticket],
+    moduleProfitPlanner && ['profit-planner', 'Profit Planner', Ticket],
+    ['modules', 'Modules', Shield],
+    ['system-check', 'System Check', Shield],
+    ['legal-text', 'Legal Text', Shield],
+    ['settings', 'Site settings', Shield],
+    ['audit', 'Audit log', ListChecks]
+  ].filter(Boolean);
 
   return <main className="admin-main">
     <section className="admin-shell">
@@ -1824,9 +1897,11 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <p className="muted">For each competition, set a draw date/time and enable auto draw in Add/Edit Competition. When the competition is sold out or closed and the draw time arrives, Prizetown safely records the winner once and updates the OBS broadcast screen.</p>
             <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Run due auto draws now</button>
           </div>
-          <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
-          <BroadcastMenuPanel setPage={setPage} />
+          <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} settings={settingsForm} />
+          <BroadcastMenuPanel setPage={setPage} settings={settingsForm} />
         </div>}
+
+        {activeTab === 'modules' && <ModulesPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
@@ -2065,5 +2140,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v90';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v91';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

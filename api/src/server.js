@@ -515,7 +515,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v90' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v91' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -598,7 +598,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v90' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v91' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add('ok', 'Configured upload directory', uploadDir);
 
@@ -615,7 +615,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v90',
+    version: 'v91',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -655,7 +655,14 @@ const allowedSettings = [
   'postal_entry_address',
   'cookie_banner_text',
   'legal_disclaimer_text',
-  'popup_terms_label'
+  'popup_terms_label',
+  'module_postcodes_enabled',
+  'module_instant_wins_enabled',
+  'module_live_draw_enabled',
+  'module_arnold_enabled',
+  'module_wheel_demo_enabled',
+  'module_profit_planner_enabled',
+  'module_cookie_legal_enabled'
 ];
 
 app.get('/settings', async (_req, res) => {
@@ -683,11 +690,14 @@ app.patch('/admin/settings', auth('admin'), async (req, res) => {
 app.post('/auth/register', async (req, res) => {
   const { name = '', email, password, postcode = '' } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  if (!postcode) return res.status(400).json({ error: 'Postcode required so we can show local competitions' });
 
-  let pc;
+  const siteSettings = await getSettingsObject();
+  const postcodeRequired = String(siteSettings.module_postcodes_enabled ?? 'true') !== 'false';
+  if (postcodeRequired && !postcode) return res.status(400).json({ error: 'Postcode required so we can show local competitions' });
+
+  let pc = { full: '', area: '', outcode: '' };
   try {
-    pc = normalizeUkPostcode(postcode);
+    if (postcode) pc = normalizeUkPostcode(postcode);
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
@@ -1791,7 +1801,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v90 random ticket numbers debug arnold)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v91 modules)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
