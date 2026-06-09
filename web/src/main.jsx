@@ -106,7 +106,7 @@ function wheelRotationForWinner(tickets = [], winnerTicket, currentRotation = 0)
   const winningAngle = index * slice;
   const currentNormalised = ((Number(currentRotation || 0) % 360) + 360) % 360;
   const correction = (360 - ((currentNormalised + winningAngle) % 360)) % 360;
-  return Number(currentRotation || 0) + (360 * 12) + correction;
+  return Number(currentRotation || 0) + (360 * 9) + correction;
 }
 
 function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW' }) {
@@ -286,7 +286,7 @@ If a competition is cancelled, Prizetown may refund eligible paid entries or off
   legal_disclaimer_text: 'Prizetown is for UK residents aged 18+. Please enter responsibly and only spend what you can afford. Free postal entry is available where offered, and all entries are subject to the competition rules, terms and privacy notice.',
   popup_terms_label: 'I am 18 or over and understand Prizetown is a prize competition platform, not a guaranteed way to make money.'
 };
-function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
+function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
 class AppErrorBoundary extends React.Component {
@@ -1009,7 +1009,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function openBroadcastScreen() {
-    window.open('/draw-broadcast', 'prizetown_draw_broadcast');
+    window.open('/draw-live?obs=1&v=80', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
   }
 
   async function resetBroadcast() {
@@ -1046,7 +1046,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-broadcast or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=80 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1165,7 +1165,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     };
     const wheelTickets = buildWheelTickets(entryList, finalWinner);
     const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number, rotation);
-    const spinMs = 14000;
+    const spinMs = 10000;
     const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
     const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
 
@@ -1264,7 +1264,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     <div className="draw-actions">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="primary" onClick={sendObsTest}>Send OBS Test</button><button className="secondary obs-test-off" onClick={clearObsTest}>OBS Test Off</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
+      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button><button className="primary" onClick={sendObsTest}>Send OBS Test</button><button className="secondary obs-test-off" onClick={clearObsTest}>OBS Test Off</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
     </div>
 
     <div className="draw-stats">
@@ -1272,7 +1272,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">This screen now uses a trusted Wheel-of-Fortune style draw. Small draws show ticket numbers; larger draws show ranges, and the exact winning ticket appears in the reveal.</p>
+    <p className="muted draw-sync-note">Use Open Live Draw Window for OBS and customer-facing draw display. This admin preview uses the same trusted wheel state; small draws show ticket numbers and larger draws show ticket ranges.</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
       <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
@@ -1766,5 +1766,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v79';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v80';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
