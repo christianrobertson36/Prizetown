@@ -707,6 +707,7 @@ function DrawBroadcastPage({ setPage }) {
   const [state, setState] = useState(null);
   const [now, setNow] = useState(new Date());
   const [rotation, setRotation] = useState(0);
+  const [lastSpinKey, setLastSpinKey] = useState('');
   const params = new URLSearchParams(window.location.search);
   const transparent = params.get('transparent') === '1';
   const compact = params.get('compact') !== '0';
@@ -728,8 +729,10 @@ function DrawBroadcastPage({ setPage }) {
         const data = await api('/draw/broadcast-state');
         if (!active) return;
         setState(data);
-        if (data.mode === 'spinning') {
-          setRotation(prev => prev + 360 * 6 + Math.floor(Math.random() * 360));
+        const spinKey = data.spin_id || `${data.competition_id || ''}-${data.updated_at || ''}`;
+        if (data.mode === 'spinning' && spinKey !== lastSpinKey) {
+          setLastSpinKey(spinKey);
+          setRotation(prev => prev + 360 * 8 + 180);
         }
       } catch {
         if (active) setState(s => s || { mode: 'offline', visual_tickets: [] });
@@ -743,7 +746,7 @@ function DrawBroadcastPage({ setPage }) {
       clearInterval(poll);
       clearInterval(clock);
     };
-  }, []);
+  }, [lastSpinKey]);
 
   useEffect(() => {
     function key(e) {
@@ -755,7 +758,10 @@ function DrawBroadcastPage({ setPage }) {
 
   const tickets = state?.visual_tickets || [];
   const winner = state?.winner;
-  const mode = state?.mode || 'idle';
+  const revealAt = state?.reveal_at ? new Date(state.reveal_at).getTime() : 0;
+  const winnerReady = Boolean(winner) && (state?.mode === 'winner' || (revealAt > 0 && Date.now() >= revealAt));
+  const displayWinner = winnerReady ? winner : null;
+  const mode = winnerReady ? 'winner' : (state?.mode || 'idle');
   const title = state?.competition_title || 'Waiting for competition';
   const competitionNumber = state?.competition_number || '—';
   const eligible = state?.eligible_count || 0;
@@ -788,7 +794,7 @@ function DrawBroadcastPage({ setPage }) {
       </header>
 
       <div className="broadcast-main">
-        {state?.show_arnold !== false && <ArnoldBroadcastHost mode={mode} winner={winner} />}
+        {state?.show_arnold !== false && <ArnoldBroadcastHost mode={mode} winner={displayWinner} />}
         <div className="broadcast-wheel-wrap">
           <div className="broadcast-datetime-strip">
             <span><strong>Draw:</strong> {drawDateText}</span>
@@ -811,10 +817,10 @@ function DrawBroadcastPage({ setPage }) {
           <div className="broadcast-stat"><span>Ticket capacity</span><strong>{capacity}</strong></div>
           <div className="broadcast-stat"><span>Visual slices</span><strong>{tickets.length}</strong></div>
 
-          {winner ? <div className="broadcast-winner">
+          {displayWinner ? <div className="broadcast-winner">
             <h2>Winner</h2>
-            <p className="winning-ticket">Ticket #{winner.ticket_number}</p>
-            <p className="winner-name">{winner.customer_name || winner.name || 'Customer'}</p>
+            <p className="winning-ticket">Ticket #{displayWinner.ticket_number}</p>
+            <p className="winner-name">{displayWinner.customer_name || displayWinner.name || 'Customer'}</p>
             <p className="muted">Final draw winner confirmed</p>
           </div> : <div className="broadcast-waiting">
             <h2>Awaiting spin</h2>
@@ -879,7 +885,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       }));
   }
 
-  function broadcastBase(rows = entries, mode = 'ready', picked = winner) {
+  function broadcastBase(rows = entries, mode = 'ready', picked = winner, extra = {}) {
     const safeRows = safeArray(rows);
     const c = competition || competitions.find(x => String(x.id) === String(competitionId)) || {};
     return {
@@ -896,7 +902,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         customer_name: picked?.customer_name || picked?.name || 'Customer',
         email: picked?.email || picked?.customer_email || ''
       } : null,
-      show_arnold: showArnold
+      show_arnold: showArnold,
+      ...extra
     };
   }
 
@@ -958,6 +965,9 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
           eligible_count: 0,
           visual_tickets: [],
           winner: null,
+          reveal_at: '',
+          spin_id: '',
+          locked_ticket_number: '',
           show_arnold: showArnold
         })
       });
@@ -1045,20 +1055,40 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   function spinDraw() {
     if (entryList.length === 0) return setMessage('Load entries before spinning.');
     if (spinning) return;
+
     const picked = entryList[Math.floor(Math.random() * entryList.length)];
-    const extra = 360 * 7 + Math.floor(Math.random() * 360);
+    const spinMs = 11000;
+    const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
+    const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
+    const finalWinner = {
+      ticket_number: picked.ticket_number,
+      customer_name: picked.customer_name || picked.name || 'Customer',
+      email: picked.email || picked.customer_email || ''
+    };
+
+    const extra = 360 * 8 + 180;
     setWinner(null);
     setSpinning(true);
     playSpinSound();
     setRotation(prev => prev + extra);
-    publishBroadcastState(broadcastBase(entryList, 'spinning', null));
+
+    publishBroadcastState(broadcastBase(entryList, 'spinning', finalWinner, {
+      spin_id: spinId,
+      reveal_at: revealAt,
+      locked_ticket_number: picked.ticket_number
+    }));
+
     setTimeout(() => {
-      setWinner(picked);
+      setWinner(finalWinner);
       setSpinning(false);
-      publishBroadcastState(broadcastBase(entryList, 'winner', picked));
-      setMessage(`Winner selected: ticket #${picked.ticket_number} - ${picked.customer_name || picked.email || 'Customer'}`);
+      publishBroadcastState(broadcastBase(entryList, 'winner', finalWinner, {
+        spin_id: spinId,
+        reveal_at: new Date(Date.now() - 1000).toISOString(),
+        locked_ticket_number: picked.ticket_number
+      }));
+      setMessage(`Winner selected: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'}`);
       stopSpinSound();
-    }, 10400);
+    }, spinMs + 700);
   }
 
   function csvDownload() {
@@ -1631,5 +1661,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v71';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v72';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

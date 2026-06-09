@@ -2723,3 +2723,16 @@ body.broadcast-body #root {
   margin: .75rem auto 0;
   max-width: 900px;
 }
+
+
+/* v72 locked OBS reveal timing */
+.broadcast-wheel.is-spinning {
+  transition: transform 11s cubic-bezier(.08,.78,.08,1);
+}
+.draw-wheel.spinning {
+  transition: transform 11s cubic-bezier(.08,.78,.08,1);
+}
+.broadcast-waiting h2,
+.broadcast-waiting p {
+  text-align: center;
+}
