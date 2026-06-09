@@ -1153,7 +1153,9 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function openBroadcastScreen() {
-    window.open('/draw-live?obs=1&v=80', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=86', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    try { live?.focus?.(); } catch {}
+    return live;
   }
 
   async function resetBroadcast() {
@@ -1190,7 +1192,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=80 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=86 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1301,6 +1303,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     if (entryList.length === 0) return setMessage('Load entries before spinning.');
     if (spinning) return;
 
+    openBroadcastScreen();
     const picked = entryList[Math.floor(Math.random() * entryList.length)];
     const finalWinner = {
       ticket_number: picked.ticket_number,
@@ -1405,11 +1408,24 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <span><strong>Capacity:</strong> {competition.max_tickets}</span>
     </div>}
 
-    <div className="draw-actions">
+    <div className="draw-actions draw-actions-clean">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
-      <button className="primary" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button><button className="primary" onClick={sendObsTest}>Send OBS Test</button><button className="secondary obs-test-off" onClick={clearObsTest}>OBS Test Off</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
+      <button className="primary live-draw-start" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Live draw running...' : 'Start Live Draw'}</button>
+      <button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button>
+      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button>
+      <label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>
+      {spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
     </div>
+
+    <details className="draw-testing-tools">
+      <summary>Testing tools / broadcast reset</summary>
+      <div className="draw-testing-actions">
+        <button className="primary" type="button" onClick={sendObsTest}>Send OBS Test</button>
+        <button className="secondary obs-test-off" type="button" onClick={clearObsTest}>OBS Test Off</button>
+        <button className="secondary" type="button" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button>
+        <button className="danger" type="button" onClick={resetBroadcast}>Reset Broadcast</button>
+      </div>
+    </details>
 
     <div className="draw-extra-controls">
       <div className="draw-speed-controls">
@@ -1435,7 +1451,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">Use Open Live Draw Window for OBS and customer-facing draw display. You can now choose Fast, Standard or Showcase spin speed, and use quick test ticket loads to check larger draws.</p>
+    <p className="muted draw-sync-note">Use Start Live Draw to open the live draw window and spin the synced OBS/customer-facing screen together. Testing/reset tools are tucked away below.</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
       <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
@@ -1929,5 +1945,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v85';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v86';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

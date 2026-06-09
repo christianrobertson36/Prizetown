@@ -3718,3 +3718,39 @@ body.broadcast-body #root {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v86 cleaned live draw controls */
+.draw-actions-clean {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .7rem;
+  padding: .75rem;
+  border-radius: 18px;
+  background: rgba(15,23,42,.52);
+  border: 1px solid rgba(250,204,21,.14);
+}
+.live-draw-start {
+  min-width: 180px;
+  box-shadow: 0 0 26px rgba(250,204,21,.18);
+}
+.draw-testing-tools {
+  margin: .75rem 0 1rem;
+  border-radius: 16px;
+  border: 1px dashed rgba(250,204,21,.25);
+  background: rgba(15,23,42,.45);
+  padding: .7rem .85rem;
+}
+.draw-testing-tools summary {
+  cursor: pointer;
+  color: #facc15;
+  font-weight: 1000;
+  letter-spacing: .03em;
+}
+.draw-testing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-top: .75rem;
+}
