@@ -469,6 +469,58 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
       document.getElementById('competition-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
   }
+
+  const demoBaseTickets = useMemo(() => [
+    { ticket_number: 1, customer_name: 'Alex' },
+    { ticket_number: 2, customer_name: 'Sam' },
+    { ticket_number: 3, customer_name: 'Taylor' },
+    { ticket_number: 4, customer_name: 'Jordan' },
+    { ticket_number: 5, customer_name: 'Casey' },
+    { ticket_number: 6, customer_name: 'Morgan' },
+    { ticket_number: 7, customer_name: 'Jamie' },
+    { ticket_number: 8, customer_name: 'Riley' },
+    { ticket_number: 9, customer_name: 'Charlie' },
+    { ticket_number: 10, customer_name: 'Drew' },
+    { ticket_number: 11, customer_name: 'Sky' },
+    { ticket_number: 12, customer_name: 'Bailey' }
+  ], []);
+  const [demoTickets, setDemoTickets] = useState(() => buildWheelTickets(demoBaseTickets));
+  const [demoWinner, setDemoWinner] = useState(null);
+  const [demoMode, setDemoMode] = useState('idle');
+  const [demoRotation, setDemoRotation] = useState(0);
+  const [demoNames, setDemoNames] = useState('Alex, Sam, Taylor, Jordan, Casey, Morgan, Jamie, Riley, Charlie, Drew, Sky, Bailey');
+
+  function refreshDemoNames() {
+    const names = demoNames.split(',').map(n => n.trim()).filter(Boolean).slice(0, 60);
+    const rows = (names.length ? names : ['Alex', 'Sam', 'Taylor', 'Jordan']).map((name, i) => ({
+      ticket_number: i + 1,
+      customer_name: name
+    }));
+    setDemoTickets(buildWheelTickets(rows));
+    setDemoWinner(null);
+    setDemoMode('idle');
+    setDemoRotation(0);
+    setMessage('Demo Wheel of Luck names updated.');
+  }
+
+  function spinDemoWheel() {
+    if (demoMode === 'spinning') return;
+    const rows = safeArray(demoTickets);
+    const picked = rows[Math.floor(Math.random() * rows.length)] || { ticket_number: 1, customer_name: 'Demo winner' };
+    const finalWinner = {
+      ticket_number: picked.ticket_number || picked.from || 1,
+      customer_name: picked.customer_name || `Demo ticket ${picked.ticket_number || picked.from || 1}`
+    };
+    const nextRotation = wheelRotationForWinner(rows, finalWinner.ticket_number, demoRotation);
+    setDemoWinner(null);
+    setDemoMode('spinning');
+    setDemoRotation(nextRotation);
+    setTimeout(() => {
+      setDemoWinner(finalWinner);
+      setDemoMode('winner');
+    }, 6200);
+  }
+
 return <main>
     <section className="hero compact-hero northern-hero">
       <div>
@@ -526,6 +578,48 @@ return <main>
 
     <section className="homepage-arnold panel">
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
+    </section>
+
+    <section className="wheel-of-luck-section panel">
+      <div className="wheel-of-luck-copy">
+        <p className="eyebrow"><Trophy size={16} /> Wheel of Luck</p>
+        <h2>Try the Prizetown Wheel of Luck</h2>
+        <p>Want to see how a draw feels before you enter? Spin the demo wheel and watch a sample ticket reveal. Official final draws use the live draw screen so customers can follow the result as it happens.</p>
+        <div className="wheel-trust-grid">
+          <span>Live visual draw</span>
+          <span>Winner reveal on screen</span>
+          <span>Ticket number shown clearly</span>
+          <span>Demo spins are for illustration only</span>
+        </div>
+        <div className="demo-name-editor">
+          <label>Demo names
+            <textarea value={demoNames} onChange={e => setDemoNames(e.target.value)} rows={3} />
+          </label>
+          <div className="demo-wheel-actions">
+            <button type="button" className="secondary" onClick={refreshDemoNames}>Update demo names</button>
+            <button type="button" className="primary" onClick={spinDemoWheel} disabled={demoMode === 'spinning'}>{demoMode === 'spinning' ? 'Spinning...' : 'Try the wheel'}</button>
+          </div>
+          <small>Demo only. This does not enter you into a live competition and does not affect official draw results.</small>
+        </div>
+      </div>
+      <div className="wheel-of-luck-demo">
+        <TrustedWheelDraw mode={demoMode} winner={demoWinner} tickets={demoTickets} rotation={demoRotation} label="DEMO WHEEL OF LUCK" />
+      </div>
+    </section>
+
+    <section className="trust-explainer-strip">
+      <article>
+        <strong>1. Enter</strong>
+        <span>Choose a competition and receive your ticket numbers.</span>
+      </article>
+      <article>
+        <strong>2. Watch</strong>
+        <span>Live final draws use the Prizetown draw screen.</span>
+      </article>
+      <article>
+        <strong>3. Reveal</strong>
+        <span>The winning ticket and winner name are shown clearly.</span>
+      </article>
     </section>
 
 
@@ -1835,5 +1929,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v84';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v85';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
