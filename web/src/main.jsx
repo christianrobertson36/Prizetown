@@ -1232,7 +1232,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=86', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=88', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1271,7 +1271,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=86 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=88 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1378,21 +1378,40 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     }
   }
 
-  function spinDraw() {
+  async function spinDraw() {
     if (entryList.length === 0) return setMessage('Load entries before spinning.');
     if (spinning) return;
 
     openBroadcastScreen();
-    const picked = entryList[Math.floor(Math.random() * entryList.length)];
+
+    let picked;
+    let officialRows = entryList;
+    let secureMethod = 'demo_local_preview_only';
+
+    if (competitionId) {
+      try {
+        const secure = await api(`/admin/competitions/${competitionId}/secure-draw`, { method: 'POST' });
+        picked = secure.winner;
+        officialRows = safeArray(secure.entries || entryList);
+        secureMethod = secure.method || 'secure_server_crypto_randomInt';
+        setEntries(officialRows);
+      } catch (err) {
+        setMessage(err.message);
+        return;
+      }
+    } else {
+      picked = entryList[Math.floor(Math.random() * entryList.length)];
+    }
+
     const finalWinner = {
       ticket_number: picked.ticket_number,
       customer_name: picked.customer_name || picked.name || 'Customer',
       email: picked.email || picked.customer_email || ''
     };
-    const wheelTickets = buildWheelTickets(entryList, finalWinner);
+    const wheelTickets = buildWheelTickets(officialRows, finalWinner);
     const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number, rotation);
     const spinMs = speedMs();
-    const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
+    const spinId = `${competitionId || 'demo'}-${Date.now()}-${picked.ticket_number}`;
     const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
 
     setWinner(null);
@@ -1405,8 +1424,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         spin_id: spinId,
         reveal_at: revealAt,
         locked_ticket_number: picked.ticket_number,
-        target_rotation: targetRotation
+        target_rotation: targetRotation,
+        draw_method: secureMethod
       }),
+      eligible_count: officialRows.length,
       visual_tickets: wheelTickets
     });
 
@@ -1418,11 +1439,13 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
           spin_id: spinId,
           reveal_at: new Date(Date.now() - 1000).toISOString(),
           locked_ticket_number: picked.ticket_number,
-          target_rotation: targetRotation
+          target_rotation: targetRotation,
+          draw_method: secureMethod
         }),
+        eligible_count: officialRows.length,
         visual_tickets: wheelTickets
       });
-      setMessage(`Winner selected: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'} (${spinSpeed} speed).`);
+      setMessage(`Winner selected securely: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'} (${spinSpeed} speed).`);
       stopSpinSound();
     }, spinMs + 700);
   }
@@ -1530,7 +1553,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">Use Start Live Draw to open the live draw window and spin the synced OBS/customer-facing screen together. Testing/reset tools are tucked away below.</p>
+    <p className="muted draw-sync-note">Use Start Live Draw to open the live draw window and run a secure server-side draw. The browser only displays the locked result selected by the API.</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
       <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
@@ -1746,7 +1769,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['system-check', 'System Check', Shield], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -1788,8 +1811,6 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
           <BroadcastMenuPanel setPage={setPage} />
         </div>}
-
-        {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
 
@@ -2026,5 +2047,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v87';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v88';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

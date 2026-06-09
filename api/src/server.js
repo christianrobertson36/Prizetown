@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -513,8 +515,8 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v87' }));
-app.get('/admin/system-check', requireAdmin, async (_req, res) => {
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v88' }));
+app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
   const errors = [];
@@ -596,7 +598,7 @@ app.get('/admin/system-check', requireAdmin, async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v87' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v88' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add('ok', 'Configured upload directory', uploadDir);
 
@@ -613,7 +615,7 @@ app.get('/admin/system-check', requireAdmin, async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v87',
+    version: 'v88',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -849,20 +851,20 @@ async function runDueAutoDraws() {
       const closedByDate = comp.closes_at && new Date(comp.closes_at).getTime() <= Date.now();
       if (!soldOut && !closedByDate) continue;
 
-      const entry = (await client.query(`
+      const eligibleEntries = (await client.query(`
         SELECT e.*, c.title AS competition_title
         FROM entries e
         JOIN competitions c ON c.id = e.competition_id
         WHERE e.competition_id=$1 AND e.payment_status IN ('paid','free','paid_test','free_manual')
-        ORDER BY random()
-        LIMIT 1
-      `, [comp.id])).rows[0];
-      if (!entry) continue;
+        ORDER BY e.ticket_number ASC
+      `, [comp.id])).rows;
+      if (eligibleEntries.length === 0) continue;
+      const entry = eligibleEntries[crypto.randomInt(0, eligibleEntries.length)];
 
       const saved = await recordFinalDrawWinner(client, {
         competitionId: comp.id,
         entry,
-        method: 'auto_scheduled',
+        method: 'auto_scheduled_secure_crypto',
         notes: 'Automatic scheduled draw'
       });
       if (!saved) continue;
@@ -1531,6 +1533,94 @@ app.get('/admin/competitions/:id/draw-entries', auth('admin'), async (req, res) 
   res.json({ competition, entries: result.rows, wheel_entries: wheelEntries, wheel_url: wheelUrl });
 });
 
+app.post('/admin/competitions/:id/secure-draw', auth('admin'), async (req, res) => {
+  const competitionId = toInt(req.params.id);
+  if (!competitionId) return res.status(400).json({ error: 'Competition ID required' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const competition = (await client.query('SELECT * FROM competitions WHERE id=$1 FOR UPDATE', [competitionId])).rows[0];
+    if (!competition) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Competition not found' });
+    }
+
+    const existing = (await client.query(`
+      SELECT d.*, e.customer_name, e.customer_email, c.title AS competition_title
+      FROM draw_results d
+      LEFT JOIN entries e ON e.id = d.entry_id
+      JOIN competitions c ON c.id = d.competition_id
+      WHERE d.competition_id=$1
+      LIMIT 1
+    `, [competitionId])).rows[0];
+
+    if (existing) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: `This competition already has a recorded draw winner: ticket #${existing.ticket_number}`,
+        existing_draw: existing
+      });
+    }
+
+    const entries = (await client.query(`
+      SELECT e.*, c.title AS competition_title
+      FROM entries e
+      JOIN competitions c ON c.id = e.competition_id
+      WHERE e.competition_id=$1 AND e.payment_status IN ('paid','free','paid_test','free_manual')
+      ORDER BY e.ticket_number ASC
+    `, [competitionId])).rows;
+
+    if (entries.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'No eligible paid/free tickets found for this competition' });
+    }
+
+    const winnerIndex = crypto.randomInt(0, entries.length);
+    const entry = entries[winnerIndex];
+
+    const saved = await recordFinalDrawWinner(client, {
+      competitionId,
+      entry,
+      createdBy: req.user?.id || null,
+      method: 'secure_server_crypto_randomInt',
+      notes: `Secure server-side draw. Eligible entries: ${entries.length}. Winner index: ${winnerIndex}.`
+    });
+
+    if (!saved) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'A draw result already exists for this competition' });
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      ok: true,
+      method: 'secure_server_crypto_randomInt',
+      generated_at: new Date().toISOString(),
+      eligible_count: entries.length,
+      competition,
+      entries,
+      winner: {
+        entry_id: entry.id,
+        ticket_number: entry.ticket_number,
+        customer_name: entry.customer_name || 'Customer',
+        email: entry.customer_email || ''
+      },
+      draw_result: saved.draw_result,
+      public_winner: saved.winner
+    });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('Secure draw failed', err);
+    res.status(500).json({ error: err.message || 'Secure draw failed' });
+  } finally {
+    client.release();
+  }
+});
+
+
 app.post('/admin/draw-results', auth('admin'), async (req, res) => {
   const competitionId = toInt(req.body.competition_id);
   const entryId = toInt(req.body.entry_id);
@@ -1690,7 +1780,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v87 system check debug)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v88 secure server draw)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
