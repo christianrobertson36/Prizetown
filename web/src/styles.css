@@ -3472,3 +3472,48 @@ body.broadcast-body #root {
   font-size: clamp(9px, 1.05vw, 14px) !important;
   stroke-width: 3px !important;
 }
+
+
+/* v81 wheel branding and speed controls */
+.trusted-wheel-logo-ring {
+  fill: #111827;
+  stroke: #f5d34f;
+  stroke-width: 8;
+}
+.trusted-wheel-centre-logo {
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
+}
+.trusted-wheel-centre-sub {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+.draw-extra-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: .85rem;
+  margin: .85rem 0 1rem;
+}
+.draw-speed-controls {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(245, 211, 79, 0.2);
+  border-radius: 16px;
+  padding: .85rem 1rem;
+}
+.control-label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: #facc15;
+  margin-bottom: .55rem;
+}
+.segmented-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.segmented-buttons button {
+  min-width: 84px;
+}

@@ -122,22 +122,28 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
     <div className="trusted-wheel-wrap">
       <div className="trusted-wheel-pointer"><span>STOP POINT</span></div>
       <svg className="trusted-wheel-svg" viewBox="0 0 500 500" role="img" aria-label="Prizetown draw wheel">
+        <defs>
+          <clipPath id="trustedWheelLogoClip">
+            <circle cx="250" cy="250" r="64" />
+          </clipPath>
+        </defs>
         <g className="trusted-wheel-rotor" style={{ transform: `rotate(${rotation}deg)`, transformOrigin: '250px 250px' }}>
           {segments.map((seg, i) => {
             const start = -slice / 2 + i * slice;
             const end = start + slice;
             const mid = i * slice;
-            const text = polarToCartesian(250, 250, 178, mid);
+            const textPoint = polarToCartesian(250, 250, 178, mid);
             const isWinningSegment = winner && Number(winner.ticket_number || 0) >= Number(seg.from || seg.ticket_number || 0) && Number(winner.ticket_number || 0) <= Number(seg.to || seg.ticket_number || 0);
             return <g key={`${seg.label || seg.ticket_number || i}-${i}`} className={isWinningSegment ? 'winning-segment' : ''}>
               <path d={wheelSlicePath(250, 250, 230, start, end)} fill={colours[i % colours.length]} />
-              {showLabels && <text x={text.x} y={text.y} textAnchor="middle" dominantBaseline="middle" className="trusted-wheel-label">{seg.label || `#${seg.ticket_number || i + 1}`}</text>}
+              {showLabels && <text x={textPoint.x} y={textPoint.y} textAnchor="middle" dominantBaseline="middle" className="trusted-wheel-label">{seg.label || `#${seg.ticket_number || i + 1}`}</text>}
             </g>;
           })}
         </g>
-        <circle cx="250" cy="250" r="105" className="trusted-wheel-centre" />
-        <text x="250" y="235" textAnchor="middle" className="trusted-wheel-centre-title">PRIZETOWN</text>
-        <text x="250" y="268" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
+        <circle cx="250" cy="250" r="108" className="trusted-wheel-centre" />
+        <circle cx="250" cy="250" r="72" className="trusted-wheel-logo-ring" />
+        <image href="/prizetown-logo.png" x="178" y="178" width="144" height="144" preserveAspectRatio="xMidYMid slice" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
+        <text x="250" y="336" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
       </svg>
     </div>
     <div className="trusted-wheel-result">
@@ -959,6 +965,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [drawTime, setDrawTime] = useState(new Date());
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
   const [showArnold, setShowArnold] = useState(() => localStorage.getItem('prizetown_draw_show_arnold') !== 'false');
+  const [spinSpeed, setSpinSpeed] = useState(() => localStorage.getItem('prizetown_draw_spin_speed') || 'standard');
   const spinAudioRef = useRef(null);
 
   const competitionList = safeArray(competitions);
@@ -984,6 +991,42 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
   function visualTicketSample(rows, picked = winner) {
     return buildWheelTickets(rows, picked);
+  }
+
+  function speedMs() {
+    if (spinSpeed === 'fast') return 6000;
+    if (spinSpeed === 'showcase') return 14000;
+    return 10000;
+  }
+
+  function setSpeedPreset(next) {
+    setSpinSpeed(next);
+    localStorage.setItem('prizetown_draw_spin_speed', next);
+    setMessage(`Spin speed set to ${next}.`);
+  }
+
+  function createTestEntries(count = 100) {
+    const demoNames = ['Alex Brown', 'Sam Roberts', 'Jamie Khan', 'Taylor Morgan', 'Jordan Smith', 'Casey Jones', 'Riley Walker', 'Charlie Lee'];
+    return Array.from({ length: count }, (_, i) => ({
+      ticket_number: i + 1,
+      customer_name: demoNames[i % demoNames.length],
+      email: `test${i + 1}@prizetown.local`,
+      order_id: `TEST-${String(i + 1).padStart(4, '0')}`,
+      payment_status: 'paid'
+    }));
+  }
+
+  function loadTestEntries(count = 100) {
+    const rows = createTestEntries(count);
+    setEntries(rows);
+    setWinner(null);
+    setSpinning(false);
+    setRotation(0);
+    setMessage(`${rows.length} test tickets loaded for draw preview.`);
+    publishBroadcastState({
+      ...broadcastBase(rows, 'ready', null, { ticket_capacity: count }),
+      visual_tickets: visualTicketSample(rows, null)
+    });
   }
 
   function broadcastBase(rows = entries, mode = 'ready', picked = winner, extra = {}) {
@@ -1165,7 +1208,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     };
     const wheelTickets = buildWheelTickets(entryList, finalWinner);
     const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number, rotation);
-    const spinMs = 10000;
+    const spinMs = speedMs();
     const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
     const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
 
@@ -1196,7 +1239,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         }),
         visual_tickets: wheelTickets
       });
-      setMessage(`Winner selected: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'}`);
+      setMessage(`Winner selected: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'} (${spinSpeed} speed).`);
       stopSpinSound();
     }, spinMs + 700);
   }
@@ -1272,7 +1315,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">Use Open Live Draw Window for OBS and customer-facing draw display. This admin preview uses the same trusted wheel state; small draws show ticket numbers and larger draws show ticket ranges.</p>
+    <p className="muted draw-sync-note">Use Open Live Draw Window for OBS and customer-facing draw display. You can now choose Fast, Standard or Showcase spin speed, and use quick test ticket loads to check larger draws.</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
       <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
@@ -1766,5 +1809,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v80';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v81';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
