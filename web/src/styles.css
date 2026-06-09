@@ -2990,3 +2990,171 @@ body.broadcast-body #root {
     font-size: .72rem;
   }
 }
+
+
+/* v77 replacement draw reveal machine - removes old numbered wheel problem */
+.reveal-machine-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 520px;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(250,204,21,.18), transparent 34%),
+    radial-gradient(circle at 25% 40%, rgba(219,39,119,.14), transparent 34%),
+    radial-gradient(circle at 78% 70%, rgba(37,99,235,.16), transparent 36%),
+    rgba(15,23,42,.62);
+  border: 1px solid rgba(250,204,21,.18);
+}
+.admin-reveal-machine-wrap {
+  margin-top: 1rem;
+  min-height: 500px;
+}
+.draw-reveal-machine {
+  width: min(760px, 92%);
+  min-height: min(64vh, 620px);
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  text-align: center;
+  position: relative;
+}
+.draw-reveal-orb {
+  position: relative;
+  width: min(52vh, 500px);
+  height: min(52vh, 500px);
+  max-width: 82vw;
+  max-height: 82vw;
+  display: grid;
+  place-items: center;
+}
+.draw-reveal-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 12px solid rgba(250,204,21,.85);
+  box-shadow: 0 0 55px rgba(250,204,21,.42), inset 0 0 42px rgba(250,204,21,.2);
+}
+.draw-reveal-ring.one {
+  background: conic-gradient(from 0deg, #ef4444, #f97316, #facc15, #22c55e, #0ea5e9, #7c3aed, #db2777, #ef4444);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%);
+  mask: radial-gradient(circle, transparent 58%, #000 60%);
+}
+.draw-reveal-ring.two {
+  inset: 10%;
+  border-width: 7px;
+  border-style: dashed;
+  border-color: rgba(255,255,255,.58);
+}
+.draw-reveal-ring.three {
+  inset: 21%;
+  border-width: 3px;
+  border-color: rgba(250,204,21,.34);
+}
+.draw-reveal-core {
+  position: relative;
+  z-index: 5;
+  width: 52%;
+  height: 52%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  padding: 1rem;
+  background: radial-gradient(circle, #fff7ad 0%, #facc15 58%, #f97316 100%);
+  color: #08111f;
+  box-shadow: 0 0 45px rgba(250,204,21,.42), inset 0 0 0 8px rgba(255,255,255,.48);
+}
+.draw-reveal-core strong {
+  font-size: clamp(2.1rem, 6vw, 5.8rem);
+  line-height: .92;
+  font-weight: 1000;
+}
+.draw-reveal-core span {
+  margin-top: .4rem;
+  font-weight: 1000;
+  font-size: clamp(.72rem, 1.2vw, 1.1rem);
+  letter-spacing: .08em;
+}
+.draw-reveal-machine.is-spinning .draw-reveal-ring.one {
+  animation: revealSpin 1.2s linear infinite;
+}
+.draw-reveal-machine.is-spinning .draw-reveal-ring.two {
+  animation: revealSpinReverse 2.1s linear infinite;
+}
+.draw-reveal-machine.is-spinning .draw-reveal-core {
+  animation: revealPulse .9s ease-in-out infinite alternate;
+}
+.draw-reveal-machine.has-winner .draw-reveal-core {
+  background: radial-gradient(circle, #dcfce7 0%, #22c55e 55%, #15803d 100%);
+  color: #fff;
+}
+.draw-reveal-result {
+  width: min(680px, 100%);
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 18px 60px rgba(0,0,0,.28);
+}
+.draw-reveal-result .reveal-kicker {
+  margin: 0 0 .35rem;
+  color: #facc15;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+.draw-reveal-result h2 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 5rem);
+  line-height: .95;
+  color: #fff;
+}
+.draw-reveal-result h3 {
+  margin: .35rem 0 0;
+  font-size: clamp(1.2rem, 3vw, 3rem);
+  color: #facc15;
+}
+.broadcast-page.safe-obs .reveal-machine-wrap {
+  min-height: 0;
+  height: 100%;
+  padding-top: 3.1rem;
+  box-sizing: border-box;
+}
+.broadcast-page.safe-obs .draw-reveal-machine {
+  min-height: 0;
+  height: 100%;
+}
+.broadcast-page.safe-obs .draw-reveal-orb {
+  width: min(48vh, 470px, 42vw);
+  height: min(48vh, 470px, 42vw);
+}
+.broadcast-page.safe-obs .draw-reveal-result {
+  padding: .75rem 1rem;
+}
+@keyframes revealSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes revealSpinReverse {
+  to { transform: rotate(-360deg); }
+}
+@keyframes revealPulse {
+  from { transform: scale(.98); }
+  to { transform: scale(1.04); }
+}
+
+/* hard-disable old wheel visuals if any old DOM remains cached */
+.draw-wheel,
+.broadcast-wheel,
+.wheel-stage > .draw-wheel,
+.broadcast-wheel-wrap > .broadcast-wheel,
+.wheel-pointer,
+.broadcast-pointer,
+.stop-ticket-badge,
+.wheel-number-labels,
+.wheel-number-label,
+.wheel-label,
+.broadcast-ticket {
+  display: none !important;
+}

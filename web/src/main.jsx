@@ -46,6 +46,38 @@ function fallbackPosterUrl(c) {
   return `/demo-posters/${competitionTheme(c).key}.svg`;
 }
 
+function DrawRevealMachine({ mode = 'idle', winner = null, label = 'PRIZETOWN FINAL DRAW' }) {
+  const isSpinning = mode === 'spinning';
+  const isWinner = mode === 'winner' && winner;
+  return <div className={`draw-reveal-machine ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
+    <div className="draw-reveal-orb">
+      <div className="draw-reveal-ring one"></div>
+      <div className="draw-reveal-ring two"></div>
+      <div className="draw-reveal-ring three"></div>
+      <div className="draw-reveal-core">
+        <strong>{isWinner ? `#${winner.ticket_number}` : isSpinning ? 'DRAWING' : 'READY'}</strong>
+        <span>{isWinner ? 'WINNING TICKET' : isSpinning ? 'LIVE DRAW IN PROGRESS' : label}</span>
+      </div>
+    </div>
+    <div className="draw-reveal-result">
+      {isWinner ? <>
+        <p className="reveal-kicker">Winner selected</p>
+        <h2>Ticket #{winner.ticket_number}</h2>
+        <h3>{winner.customer_name || winner.name || 'Customer'}</h3>
+      </> : isSpinning ? <>
+        <p className="reveal-kicker">Drawing live</p>
+        <h2>Please wait...</h2>
+        <h3>Winner will reveal after the animation</h3>
+      </> : <>
+        <p className="reveal-kicker">Ready</p>
+        <h2>Waiting for draw</h2>
+        <h3>Load tickets or send an OBS test</h3>
+      </>}
+    </div>
+  </div>;
+}
+
+
 function WheelNumberLabels() {
   return null;
 }
@@ -813,19 +845,13 @@ function DrawBroadcastPage({ setPage }) {
 
       <div className="broadcast-main">
         {state?.show_arnold !== false && <ArnoldBroadcastHost mode={mode} winner={displayWinner} />}
-        <div className="broadcast-wheel-wrap">
+        <div className="broadcast-wheel-wrap reveal-machine-wrap">
           <div className="broadcast-datetime-strip">
             <span><strong>Draw:</strong> {drawDateText}</span>
             <span><strong>Time:</strong> {drawTimeText}</span>
             <span><strong>Live:</strong> {liveTimeText}</span>
           </div>
-          <div className="broadcast-pointer">STOP POINT</div>
-          <div className={`stop-ticket-badge ${displayWinner ? 'has-winner' : ''}`}>{displayWinner ? `TICKET #${displayWinner.ticket_number}` : mode === 'spinning' ? 'DRAWING...' : 'WAITING'}</div>
-          <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
-            <div className="wheel-colour-slices" aria-hidden="true"></div>
-            {tickets.length === 0 && <div className="broadcast-wheel-empty">Load tickets in admin</div>}
-            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'VISUAL DRAW'}</small></div>
-          </div>
+          <DrawRevealMachine mode={mode} winner={displayWinner} label="PRIZETOWN FINAL DRAW" />
         </div>
 
         <aside className="broadcast-info">
@@ -1180,16 +1206,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">The spinner is visual only. The fixed stop point shows the locked winning ticket after the draw finishes, and the same number appears in the winner reveal.</p>
+    <p className="muted draw-sync-note">This screen now uses a clean reveal machine instead of a numbered wheel. The ticket number is shown only after the locked draw result is ready.</p>
 
-    <div className="wheel-stage">
-      <div className="wheel-pointer">STOP POINT</div>
-      <div className={`stop-ticket-badge ${winner ? 'has-winner' : ''}`}>{winner ? `TICKET #${winner.ticket_number}` : spinning ? 'DRAWING...' : 'WAITING'}</div>
-      <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
-        <div className="wheel-colour-slices" aria-hidden="true"></div>
-        {visualEntries.length === 0 && <div className="wheel-empty">Load tickets</div>}
-        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'VISUAL DRAW'}</small></div>
-      </div>
+    <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
+      <DrawRevealMachine mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} label="ADMIN DRAW PREVIEW" />
     </div>
 
     {winner && <div className="winner-card">
@@ -1680,5 +1700,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v76';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v77';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
