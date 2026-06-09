@@ -136,7 +136,14 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
             const isWinningSegment = winner && Number(winner.ticket_number || 0) >= Number(seg.from || seg.ticket_number || 0) && Number(winner.ticket_number || 0) <= Number(seg.to || seg.ticket_number || 0);
             return <g key={`${seg.label || seg.ticket_number || i}-${i}`} className={isWinningSegment ? 'winning-segment' : ''}>
               <path d={wheelSlicePath(250, 250, 230, start, end)} fill={colours[i % colours.length]} />
-              {showLabels && <text x={textPoint.x} y={textPoint.y} textAnchor="middle" dominantBaseline="middle" className="trusted-wheel-label">{seg.label || `#${seg.ticket_number || i + 1}`}</text>}
+              {showLabels && <text
+                x={textPoint.x}
+                y={textPoint.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="trusted-wheel-label trusted-wheel-label-oriented"
+                transform={`rotate(${mid > 90 && mid < 270 ? mid + 180 : mid}, ${textPoint.x}, ${textPoint.y})`}
+              >{seg.label || `#${seg.ticket_number || i + 1}`}</text>}
             </g>;
           })}
         </g>
@@ -1828,5 +1835,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v82';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v83';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

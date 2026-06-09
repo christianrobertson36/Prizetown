@@ -3563,3 +3563,13 @@ body.broadcast-body #root {
 .segmented-buttons button {
   min-width: 86px;
 }
+
+
+/* v83 wheel label orientation */
+.trusted-wheel-label-oriented {
+  font-size: clamp(8px, .9vw, 13px) !important;
+  letter-spacing: .01em;
+}
+.trusted-wheel-svg .trusted-wheel-label {
+  dominant-baseline: middle;
+}
