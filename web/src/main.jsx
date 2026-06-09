@@ -100,6 +100,7 @@ function App() {
   const [adminAudit, setAdminAudit] = useState([]);
   const [adminInstantWins, setAdminInstantWins] = useState([]);
   const [adminPostcodeZones, setAdminPostcodeZones] = useState([]);
+  const [adminPostcodeAssignments, setAdminPostcodeAssignments] = useState([]);
   const [message, setMessage] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('prizetown_cart') || '[]'));
   const [selected, setSelected] = useState(null);
@@ -117,7 +118,7 @@ function App() {
     setCompetitions(comps); setWinners(wins); setSettings({ ...defaultSettings, ...siteSettings }); setInstantWinners(iw);
   }
   async function loadAccount() { if (!user) return; const [myEntries, myOrders] = await Promise.all([api('/me/entries'), api('/me/orders')]); setEntries(myEntries); setOrders(myOrders); }
-  async function loadAdminData() { if (user?.role !== 'admin') return; const [rows, orderRows, auditRows, iw, zones] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs'), api('/admin/instant-wins'), api('/admin/postcode-zones')]); setAdminEntries(rows); setAdminOrders(orderRows); setAdminAudit(auditRows); setAdminInstantWins(iw); setAdminPostcodeZones(zones); }
+  async function loadAdminData() { if (user?.role !== 'admin') return; const [rows, orderRows, auditRows, iw, zones, assignments] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs'), api('/admin/instant-wins'), api('/admin/postcode-zones'), api('/admin/competition-postcode-assignments')]); setAdminEntries(rows); setAdminOrders(orderRows); setAdminAudit(auditRows); setAdminInstantWins(iw); setAdminPostcodeZones(zones); setAdminPostcodeAssignments(assignments); }
   useEffect(() => { load().catch(err => setMessage(err.message)); }, []);
   useEffect(() => { if (user) loadAccount().catch(() => {}); }, [user]);
   useEffect(() => { if (user?.role === 'admin') loadAdminData().catch(() => {}); }, [user]);
@@ -141,7 +142,7 @@ function App() {
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
     {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
-    {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} postcodeZones={adminPostcodeZones} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} setPage={setPage} />}
+    {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} postcodeZones={adminPostcodeZones} postcodeAssignments={adminPostcodeAssignments} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} setPage={setPage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
 }
@@ -925,8 +926,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 }
 
 
-function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, postcodeZones = [], reload, setMessage, setPage }) {
-  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '' };
+function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, postcodeZones = [], postcodeAssignments = [], reload, setMessage, setPage }) {
+  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all' };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -939,6 +940,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [drawNotes, setDrawNotes] = useState('');
   const [drawResults, setDrawResults] = useState([]);
   const [postcodeForm, setPostcodeForm] = useState({ code: '', label: '', notes: '', active: true });
+  const [assignForm, setAssignForm] = useState({ competition_ids: [], mode: 'all', zone_ids: [] });
   useEffect(() => { setSettingsForm({ ...defaultSettings, ...settings }); }, [settings]);
 
   const liveCount = competitions.filter(c => c.status === 'active').length;
@@ -978,6 +980,31 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     setMessage('Postcode zone deleted.');
     reload();
   }
+  function toggleAssignCompetition(id) {
+    const current = assignForm.competition_ids || [];
+    setAssignForm({ ...assignForm, competition_ids: current.includes(id) ? current.filter(v => v !== id) : [...current, id] });
+  }
+  function toggleAssignZone(id) {
+    const current = assignForm.zone_ids || [];
+    setAssignForm({ ...assignForm, zone_ids: current.includes(id) ? current.filter(v => v !== id) : [...current, id] });
+  }
+  async function saveBulkPostcodeAssignment(e) {
+    e.preventDefault();
+    try {
+      const result = await api('/admin/competition-postcode-bulk', { method: 'POST', body: JSON.stringify(assignForm) });
+      setMessage(`Postcode assignment updated for ${result.updated} competitions.`);
+      setAssignForm({ competition_ids: [], mode: 'all', zone_ids: [] });
+      reload();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+  function assignmentLabel(competitionId) {
+    const found = (postcodeAssignments || []).find(a => Number(a.competition_id) === Number(competitionId));
+    if (!found || found.postcode_mode !== 'selected') return 'All postcodes';
+    const zones = safeArray(found.zones);
+    return zones.length ? zones.map(z => z.code).join(', ') : 'Selected zones not set';
+  }
   async function loadDraw() {
     if (!drawCompetitionId) return setMessage('Choose a competition first.');
     const data = await api(`/admin/competitions/${drawCompetitionId}/draw-entries`);
@@ -1005,7 +1032,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -1019,9 +1046,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       <section className="admin-content">
         {activeTab === 'overview' && <div className="panel"><h1>Dashboard overview</h1><div className="stat-grid"><div><strong>{competitions.length}</strong><span>Total competitions</span></div><div><strong>{liveCount}</strong><span>Live competitions</span></div><div><strong>{totalTickets}</strong><span>Tickets allocated</span></div><div><strong>{money(revenue)}</strong><span>Test order value</span></div><div><strong>{instantClaimed}/{instantWins.length}</strong><span>Instant wins claimed</span></div></div><div className="admin-split"><div><h2>Recent orders</h2>{orders.slice(0, 8).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div><div><h2>Recent entries</h2>{entries.slice(0, 8).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div></div>}
 
-        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Seed demo competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} · {c.entries_sold || 0}/{c.max_tickets} tickets · instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} · closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
+        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Seed demo competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} · {c.entries_sold || 0}/{c.max_tickets} tickets · postcode: {assignmentLabel(c.id)} · instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} · closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
 
-        {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label></div><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
+        {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><label>Postcode availability<select value={form.postcode_mode || 'all'} onChange={e => updateField('postcode_mode', e.target.value)}><option value="all">All postcodes</option><option value="selected">Selected postcode zones</option></select><small className="muted">Use Assign Postcodes for selecting the exact zones.</small></label><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label></div><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
 
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
@@ -1054,6 +1081,45 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           </div>
         </div>}
 
+
+        {activeTab === 'postcode-assign' && <div className="admin-split postcode-assign-admin">
+          <form className="panel" onSubmit={saveBulkPostcodeAssignment}>
+            <h1>Assign competitions to postcodes</h1>
+            <p className="muted">Choose one or more competitions, then make them available to all postcodes or selected postcode zones.</p>
+
+            <h2>1. Choose competitions</h2>
+            <div className="checkbox-stack">
+              {competitions.map(c => <label className="check-row" key={c.id}>
+                <input type="checkbox" checked={(assignForm.competition_ids || []).includes(c.id)} onChange={() => toggleAssignCompetition(c.id)} />
+                <span>{c.title} <em>({c.status})</em></span>
+              </label>)}
+            </div>
+
+            <h2>2. Choose coverage</h2>
+            <label>Availability<select value={assignForm.mode} onChange={e => setAssignForm({ ...assignForm, mode: e.target.value })}><option value="all">All postcodes</option><option value="selected">Selected postcode zones only</option></select></label>
+
+            {assignForm.mode === 'selected' && <div className="postcode-zone-picker">
+              <h2>3. Select zones</h2>
+              {postcodeZones.filter(z => z.active).length === 0 && <p className="muted">No active postcode zones yet. Add zones in Postcode Zones first.</p>}
+              {postcodeZones.filter(z => z.active).map(z => <label className="check-row" key={z.id}>
+                <input type="checkbox" checked={(assignForm.zone_ids || []).includes(z.id)} onChange={() => toggleAssignZone(z.id)} />
+                <span><strong>{z.code}</strong> {z.label ? `— ${z.label}` : ''} <em>({z.type})</em></span>
+              </label>)}
+            </div>}
+
+            <button className="primary full">Apply postcode assignment</button>
+          </form>
+
+          <div className="panel list-panel">
+            <h1>Current coverage</h1>
+            {competitions.map(c => <div className="list-row postcode-assignment-row" key={c.id}>
+              <div><strong>{c.title}</strong><p>{assignmentLabel(c.id)}</p></div>
+              <button type="button" onClick={() => setAssignForm({ competition_ids: [c.id], mode: 'all', zone_ids: [] })}>Set all</button>
+              <button type="button" onClick={() => setAssignForm({ competition_ids: [c.id], mode: 'selected', zone_ids: safeArray((postcodeAssignments || []).find(a => Number(a.competition_id) === Number(c.id))?.zones).map(z => z.id) })}>Edit zones</button>
+            </div>)}
+          </div>
+        </div>}
+
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}><h1>Site settings</h1><div className="two"><label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label><label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label></div><label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label><label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label><label>Global free entry route<textarea value={settingsForm.free_entry_global || ''} onChange={e => setSettingsForm({ ...settingsForm, free_entry_global: e.target.value })} /></label><label>Terms / legal text<textarea value={settingsForm.terms_text || ''} onChange={e => setSettingsForm({ ...settingsForm, terms_text: e.target.value })} /></label><label>Responsible play text<textarea value={settingsForm.responsible_play_text || ''} onChange={e => setSettingsForm({ ...settingsForm, responsible_play_text: e.target.value })} /></label><button className="primary full">Save site settings</button></form>}
 
         {activeTab === 'audit' && <div className="panel list-panel"><h1>Audit log</h1>{(auditLogs || []).length === 0 && <p className="muted">No audit log entries yet.</p>}{(auditLogs || []).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} · {a.details} · {new Date(a.created_at).toLocaleString()}</p></div></div>)}</div>}
@@ -1064,5 +1130,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v57';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v58';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

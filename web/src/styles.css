@@ -1954,3 +1954,42 @@ label small.muted {
   margin-top: .35rem;
   color: rgba(254,243,199,.62);
 }
+
+
+/* v58 postcode competition assignment */
+.checkbox-stack,
+.postcode-zone-picker {
+  display: grid;
+  gap: .55rem;
+  margin: .75rem 0 1rem;
+  max-height: 24rem;
+  overflow: auto;
+  padding: .75rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.checkbox-stack .check-row,
+.postcode-zone-picker .check-row {
+  justify-content: flex-start;
+  gap: .65rem;
+  padding: .55rem .6rem;
+  border-radius: .75rem;
+  background: rgba(255,255,255,.045);
+}
+.checkbox-stack em,
+.postcode-zone-picker em {
+  color: rgba(254,243,199,.58);
+  font-style: normal;
+  font-size: .86rem;
+}
+.postcode-assignment-row p {
+  color: #fde68a;
+  font-weight: 850;
+}
+.postcode-assign-admin h2 {
+  margin-top: 1rem;
+  margin-bottom: .35rem;
+  font-size: 1rem;
+  color: #facc15;
+}

@@ -120,6 +120,14 @@ async function initDb() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+
+    CREATE TABLE IF NOT EXISTS competition_postcode_zones (
+      competition_id INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
+      zone_id INTEGER NOT NULL REFERENCES postcode_zones(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (competition_id, zone_id)
+    );
+
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -236,6 +244,7 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS ticket_presets TEXT NOT NULL DEFAULT '10,20,50,100,250,500,1000,2500';
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS max_per_order INTEGER NOT NULL DEFAULT 2500;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Instant Wins';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS postcode_mode TEXT NOT NULL DEFAULT 'all';
 
     INSERT INTO site_settings (key, value) VALUES
       ('site_name', 'Prizetown'),
@@ -259,6 +268,7 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS ticket_presets TEXT NOT NULL DEFAULT '10,20,50,100,250,500,1000,2500';
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS max_per_order INTEGER NOT NULL DEFAULT 2500;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Instant Wins';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS postcode_mode TEXT NOT NULL DEFAULT 'all';
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
@@ -269,6 +279,7 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_users_postcode_area ON users(postcode_area);
     CREATE INDEX IF NOT EXISTS idx_users_postcode_outcode ON users(postcode_outcode);
     CREATE INDEX IF NOT EXISTS idx_postcode_zones_active ON postcode_zones(active);
+    CREATE INDEX IF NOT EXISTS idx_competition_postcode_zones_zone ON competition_postcode_zones(zone_id);
   `);
 
   await pool.query(`ALTER TABLE instant_win_prizes ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE`).catch(() => {});
@@ -318,7 +329,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v57' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v58' }));
 
 
 async function getSettingsObject() {
@@ -577,6 +588,68 @@ app.delete('/admin/postcode-zones/:id', auth('admin'), async (req, res) => {
   res.json({ ok: true });
 });
 
+
+app.get('/admin/competition-postcode-assignments', auth('admin'), async (_req, res) => {
+  const result = await query(`
+    SELECT c.id AS competition_id, c.title AS competition_title, COALESCE(c.postcode_mode, 'all') AS postcode_mode,
+           COALESCE(json_agg(json_build_object('id', z.id, 'code', z.code, 'label', z.label, 'type', z.type) ORDER BY z.code) FILTER (WHERE z.id IS NOT NULL), '[]') AS zones
+    FROM competitions c
+    LEFT JOIN competition_postcode_zones cpz ON cpz.competition_id = c.id
+    LEFT JOIN postcode_zones z ON z.id = cpz.zone_id
+    GROUP BY c.id
+    ORDER BY c.created_at DESC
+  `);
+  res.json(result.rows);
+});
+
+async function saveCompetitionPostcodeAssignment({ competitionId, mode, zoneIds }) {
+  const cleanMode = mode === 'selected' ? 'selected' : 'all';
+  await query('UPDATE competitions SET postcode_mode=$1, updated_at=NOW() WHERE id=$2', [cleanMode, competitionId]);
+  await query('DELETE FROM competition_postcode_zones WHERE competition_id=$1', [competitionId]);
+
+  if (cleanMode === 'selected') {
+    const ids = Array.isArray(zoneIds) ? zoneIds.map(v => toInt(v)).filter(Boolean) : [];
+    for (const zoneId of [...new Set(ids)]) {
+      await query(`
+        INSERT INTO competition_postcode_zones (competition_id, zone_id)
+        VALUES ($1,$2)
+        ON CONFLICT DO NOTHING
+      `, [competitionId, zoneId]);
+    }
+  }
+}
+
+app.patch('/admin/competitions/:id/postcode-zones', auth('admin'), async (req, res) => {
+  const competitionId = toInt(req.params.id);
+  const exists = await query('SELECT id, title FROM competitions WHERE id=$1', [competitionId]);
+  if (!exists.rows[0]) return res.status(404).json({ error: 'Competition not found' });
+
+  await saveCompetitionPostcodeAssignment({
+    competitionId,
+    mode: req.body.mode,
+    zoneIds: req.body.zone_ids || []
+  });
+
+  await audit(req.user, 'competition_postcode_assignment_updated', `Updated postcode assignment for ${exists.rows[0].title}`);
+  res.json({ ok: true });
+});
+
+app.post('/admin/competition-postcode-bulk', auth('admin'), async (req, res) => {
+  const competitionIds = Array.isArray(req.body.competition_ids) ? req.body.competition_ids.map(v => toInt(v)).filter(Boolean) : [];
+  if (competitionIds.length === 0) return res.status(400).json({ error: 'Choose at least one competition' });
+
+  for (const competitionId of [...new Set(competitionIds)]) {
+    await saveCompetitionPostcodeAssignment({
+      competitionId,
+      mode: req.body.mode,
+      zoneIds: req.body.zone_ids || []
+    });
+  }
+
+  await audit(req.user, 'competition_postcode_bulk_updated', `Updated postcode assignment for ${competitionIds.length} competitions`);
+  res.json({ ok: true, updated: competitionIds.length });
+});
+
 app.post('/admin/upload', auth('admin'), upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   res.json({ url: `/uploads/${req.file.filename}` });
@@ -586,10 +659,10 @@ app.post('/admin/competitions', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     INSERT INTO competitions
-    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category, postcode_mode)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
     RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins']);
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all']);
   await audit(req.user, 'competition_created', `Created competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
@@ -600,10 +673,10 @@ app.patch('/admin/competitions/:id', auth('admin'), async (req, res) => {
     UPDATE competitions SET
       title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6, rules_text=$7,
       closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13, draw_at=$14, status=$15, image_url=$16,
-      prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20,
+      prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20, postcode_mode=$21,
       updated_at=NOW()
-    WHERE id=$21 RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', req.params.id]);
+    WHERE id=$22 RETURNING *
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Competition not found' });
   await audit(req.user, 'competition_updated', `Updated competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
@@ -1078,7 +1151,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v57 postcode signup and zones)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v58 competition postcode assignment)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
