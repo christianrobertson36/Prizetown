@@ -124,7 +124,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
       <svg className="trusted-wheel-svg" viewBox="0 0 500 500" role="img" aria-label="Prizetown draw wheel">
         <defs>
           <clipPath id="trustedWheelLogoClip">
-            <circle cx="250" cy="250" r="64" />
+            <circle cx="250" cy="250" r="58" />
           </clipPath>
         </defs>
         <g className="trusted-wheel-rotor" style={{ transform: `rotate(${rotation}deg)`, transformOrigin: '250px 250px' }}>
@@ -141,8 +141,8 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
           })}
         </g>
         <circle cx="250" cy="250" r="108" className="trusted-wheel-centre" />
-        <circle cx="250" cy="250" r="72" className="trusted-wheel-logo-ring" />
-        <image href="/prizetown-logo.png" x="178" y="178" width="144" height="144" preserveAspectRatio="xMidYMid slice" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
+        <circle cx="250" cy="250" r="66" className="trusted-wheel-logo-ring" />
+        <image href="/prizetown-logo.png" x="192" y="192" width="116" height="116" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
         <text x="250" y="336" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
       </svg>
     </div>
@@ -1310,6 +1310,25 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button><button className="primary" onClick={sendObsTest}>Send OBS Test</button><button className="secondary obs-test-off" onClick={clearObsTest}>OBS Test Off</button><button className="secondary" onClick={toggleArnold}>{showArnold ? 'Hide Arnold' : 'Show Arnold'}</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
     </div>
 
+    <div className="draw-extra-controls">
+      <div className="draw-speed-controls">
+        <span className="control-label">Spin speed</span>
+        <div className="segmented-buttons">
+          <button type="button" className={spinSpeed === 'fast' ? 'primary' : 'secondary'} onClick={() => setSpeedPreset('fast')}>Fast</button>
+          <button type="button" className={spinSpeed === 'standard' ? 'primary' : 'secondary'} onClick={() => setSpeedPreset('standard')}>Standard</button>
+          <button type="button" className={spinSpeed === 'showcase' ? 'primary' : 'secondary'} onClick={() => setSpeedPreset('showcase')}>Showcase</button>
+        </div>
+      </div>
+      <div className="draw-speed-controls">
+        <span className="control-label">Quick test ticket loads</span>
+        <div className="segmented-buttons">
+          <button type="button" className="secondary" onClick={() => loadTestEntries(50)}>50</button>
+          <button type="button" className="secondary" onClick={() => loadTestEntries(150)}>150</button>
+          <button type="button" className="secondary" onClick={() => loadTestEntries(500)}>500</button>
+        </div>
+      </div>
+    </div>
+
     <div className="draw-stats">
       <div><strong>{entryList.length}</strong><span>eligible tickets loaded</span></div>
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
@@ -1809,5 +1828,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v81';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v82';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

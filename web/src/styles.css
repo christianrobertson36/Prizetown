@@ -3517,3 +3517,49 @@ body.broadcast-body #root {
 .segmented-buttons button {
   min-width: 84px;
 }
+
+
+/* v82 logo fit + visible draw controls fix */
+.trusted-wheel-logo-ring {
+  fill: rgba(15,23,42,.96) !important;
+  stroke: #f5d34f !important;
+  stroke-width: 7 !important;
+}
+.trusted-wheel-centre-logo {
+  opacity: 1 !important;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.trusted-wheel-centre {
+  fill: #facc15 !important;
+}
+.draw-extra-controls {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: .85rem;
+  margin: .95rem 0 1rem;
+}
+.draw-speed-controls {
+  display: block !important;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(245, 211, 79, 0.24);
+  border-radius: 16px;
+  padding: .85rem 1rem;
+}
+.control-label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: #facc15;
+  margin-bottom: .55rem;
+}
+.segmented-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.segmented-buttons button {
+  min-width: 86px;
+}

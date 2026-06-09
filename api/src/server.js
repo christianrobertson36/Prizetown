@@ -513,7 +513,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v81' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v82' }));
 
 
 async function getSettingsObject() {
@@ -1577,7 +1577,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v81 round logo speed controls)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v82 logo controls fix)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
