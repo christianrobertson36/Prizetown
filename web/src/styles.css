@@ -2888,3 +2888,105 @@ body.broadcast-body #root {
   color: #facc15;
   font-weight: 1000;
 }
+
+
+/* v76 fixed stop point + ticket badge draw layout */
+.draw-wheel .wheel-colour-slices::before,
+.broadcast-wheel .wheel-colour-slices::before {
+  content: "" !important;
+  display: none !important;
+}
+.broadcast-pointer,
+.wheel-pointer {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: .45rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  min-width: 150px;
+  padding: .42rem .85rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  font-weight: 1000;
+  letter-spacing: .08em;
+  font-size: .78rem;
+  box-shadow: 0 10px 30px rgba(250,204,21,.35);
+}
+.broadcast-pointer::before,
+.wheel-pointer::before {
+  content: "▼";
+  margin-right: .45rem;
+  font-size: 1rem;
+}
+.broadcast-pointer::after,
+.wheel-pointer::after {
+  content: "";
+}
+.stop-ticket-badge {
+  position: absolute;
+  top: 3.05rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 31;
+  min-width: 180px;
+  padding: .5rem 1rem;
+  border-radius: 999px;
+  background: rgba(15,23,42,.94);
+  border: 1px solid rgba(250,204,21,.38);
+  color: rgba(254,243,199,.86);
+  font-weight: 1000;
+  font-size: clamp(.86rem, 1vw, 1.05rem);
+  text-align: center;
+  box-shadow: 0 12px 34px rgba(0,0,0,.38);
+}
+.stop-ticket-badge.has-winner {
+  background: linear-gradient(135deg, rgba(34,197,94,.95), rgba(21,128,61,.95));
+  color: #fff;
+  border-color: rgba(187,247,208,.7);
+  font-size: clamp(1rem, 1.4vw, 1.35rem);
+}
+.wheel-stage,
+.broadcast-wheel-wrap {
+  position: relative;
+}
+.draw-wheel .wheel-centre,
+.broadcast-wheel .broadcast-centre {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  rotate: 0deg !important;
+  text-align: center;
+}
+.draw-wheel .wheel-centre small,
+.broadcast-wheel .broadcast-centre small {
+  display: block;
+  margin-top: .4rem;
+  letter-spacing: .04em;
+}
+.broadcast-page.safe-obs .broadcast-wheel-wrap {
+  padding-top: 5.4rem;
+}
+.broadcast-page.safe-obs .broadcast-datetime-strip {
+  top: .25rem;
+}
+.broadcast-page.safe-obs .broadcast-pointer {
+  top: 2.3rem;
+}
+.broadcast-page.safe-obs .stop-ticket-badge {
+  top: 5rem;
+}
+.draw-room .wheel-stage {
+  padding-top: 5.5rem;
+}
+@media (max-width: 900px) {
+  .broadcast-pointer,
+  .wheel-pointer,
+  .stop-ticket-badge {
+    min-width: 135px;
+    font-size: .72rem;
+  }
+}

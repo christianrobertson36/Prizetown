@@ -819,7 +819,8 @@ function DrawBroadcastPage({ setPage }) {
             <span><strong>Time:</strong> {drawTimeText}</span>
             <span><strong>Live:</strong> {liveTimeText}</span>
           </div>
-          <div className="broadcast-pointer">▼</div>
+          <div className="broadcast-pointer">STOP POINT</div>
+          <div className={`stop-ticket-badge ${displayWinner ? 'has-winner' : ''}`}>{displayWinner ? `TICKET #${displayWinner.ticket_number}` : mode === 'spinning' ? 'DRAWING...' : 'WAITING'}</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
             <div className="wheel-colour-slices" aria-hidden="true"></div>
             {tickets.length === 0 && <div className="broadcast-wheel-empty">Load tickets in admin</div>}
@@ -1179,10 +1180,11 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">The spinner is visual only. The winning ticket is locked once at spin start and appears only in the final winner reveal, so no wheel number can conflict with the result.</p>
+    <p className="muted draw-sync-note">The spinner is visual only. The fixed stop point shows the locked winning ticket after the draw finishes, and the same number appears in the winner reveal.</p>
 
     <div className="wheel-stage">
-      <div className="wheel-pointer">▼</div>
+      <div className="wheel-pointer">STOP POINT</div>
+      <div className={`stop-ticket-badge ${winner ? 'has-winner' : ''}`}>{winner ? `TICKET #${winner.ticket_number}` : spinning ? 'DRAWING...' : 'WAITING'}</div>
       <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
         <div className="wheel-colour-slices" aria-hidden="true"></div>
         {visualEntries.length === 0 && <div className="wheel-empty">Load tickets</div>}
@@ -1678,5 +1680,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v75';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v76';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
