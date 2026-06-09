@@ -45,6 +45,30 @@ const defaultSettings = {
 };
 function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; return 'home'; }
 
+
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, message: error?.message || 'Something went wrong' };
+  }
+  componentDidCatch(error, info) {
+    console.error('Prizetown screen error', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <main><section className="panel checkout-error">
+        <h1>Screen error</h1>
+        <p>{this.state.message}</p>
+        <button className="primary" onClick={() => window.location.reload()}>Reload Prizetown</button>
+      </section></main>;
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [page, setPageState] = useState(initialPage());
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('prizetown_user') || 'null'));
@@ -468,33 +492,45 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
   async function publishBroadcastState(nextState) {
     try {
-      await api('/admin/draw/broadcast-state', { method: 'POST', body: JSON.stringify(nextState) });
+      await api('/admin/draw/broadcast-state', { method: 'POST', body: JSON.stringify(nextState || {}) });
+      return true;
     } catch (err) {
-      setMessage(`Broadcast sync failed: ${err.message}`);
+      console.warn('Broadcast sync failed', err);
+      setMessage(`Tickets loaded, but OBS broadcast sync failed: ${err.message}`);
+      return false;
     }
   }
 
   function visualTicketSample(rows) {
-    if (!rows || rows.length === 0) return [];
-    if (rows.length <= 120) return rows.map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
-    const step = Math.ceil(rows.length / 120);
-    return rows.filter((_, i) => i % step === 0).slice(0, 120).map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
+    const safeRows = Array.isArray(rows) ? rows : [];
+    if (safeRows.length === 0) return [];
+    const limit = 120;
+    const step = Math.max(1, Math.ceil(safeRows.length / limit));
+    return safeRows
+      .filter((_, i) => i % step === 0)
+      .slice(0, limit)
+      .map((e, i) => ({
+        ticket_number: e?.ticket_number ?? e?.ticket ?? i + 1,
+        customer_name: e?.customer_name || e?.name || ''
+      }));
   }
 
   function broadcastBase(rows = entries, mode = 'ready', picked = winner) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const c = competition || competitions.find(x => String(x.id) === String(competitionId)) || {};
     return {
       mode,
-      competition_id: competition?.id || competitionId || null,
-      competition_title: competition?.title || '',
-      competition_number: competition?.id ? `#${competition.id}` : '',
-      draw_date: competition?.draw_at || '',
-      ticket_capacity: competition?.max_tickets || 0,
-      eligible_count: rows.length || 0,
-      visual_tickets: visualTicketSample(rows),
+      competition_id: c.id || competitionId || null,
+      competition_title: c.title || '',
+      competition_number: c.id ? `#${c.id}` : '',
+      draw_date: c.draw_at || '',
+      ticket_capacity: Number(c.max_tickets || 0),
+      eligible_count: safeRows.length,
+      visual_tickets: visualTicketSample(safeRows),
       winner: picked ? {
-        ticket_number: picked.ticket_number,
-        customer_name: picked.customer_name || picked.name || 'Customer',
-        email: picked.email || picked.customer_email || ''
+        ticket_number: picked?.ticket_number ?? '',
+        customer_name: picked?.customer_name || picked?.name || 'Customer',
+        email: picked?.email || picked?.customer_email || ''
       } : null
     };
   }
@@ -521,7 +557,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       const rows = await api(`/admin/competitions/${competitionId}/draw-entries`);
       setEntries(rows || []);
       setMessage(`${rows.length} eligible draw tickets loaded.`);
-      await publishBroadcastState(broadcastBase(rows || [], 'ready', null));
+      publishBroadcastState(broadcastBase(rows || [], 'ready', null));
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -734,5 +770,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v40';
-createRoot(document.getElementById('root')).render(<App />);
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v41';
+createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

@@ -287,7 +287,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v40' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v41' }));
 
 
 async function getSettingsObject() {
@@ -391,12 +391,20 @@ app.get('/draw/broadcast-state', (_req, res) => {
 });
 
 app.post('/admin/draw/broadcast-state', auth('admin'), (req, res) => {
-  drawBroadcastState = {
-    ...drawBroadcastState,
-    ...(req.body || {}),
-    updated_at: new Date().toISOString()
-  };
-  res.json(drawBroadcastState);
+  try {
+    const body = req.body || {};
+    drawBroadcastState = {
+      ...drawBroadcastState,
+      ...body,
+      visual_tickets: Array.isArray(body.visual_tickets) ? body.visual_tickets.slice(0, 150) : [],
+      winner: body.winner || null,
+      updated_at: new Date().toISOString()
+    };
+    res.json(drawBroadcastState);
+  } catch (err) {
+    console.error('Broadcast state update failed', err);
+    res.status(400).json({ error: err.message || 'Broadcast state update failed' });
+  }
 });
 
 app.post('/admin/draw/broadcast-reset', auth('admin'), (_req, res) => {
@@ -961,7 +969,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v40 OBS menu build fix)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v41 draw load blank fix)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

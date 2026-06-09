@@ -1117,3 +1117,12 @@ details { margin-top: 1rem; color: #c8cada; }
   color: #fde68a;
   overflow-wrap: anywhere;
 }
+
+
+/* v41 draw load blank-screen safety */
+.screen-error-note {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.35);
+}
