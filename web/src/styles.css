@@ -2150,3 +2150,54 @@ label small.muted {
 .site-footer .footer-column details summary {
   cursor: pointer;
 }
+
+
+/* v63 legal pages and editable legal text */
+.legal-main {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+.legal-panel h1 {
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  margin-bottom: 1rem;
+}
+.legal-copy {
+  white-space: normal;
+  line-height: 1.7;
+  color: rgba(255,255,255,.88);
+}
+.legal-copy p {
+  margin: .55rem 0;
+}
+.legal-copy p:first-of-type {
+  color: #facc15;
+  font-weight: 1000;
+  font-size: 1.15rem;
+}
+.legal-contact {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(250,204,21,.10);
+  border: 1px solid rgba(250,204,21,.18);
+}
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: .65rem;
+}
+.footer-links button {
+  padding: .35rem .55rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #fef3c7;
+  font-weight: 850;
+}
+.legal-editor textarea {
+  min-height: 9rem;
+  font-family: inherit;
+  line-height: 1.45;
+}

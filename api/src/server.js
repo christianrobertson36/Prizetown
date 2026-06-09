@@ -509,7 +509,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v62' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v63' }));
 
 
 async function getSettingsObject() {
@@ -526,8 +526,14 @@ const allowedSettings = [
   'footer_text',
   'free_entry_global',
   'terms_text',
+  'privacy_text',
+  'cookie_text',
+  'refund_text',
+  'winner_publication_text',
   'responsible_play_text',
-  'age_confirmation_text'
+  'age_confirmation_text',
+  'promoter_text',
+  'postal_entry_address'
 ];
 
 app.get('/settings', async (_req, res) => {
@@ -1427,7 +1433,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v62 live footer polish)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v63 editable legal text)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

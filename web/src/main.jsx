@@ -48,13 +48,129 @@ function fallbackPosterUrl(c) {
 
 
 const defaultSettings = {
-  site_name: 'Prizetown', support_email: 'support@prizetown.local', hero_eyebrow: 'Custom competition platform',
-  hero_title: 'Win big prizes with Prizetown', hero_text: 'Browse live postcode prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.',
-  footer_text: 'Prizetown runs postcode-based prize competitions with clear entry limits, responsible play guidance and transparent draw information.', free_entry_global: 'Free postal entry is available for eligible competitions. Please read each competition page and site terms before entering.',
-  terms_text: 'Add your competition terms, eligibility rules, draw process, free entry route and privacy/contact wording here before going public.', responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
-  age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules and free-entry terms.'
+  site_name: 'Prizetown',
+  support_email: 'support@prizetown.local',
+  hero_eyebrow: 'Postcode prize competitions',
+  hero_title: 'Win big prizes with Prizetown',
+  hero_text: 'Browse live postcode prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.',
+  footer_text: 'Prizetown runs postcode-based prize competitions with clear entry limits, responsible play guidance and transparent draw information.',
+  free_entry_global: `Free Postal Entry Route
+
+Where a competition offers free postal entry, postal entries must be submitted before the stated deadline and must include the required details clearly and legibly.
+
+Unless the individual competition page says otherwise, include:
+- Full name
+- Date of birth
+- Email address
+- Contact telephone number
+- Full postal address and postcode
+- Competition name
+- The answer to the competition question, where required
+
+Each postal entry must be sent separately. Bulk, automated, mechanically reproduced, incomplete, illegible or late entries may be rejected. Valid free entries are given the same chance of winning as paid entries and are entered into the same draw.
+
+The postal address and any competition-specific deadline should be shown on the competition page or in Admin settings before launch.`,
+  terms_text: `Prizetown Terms and Conditions
+
+1. About Prizetown
+Prizetown operates postcode-based prize competitions. Each competition page explains the prize, ticket price, closing date, maximum tickets, maximum entries per user, eligibility rules, draw method and any free-entry route.
+
+2. Eligibility
+Unless stated otherwise on a competition page, entries are open to UK residents aged 18 or over. You must provide accurate account and contact details. We may ask a winner to provide proof of identity, age, address and eligibility before a prize is awarded.
+
+3. How to enter
+You can enter online by selecting tickets, answering the competition question and completing checkout. Where a free postal entry route is offered, free entries are treated fairly and entered into the same draw as paid entries, subject to the competition rules and deadlines.
+
+4. Competition questions
+Competitions may require a question or skill element. Incorrect, incomplete, automated, bulk, fraudulent or duplicate entries may be rejected.
+
+5. Ticket numbers and limits
+Ticket numbers are allocated after a valid entry is accepted. Each competition may have a maximum number of tickets, a maximum number per user and postcode availability rules. We may refuse or cancel entries that breach these limits.
+
+6. Draws and winner selection
+Final draws are made from valid entries after the closing date or when the competition sells out, depending on the competition rules. Instant-win prizes, where offered, are awarded when a valid ticket matches a configured winning ticket number. Draw records may be kept for audit and transparency.
+
+7. Prizes
+Prizes are as described on the competition page. Prizes are non-transferable unless we agree otherwise. We may substitute a prize of equal or greater value if the advertised prize becomes unavailable for reasons outside our reasonable control.
+
+8. Winner contact and publication
+Winners will be contacted using the details on their account or entry. Winner names, initials, town/county and prize details may be published for transparency unless a lawful objection applies.
+
+9. Refunds, cancellations and changes
+We may cancel, extend, amend or withdraw a competition where necessary for technical, legal, operational or fairness reasons. If a competition is cancelled, eligible paid entries may be refunded or handled as stated on the competition page.
+
+10. Fair use and fraud prevention
+We may suspend accounts, void entries or withhold prizes where we reasonably suspect fraud, abuse, automated entry, payment issues, chargebacks, false information, multiple-account abuse or breach of the rules.
+
+11. Liability
+Prizetown is not responsible for losses caused by incorrect details provided by entrants, internet failures, email delivery issues, third-party payment problems or events outside our reasonable control, except where the law says liability cannot be limited.
+
+12. Responsible play
+Only enter what you can afford. Prizetown is intended as entertainment, not a way to make money. If entering competitions stops being fun, take a break.
+
+13. Governing law
+These terms are intended for use in the United Kingdom and are governed by the laws of England and Wales unless mandatory local laws apply.
+
+14. Contact
+For support, contact us using the support email shown on the website.`,
+  privacy_text: `Prizetown Privacy Notice
+
+1. Who we are
+Prizetown collects and uses personal information to operate postcode-based prize competitions, customer accounts, entries, orders, free-entry processing, winner contact and website administration.
+
+2. Information we collect
+We may collect your name, email address, password hash, postcode, contact details, entry details, ticket numbers, order details, payment references, IP/device information, support messages, free-entry details and winner verification information.
+
+3. Why we use your information
+We use personal information to create accounts, process entries, allocate tickets, run draws, contact winners, prevent fraud, manage refunds or chargebacks, provide support, keep audit records, comply with legal obligations and improve the website.
+
+4. Lawful bases
+Depending on the activity, we may rely on contract, legal obligation, legitimate interests and consent. For example, we need some details to provide competition entry services and may need to keep records for accounting, fraud prevention and compliance.
+
+5. Sharing information
+We may share information with service providers such as hosting providers, payment processors, email providers, professional advisers, fraud-prevention services or regulators where necessary. We do not sell personal information.
+
+6. Winner publication
+For transparency, winner details such as name, initials, general location and prize won may be published where lawful. You can contact us if you have a concern about winner publication.
+
+7. How long we keep information
+We keep information only as long as needed for competition administration, customer support, accounting, legal, fraud-prevention and audit purposes.
+
+8. Your rights
+You may have rights to access, correct, delete, restrict or object to use of your personal information, and to complain to the Information Commissioner's Office if you are unhappy with how your data is handled.
+
+9. Security
+We use reasonable technical and organisational measures to protect account, entry and order information.
+
+10. Contact
+For privacy questions, contact the support email shown on the website.`,
+  cookie_text: `Cookie Notice
+
+Prizetown may use essential cookies or local storage to keep you logged in, remember your basket and operate the website securely. These are needed for the site to work.
+
+If analytics, advertising pixels or optional tracking tools are added later, the cookie notice should be updated and a consent banner should be used where required.
+
+You can control cookies through your browser settings, but blocking essential cookies may stop account, basket or checkout features working correctly.`,
+  refund_text: `Refunds and Cancellations
+
+Entries are normally final once ticket numbers are allocated, unless the law requires otherwise or Prizetown agrees a refund.
+
+We may refund or cancel entries where:
+- A competition is cancelled
+- A payment error occurs
+- Duplicate or incorrect entries are identified
+- A customer breaches entry limits
+- Fraud, chargeback or abuse is suspected
+- A technical issue affects fairness
+
+If a competition is cancelled, Prizetown may refund eligible paid entries or offer another fair remedy. Free entries do not create a cash refund entitlement.`,
+  winner_publication_text: 'Winner names, initials, general location and prize details may be published for transparency unless a lawful objection applies.',
+  responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
+  age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules, terms, privacy notice and free-entry terms.',
+  promoter_text: 'Promoter details can be edited in Admin → Legal Text. Add your trading name, address and company details before full public launch.',
+  postal_entry_address: 'Add postal entry address in Admin → Legal Text.'
 };
-function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; return 'home'; }
+function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
 class AppErrorBoundary extends React.Component {
@@ -129,7 +245,7 @@ function App() {
   return <div>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src="/prizetown-logo.png" alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
-      <button type="button" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button>
+      <button type="button" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
       {user?.role === 'admin' && <button onClick={() => { setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
@@ -139,6 +255,11 @@ function App() {
     {page === 'home' && <Home settings={settings} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
+    {page === 'terms' && <LegalPage title="Terms and Conditions" text={settings.terms_text || defaultSettings.terms_text} settings={settings} setPage={setPage} />}
+    {page === 'privacy' && <LegalPage title="Privacy Notice" text={settings.privacy_text || defaultSettings.privacy_text} settings={settings} setPage={setPage} />}
+    {page === 'free-entry' && <LegalPage title="Free Entry Route" text={settings.free_entry_global || defaultSettings.free_entry_global} settings={settings} setPage={setPage} />}
+    {page === 'cookies' && <LegalPage title="Cookie Notice" text={settings.cookie_text || defaultSettings.cookie_text} settings={settings} setPage={setPage} />}
+    {page === 'refunds' && <LegalPage title="Refunds and Cancellations" text={settings.refund_text || defaultSettings.refund_text} settings={settings} setPage={setPage} />}
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
     {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
@@ -320,7 +441,13 @@ return <main>
       <div className="footer-column">
         <h3>Transparency</h3>
         <p>Competition details, ticket limits, closing dates and draw information are shown clearly before entry.</p>
-        <details><summary>Site terms</summary><p>{settings.terms_text}</p></details>
+        <div className="footer-links">
+          <button type="button" onClick={() => setPage('terms')}>Terms</button>
+          <button type="button" onClick={() => setPage('privacy')}>Privacy</button>
+          <button type="button" onClick={() => setPage('free-entry')}>Free entry</button>
+          <button type="button" onClick={() => setPage('cookies')}>Cookies</button>
+          <button type="button" onClick={() => setPage('refunds')}>Refunds</button>
+        </div>
       </div>
     </footer>}
   </main>;
@@ -1120,7 +1247,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -1295,8 +1422,36 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             </div>
           </div>
         </div>}
+        {activeTab === 'legal-text' && <form className="panel settings-panel legal-editor" onSubmit={saveSettings}>
+          <h1>Legal Text</h1>
+          <p className="muted">Edit the customer-facing legal pages. This is starter wording only — have it checked by a UK solicitor/accountant before taking large volumes of paid entries.</p>
+          <div className="two">
+            <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
+            <label>Postal entry address<input value={settingsForm.postal_entry_address || ''} onChange={e => setSettingsForm({ ...settingsForm, postal_entry_address: e.target.value })} /></label>
+          </div>
+          <label>Promoter / company details<textarea rows="4" value={settingsForm.promoter_text || ''} onChange={e => setSettingsForm({ ...settingsForm, promoter_text: e.target.value })} /></label>
+          <label>Terms and Conditions<textarea rows="14" value={settingsForm.terms_text || ''} onChange={e => setSettingsForm({ ...settingsForm, terms_text: e.target.value })} /></label>
+          <label>Privacy Notice<textarea rows="14" value={settingsForm.privacy_text || ''} onChange={e => setSettingsForm({ ...settingsForm, privacy_text: e.target.value })} /></label>
+          <label>Free Entry Route<textarea rows="10" value={settingsForm.free_entry_global || ''} onChange={e => setSettingsForm({ ...settingsForm, free_entry_global: e.target.value })} /></label>
+          <label>Cookie Notice<textarea rows="8" value={settingsForm.cookie_text || ''} onChange={e => setSettingsForm({ ...settingsForm, cookie_text: e.target.value })} /></label>
+          <label>Refunds and Cancellations<textarea rows="8" value={settingsForm.refund_text || ''} onChange={e => setSettingsForm({ ...settingsForm, refund_text: e.target.value })} /></label>
+          <label>Winner publication text<textarea rows="5" value={settingsForm.winner_publication_text || ''} onChange={e => setSettingsForm({ ...settingsForm, winner_publication_text: e.target.value })} /></label>
+          <label>Responsible play text<textarea rows="5" value={settingsForm.responsible_play_text || ''} onChange={e => setSettingsForm({ ...settingsForm, responsible_play_text: e.target.value })} /></label>
+          <label>Age confirmation text<textarea rows="4" value={settingsForm.age_confirmation_text || ''} onChange={e => setSettingsForm({ ...settingsForm, age_confirmation_text: e.target.value })} /></label>
+          <button className="primary full">Save legal text</button>
+        </form>}
 
-        {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}><h1>Site settings</h1><div className="two"><label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label><label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label></div><label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label><label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label><label>Global free entry route<textarea value={settingsForm.free_entry_global || ''} onChange={e => setSettingsForm({ ...settingsForm, free_entry_global: e.target.value })} /></label><label>Terms / legal text<textarea value={settingsForm.terms_text || ''} onChange={e => setSettingsForm({ ...settingsForm, terms_text: e.target.value })} /></label><label>Responsible play text<textarea value={settingsForm.responsible_play_text || ''} onChange={e => setSettingsForm({ ...settingsForm, responsible_play_text: e.target.value })} /></label><button className="primary full">Save site settings</button></form>}
+        {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}>
+          <h1>Site settings</h1>
+          <div className="two">
+            <label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label>
+            <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
+          </div>
+          <label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label>
+          <label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label>
+          <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
+          <button className="primary full">Save site settings</button>
+        </form>}
 
         {activeTab === 'audit' && <div className="panel list-panel"><h1>Audit log</h1>{(auditLogs || []).length === 0 && <p className="muted">No audit log entries yet.</p>}{(auditLogs || []).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} · {a.details} · {new Date(a.created_at).toLocaleString()}</p></div></div>)}</div>}
       </section>
@@ -1304,7 +1459,22 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   </main>;
 }
 
+
+function LegalPage({ title, text, settings, setPage }) {
+  return <main className="legal-main">
+    <section className="panel legal-panel">
+      <button type="button" className="link" onClick={() => setPage('home')}>Back to competitions</button>
+      <h1>{title}</h1>
+      <div className="legal-copy">{String(text || '').split('\n').map((line, index) => line.trim() === '' ? <br key={index} /> : <p key={index}>{line}</p>)}</div>
+      <div className="legal-contact">
+        <strong>Contact</strong>
+        <p>Questions? Email {settings.support_email || defaultSettings.support_email}.</p>
+      </div>
+    </section>
+  </main>;
+}
+
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v62';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v63';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
