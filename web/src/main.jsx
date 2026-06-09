@@ -1,3 +1,14 @@
+
+function safeArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value && Array.isArray(value.rows)) return value.rows;
+  if (value && Array.isArray(value.items)) return value.items;
+  if (value && Array.isArray(value.data)) return value.data;
+  if (value && Array.isArray(value.competitions)) return value.competitions;
+  if (value && Array.isArray(value.entries)) return value.entries;
+  return [];
+}
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Gift, Trophy, User, Shield, LogOut, Plus, Trash2, Pencil, Ticket, Sparkles, ShoppingCart, ClipboardList, Zap, Clock, ListChecks } from 'lucide-react';
@@ -338,7 +349,7 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
   </section></main>;
 }
 
-function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
+function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entryList.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
 
 
 
@@ -482,8 +493,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
 
-  const competition = competitions.find(c => String(c.id) === String(competitionId));
-  const visualEntries = entries.length <= 80 ? entries : entries.filter((_, i) => i % Math.ceil(entries.length / 80) === 0).slice(0, 80);
+  const competitionList = safeArray(competitions);
+  const entryList = safeArray(entries);
+  const competition = competitionList.find(c => String(c.id) === String(competitionId));
+  const visualEntries = entryList.length <= 80 ? entryList : entryList.filter((_, i) => i % Math.max(1, Math.ceil(entryList.length / 80)) === 0).slice(0, 80);
 
   useEffect(() => {
     const t = setInterval(() => setDrawTime(new Date()), 1000);
@@ -502,7 +515,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function visualTicketSample(rows) {
-    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeRows = safeArray(rows);
     if (safeRows.length === 0) return [];
     const limit = 120;
     const step = Math.max(1, Math.ceil(safeRows.length / limit));
@@ -516,7 +529,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function broadcastBase(rows = entries, mode = 'ready', picked = winner) {
-    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeRows = safeArray(rows);
     const c = competition || competitions.find(x => String(x.id) === String(competitionId)) || {};
     return {
       mode,
@@ -554,10 +567,11 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     try {
       setLoading(true);
       setWinner(null);
-      const rows = await api(`/admin/competitions/${competitionId}/draw-entries`);
-      setEntries(rows || []);
+      const result = await api(`/admin/competitions/${competitionId}/draw-entries`);
+      const rows = safeArray(result);
+      setEntries(rows);
       setMessage(`${rows.length} eligible draw tickets loaded.`);
-      publishBroadcastState(broadcastBase(rows || [], 'ready', null));
+      publishBroadcastState(broadcastBase(rows, 'ready', null));
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -566,9 +580,9 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function spinDraw() {
-    if (entries.length === 0) return setMessage('Load entries before spinning.');
+    if (entryList.length === 0) return setMessage('Load entries before spinning.');
     if (spinning) return;
-    const picked = entries[Math.floor(Math.random() * entries.length)];
+    const picked = entryList[Math.floor(Math.random() * entryList.length)];
     const extra = 360 * 7 + Math.floor(Math.random() * 360);
     setWinner(null);
     setSpinning(true);
@@ -583,7 +597,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function csvDownload() {
-    if (entries.length === 0) return setMessage('Load entries first.');
+    if (entryList.length === 0) return setMessage('Load entries first.');
     const header = ['competition_id','competition_title','ticket_number','customer_name','customer_email','order_id','payment_status','created_at'];
     const rows = entries.map(e => [
       competitionId,
@@ -621,7 +635,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <label>Competition
         <select value={competitionId} onChange={e => { setCompetitionId(e.target.value); setEntries([]); setWinner(null); }}>
           <option value="">Choose competition</option>
-          {competitions.map(c => <option key={c.id} value={c.id}>#{c.id} - {c.title}</option>)}
+          {competitionList.map(c => <option key={c.id} value={c.id}>#{c.id} - {c.title}</option>)}
         </select>
       </label>
       <label>Competition number / ID
@@ -638,12 +652,12 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
     <div className="draw-actions">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
-      <button className="primary" onClick={spinDraw} disabled={spinning || entries.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entries.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button>
+      <button className="primary" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
+      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button>
     </div>
 
     <div className="draw-stats">
-      <div><strong>{entries.length}</strong><span>eligible tickets loaded</span></div>
+      <div><strong>{entryList.length}</strong><span>eligible tickets loaded</span></div>
       <div><strong>{visualEntries.length}</strong><span>visual wheel slices</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
@@ -672,8 +686,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
     <details>
       <summary>Loaded ticket list preview</summary>
-      {entries.length === 0 ? <p className="muted">No entries loaded.</p> : <div className="entry-chip-list">{entries.slice(0, 1000).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}
-      {entries.length > 1000 && <p className="muted">Showing first 1000 tickets only. The draw still uses all {entries.length} loaded tickets.</p>}
+      {entryList.length === 0 ? <p className="muted">No entries loaded.</p> : <div className="entry-chip-list">{entryList.slice(0, 1000).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}
+      {entryList.length > 1000 && <p className="muted">Showing first 1000 tickets only. The draw still uses all {entryList.length} loaded tickets.</p>}
     </details>
   </section>;
 }
@@ -770,5 +784,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v41';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v42';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

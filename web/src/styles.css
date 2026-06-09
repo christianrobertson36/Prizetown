@@ -1126,3 +1126,24 @@ details { margin-top: 1rem; color: #c8cada; }
   background: rgba(239,68,68,.12);
   border: 1px solid rgba(239,68,68,.35);
 }
+
+
+/* v42 draw dropdown readability */
+.draw-room select,
+.draw-room option,
+.broadcast-menu-panel select,
+.panel select {
+  background: #111827;
+  color: #fef3c7;
+  border: 1px solid rgba(250,204,21,.42);
+}
+.draw-room select:focus,
+.panel select:focus {
+  outline: 2px solid rgba(250,204,21,.55);
+  box-shadow: 0 0 0 .25rem rgba(250,204,21,.12);
+}
+.draw-room option {
+  background: #111827;
+  color: #fef3c7;
+  padding: .75rem;
+}
