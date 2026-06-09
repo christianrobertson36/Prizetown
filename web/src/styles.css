@@ -1337,3 +1337,13 @@ details { margin-top: 1rem; color: #c8cada; }
     margin: -3.8rem;
   }
 }
+
+
+/* v44: draw spinner only appears inside Admin > Final draw */
+.final-draw-only {
+  display: grid;
+  gap: 1rem;
+}
+.final-draw-only .draw-room {
+  margin: 0;
+}
