@@ -62,21 +62,26 @@ class AppErrorBoundary extends React.Component {
     super(props);
     this.state = { hasError: false, message: '' };
   }
+
   static getDerivedStateFromError(error) {
     return { hasError: true, message: error?.message || 'Something went wrong' };
   }
+
   componentDidCatch(error, info) {
     console.error('Prizetown screen error', error, info);
   }
+
   render() {
     if (this.state.hasError) {
-      return <main><section className="panel checkout-error">
-        <h1>Screen error</h1>
-        <p>{this.state.message}</p>
-        <button className="primary" onClick={() => window.location.reload()}>Reload Prizetown</button>
-      </section>
-    <section className="trust-strip">
+      return <main>
+        <section className="panel checkout-error">
+          <h1>Screen error</h1>
+          <p>{this.state.message}</p>
+          <button className="primary" onClick={() => window.location.reload()}>Reload Prizetown</button>
+        </section>
+      </main>;
     }
+
     return this.props.children;
   }
 }
@@ -181,7 +186,6 @@ function ArnoldBroadcastHost({ mode = 'idle', winner }) {
     </div>
   </div>;
 }
-
 
 function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   function openCompetition(c) {
@@ -891,5 +895,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v48';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v49';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
