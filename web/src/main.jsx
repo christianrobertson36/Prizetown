@@ -797,11 +797,9 @@ function DrawBroadcastPage({ setPage }) {
           </div>
           <div className="broadcast-pointer">▼</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
-            {tickets.length === 0 ? <div className="broadcast-wheel-empty">Load tickets in admin</div> : tickets.map((e, i) => {
-              const angle = (360 / tickets.length) * i;
-              return <span className="broadcast-ticket" key={`${e.ticket_number}-${i}`} style={{ transform: `rotate(${angle}deg) translateY(-15.6rem)` }}>#{e.ticket_number}</span>;
-            })}
-            <div className="broadcast-centre">PRIZETOWN<br/><small>LIVE FINAL DRAW</small></div>
+            <div className="wheel-colour-slices" aria-hidden="true"></div>
+            {tickets.length === 0 && <div className="broadcast-wheel-empty">Load tickets in admin</div>}
+            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'LIVE FINAL DRAW'}</small></div>
           </div>
         </div>
 
@@ -820,7 +818,7 @@ function DrawBroadcastPage({ setPage }) {
             <p className="muted">Final draw winner confirmed</p>
           </div> : <div className="broadcast-waiting">
             <h2>Awaiting spin</h2>
-            <p>Draw date and live clock are shown on this broadcast screen for OBS. Use Admin → Final Draw → Send OBS Test to check the source, then OBS Test Off to clear it.</p>
+            <p>Draw date and live clock are shown on this broadcast screen for OBS. The wheel is visual only; the confirmed winner appears here after the draw.</p>
           </div>}
         </aside>
       </div>
@@ -1131,20 +1129,17 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
     <div className="draw-stats">
       <div><strong>{entryList.length}</strong><span>eligible tickets loaded</span></div>
-      <div><strong>{visualEntries.length}</strong><span>visual wheel slices</span></div>
+      <div><strong>{visualEntries.length}</strong><span>visual draw slices</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
+    <p className="muted draw-sync-note">The wheel is now a clean visual spinner. The actual winning ticket is selected once from the full eligible ticket list and shown in the winner reveal, so admin and OBS do not display conflicting wheel numbers.</p>
 
     <div className="wheel-stage">
       <div className="wheel-pointer">▼</div>
       <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
-        {visualEntries.length === 0 ? <div className="wheel-empty">Load tickets</div> : visualEntries.map((e, i) => {
-          const angle = (360 / visualEntries.length) * i;
-          return <div className="wheel-label" key={`${e.ticket_number}-${i}`} style={{ transform: `rotate(${angle}deg) translateY(-8.9rem)` }}>
-            #{e.ticket_number}
-          </div>;
-        })}
-        <div className="wheel-centre">PRIZETOWN<br/><small>LIVE FINAL DRAW</small></div>
+        <div className="wheel-colour-slices" aria-hidden="true"></div>
+        {visualEntries.length === 0 && <div className="wheel-empty">Load tickets</div>}
+        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'LIVE FINAL DRAW'}</small></div>
       </div>
     </div>
 
@@ -1636,5 +1631,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v70';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v71';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
