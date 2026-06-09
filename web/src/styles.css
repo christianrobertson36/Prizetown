@@ -1147,3 +1147,193 @@ details { margin-top: 1rem; color: #c8cada; }
   color: #fef3c7;
   padding: .75rem;
 }
+
+
+/* v43 bigger colourful draw spinner upgrade */
+.wheel-stage {
+  min-height: 34rem;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(250,204,21,.34), transparent 19rem),
+    radial-gradient(circle at 18% 20%, rgba(236,72,153,.25), transparent 17rem),
+    radial-gradient(circle at 86% 78%, rgba(59,130,246,.20), transparent 18rem),
+    rgba(0,0,0,.24);
+}
+.draw-wheel {
+  width: 28rem;
+  height: 28rem;
+  border: .9rem solid #fde047;
+  background:
+    repeating-conic-gradient(
+      from -8deg,
+      #ef4444 0deg 15deg,
+      #f97316 15deg 30deg,
+      #facc15 30deg 45deg,
+      #22c55e 45deg 60deg,
+      #06b6d4 60deg 75deg,
+      #3b82f6 75deg 90deg,
+      #8b5cf6 90deg 105deg,
+      #ec4899 105deg 120deg
+    );
+  box-shadow:
+    0 2.6rem 6.5rem rgba(0,0,0,.55),
+    inset 0 0 3rem rgba(0,0,0,.45),
+    0 0 3.2rem rgba(250,204,21,.42),
+    0 0 5.5rem rgba(236,72,153,.18);
+}
+.draw-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 1.2rem;
+  border-radius: 50%;
+  border: .35rem dashed rgba(255,255,255,.55);
+  box-shadow: inset 0 0 1.8rem rgba(0,0,0,.35);
+}
+.draw-wheel::after {
+  content: "";
+  position: absolute;
+  inset: -.55rem;
+  border-radius: 50%;
+  border: .25rem solid rgba(255,255,255,.32);
+  box-shadow: 0 0 1.8rem rgba(255,255,255,.28);
+}
+.draw-wheel.spinning {
+  filter: saturate(1.55) brightness(1.15);
+}
+.wheel-pointer {
+  top: .65rem;
+  font-size: 3.2rem;
+  color: #fef3c7;
+  filter: drop-shadow(0 .35rem .45rem rgba(0,0,0,.75)) drop-shadow(0 0 .8rem rgba(250,204,21,.85));
+}
+.wheel-label {
+  font-size: .82rem;
+  color: #fff;
+  text-shadow: 0 2px 5px rgba(0,0,0,.95), 0 0 8px rgba(255,255,255,.45);
+  transform-origin: 0 0;
+}
+.wheel-centre {
+  width: 9.8rem;
+  height: 9.8rem;
+  margin: -4.9rem;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, #fff7ed, #fef08a, #f59e0b, #fb7185);
+  border: .48rem solid rgba(255,255,255,.75);
+  box-shadow:
+    0 1rem 2.4rem rgba(0,0,0,.45),
+    0 0 2.2rem rgba(250,204,21,.70);
+}
+.wheel-centre small {
+  font-size: .62rem;
+}
+.winner-card {
+  border-color: rgba(34,197,94,.65);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(250,204,21,.20), transparent 14rem),
+    linear-gradient(135deg, rgba(34,197,94,.24), rgba(255,255,255,.06));
+}
+
+/* OBS broadcast wheel gets even larger and brighter */
+.broadcast-wheel-wrap {
+  min-height: 78vh;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(250,204,21,.34), transparent 31rem),
+    radial-gradient(circle at 22% 20%, rgba(236,72,153,.24), transparent 24rem),
+    radial-gradient(circle at 80% 72%, rgba(37,99,235,.22), transparent 26rem),
+    rgba(255,255,255,.035);
+}
+.broadcast-wheel {
+  width: min(80vh, 60vw);
+  height: min(80vh, 60vw);
+  min-width: 42rem;
+  min-height: 42rem;
+  border: 1.45rem solid #fde047;
+  background:
+    repeating-conic-gradient(
+      from -10deg,
+      #dc2626 0deg 12deg,
+      #ea580c 12deg 24deg,
+      #facc15 24deg 36deg,
+      #16a34a 36deg 48deg,
+      #0891b2 48deg 60deg,
+      #2563eb 60deg 72deg,
+      #7c3aed 72deg 84deg,
+      #db2777 84deg 96deg
+    );
+  box-shadow:
+    0 3rem 8rem rgba(0,0,0,.68),
+    inset 0 0 5rem rgba(0,0,0,.48),
+    0 0 4.5rem rgba(250,204,21,.45),
+    0 0 7rem rgba(236,72,153,.18);
+}
+.broadcast-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 1.6rem;
+  border-radius: 50%;
+  border: .45rem dashed rgba(255,255,255,.58);
+}
+.broadcast-wheel::after {
+  content: "";
+  position: absolute;
+  inset: -.75rem;
+  border-radius: 50%;
+  border: .3rem solid rgba(255,255,255,.35);
+  box-shadow: 0 0 2.6rem rgba(255,255,255,.28);
+}
+.broadcast-pointer {
+  top: .6rem;
+  font-size: 5.5rem;
+  color: #fef3c7;
+  filter: drop-shadow(0 .5rem .5rem rgba(0,0,0,.85)) drop-shadow(0 0 1rem rgba(250,204,21,.9));
+}
+.broadcast-ticket {
+  font-size: clamp(.78rem, 1vw, 1.15rem);
+  text-shadow: 0 .15rem .38rem black, 0 0 .5rem rgba(255,255,255,.4);
+}
+.broadcast-centre {
+  width: 16rem;
+  height: 16rem;
+  margin: -8rem;
+  font-size: 1.9rem;
+  background: linear-gradient(135deg, #fff7ed, #fef08a, #facc15, #fb7185);
+  border: .72rem solid rgba(255,255,255,.76);
+  box-shadow:
+    0 1.4rem 3.5rem rgba(0,0,0,.52),
+    0 0 3rem rgba(250,204,21,.75);
+}
+.broadcast-centre small {
+  font-size: 1rem;
+}
+.broadcast-wheel.is-spinning,
+.draw-wheel.spinning {
+  animation: prizetownPulseGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes prizetownPulseGlow {
+  from {
+    box-shadow:
+      0 2.5rem 6.5rem rgba(0,0,0,.55),
+      inset 0 0 3rem rgba(0,0,0,.45),
+      0 0 2.8rem rgba(250,204,21,.42),
+      0 0 4.5rem rgba(236,72,153,.18);
+  }
+  to {
+    box-shadow:
+      0 3rem 8rem rgba(0,0,0,.65),
+      inset 0 0 3.6rem rgba(0,0,0,.42),
+      0 0 4.8rem rgba(250,204,21,.72),
+      0 0 7rem rgba(59,130,246,.28);
+  }
+}
+
+@media (max-width: 700px) {
+  .draw-wheel {
+    width: 20rem;
+    height: 20rem;
+  }
+  .wheel-centre {
+    width: 7.6rem;
+    height: 7.6rem;
+    margin: -3.8rem;
+  }
+}
