@@ -99,7 +99,8 @@ function App() {
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
     {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
-    {page === 'admin' && <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />}
+    {page === 'admin' && <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
+      <BroadcastMenuPanel setPage={setPage} />}
     {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
@@ -313,6 +314,27 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
 
 function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
 
+
+
+
+function BroadcastMenuPanel({ setPage }) {
+  return <section className="panel broadcast-menu-panel">
+    <h1>OBS Draw Screen</h1>
+    <p className="muted">Use this page for live broadcasts. Add the broadcast URL to OBS as a Browser Source, or open it in a separate window.</p>
+    <div className="broadcast-menu-grid">
+      <button className="primary" onClick={() => setPage('draw-broadcast')}>Open broadcast screen in this browser</button>
+      <button className="secondary" onClick={() => window.open('/draw-broadcast', 'prizetown_draw_broadcast')}>Open broadcast screen in new window</button>
+      <button className="secondary" onClick={() => window.open('/draw-broadcast?transparent=1', 'prizetown_draw_broadcast_overlay')}>Open transparent OBS overlay</button>
+    </div>
+    <div className="obs-url-box">
+      <strong>OBS Browser Source URL</strong>
+      <code>http://192.168.1.177:3100/draw-broadcast</code>
+      <strong>Transparent overlay URL</strong>
+      <code>http://192.168.1.177:3100/draw-broadcast?transparent=1</code>
+    </div>
+    <p className="muted">Recommended OBS browser source size: 1920 x 1080.</p>
+  </section>;
+}
 
 
 function DrawBroadcastPage({ setPage }) {
@@ -710,5 +732,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v38';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v39';
 createRoot(document.getElementById('root')).render(<App />);
