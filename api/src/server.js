@@ -515,7 +515,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v93' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v94' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -598,7 +598,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v93' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v94' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add('ok', 'Configured upload directory', uploadDir);
 
@@ -615,7 +615,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v93',
+    version: 'v94',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -639,6 +639,15 @@ async function getSettingsObject() {
 const allowedSettings = [
   'site_name',
   'support_email',
+  'logo_url',
+  'favicon_url',
+  'brand_primary_color',
+  'brand_accent_color',
+  'brand_background_color',
+  'brand_button_text_color',
+  'brand_footer_credit',
+  'brand_footer_link_url',
+  'brand_footer_link_label',
   'hero_eyebrow',
   'hero_title',
   'hero_text',
@@ -1801,7 +1810,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v93 modules jsx build fix)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v94 branding)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

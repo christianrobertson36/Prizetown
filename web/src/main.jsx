@@ -151,7 +151,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
         </g>
         <circle cx="250" cy="250" r="108" className="trusted-wheel-centre" />
         <circle cx="250" cy="250" r="66" className="trusted-wheel-logo-ring" />
-        <image href="/prizetown-logo.png" x="192" y="192" width="116" height="116" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
+        <image href={siteLogo({})} x="192" y="192" width="116" height="116" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
         <text x="250" y="336" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
       </svg>
     </div>
@@ -178,6 +178,15 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
 const defaultSettings = {
   site_name: 'Prizetown',
   support_email: 'support@prizetown.local',
+  logo_url: '/prizetown-logo.png',
+  favicon_url: '',
+  brand_primary_color: '#facc15',
+  brand_accent_color: '#f97316',
+  brand_background_color: '#08101f',
+  brand_button_text_color: '#08101f',
+  brand_footer_credit: 'Website by Neotech Designs',
+  brand_footer_link_url: 'https://ctec-shop.co.uk',
+  brand_footer_link_label: 'ctec-shop.co.uk',
   hero_eyebrow: 'Postcode prize competitions',
   hero_title: 'Win big prizes with Prizetown',
   hero_text: 'Browse live postcode prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.',
@@ -313,6 +322,19 @@ function featureEnabled(settings, key) {
   return String((settings || {})[key] ?? 'true') !== 'false';
 }
 
+
+function siteLogo(settings) {
+  return imageUrl((settings || {}).logo_url || '/prizetown-logo.png');
+}
+function brandStyle(settings = {}) {
+  return {
+    '--brand-primary': settings.brand_primary_color || '#facc15',
+    '--brand-accent': settings.brand_accent_color || '#f97316',
+    '--brand-bg': settings.brand_background_color || '#08101f',
+    '--brand-button-text': settings.brand_button_text_color || '#08101f'
+  };
+}
+
 function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
@@ -396,6 +418,17 @@ function App() {
   async function loadAccount() { if (!user) return; const [myEntries, myOrders] = await Promise.all([api('/me/entries'), api('/me/orders')]); setEntries(myEntries); setOrders(myOrders); }
   async function loadAdminData() { if (user?.role !== 'admin') return; const [rows, orderRows, auditRows, iw, zones, assignments] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs'), api('/admin/instant-wins'), api('/admin/postcode-zones'), api('/admin/competition-postcode-assignments')]); setAdminEntries(rows); setAdminOrders(orderRows); setAdminAudit(auditRows); setAdminInstantWins(iw); setAdminPostcodeZones(zones); setAdminPostcodeAssignments(assignments); }
   useEffect(() => { load().catch(err => setMessage(err.message)); }, []);
+  useEffect(() => {
+    if (!settings.favicon_url) return;
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = imageUrl(settings.favicon_url);
+  }, [settings.favicon_url]);
+
   useEffect(() => { if (user) loadAccount().catch(() => {}); }, [user]);
   useEffect(() => { if (user?.role === 'admin') loadAdminData().catch(() => {}); }, [user]);
   function logout() { localStorage.removeItem('prizetown_token'); localStorage.removeItem('prizetown_user'); setUser(null); setEntries([]); setOrders([]); setPage('home'); }
@@ -407,9 +440,9 @@ function App() {
     return <DrawBroadcastPage setPage={setPage} />;
   }
 
-  return <div>
+  return <div style={brandStyle(settings)}>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
-    <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src="/prizetown-logo.png" alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
+    <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
       <button type="button" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
@@ -586,7 +619,7 @@ return <main>
         </div>
       </div>
       <div className="hero-card draw-card pick-poster-card">
-        <img className="pick-poster-logo" src="/prizetown-logo.png" alt="Prizetown" />
+        <img className="pick-poster-logo" src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} />
         <img className="pick-poster-arnold" src="/arnold-highlife-poster.png" alt="Arnold Blackndeckka living the high life" />
         <div className="pick-poster-copy">
           <p className="eyebrow"><Sparkles size={16} /> Hosted by Arnold</p>
@@ -695,9 +728,9 @@ return <main>
 
     {typeof WebsiteFooter === 'function' ? <WebsiteFooter settings={settings} setPage={setPage} /> : <footer className="site-footer">
       <div className="footer-brand">
-        <img src="/prizetown-logo.png" alt="Prizetown" />
+        <img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} />
         <p>{settings.footer_text}</p>
-        <p className="footer-credit">Website by <strong>Neotech Designs</strong> · <a href="https://ctec-shop.co.uk" target="_blank" rel="noreferrer">ctec-shop.co.uk</a></p>
+        <p className="footer-credit">{settings.brand_footer_credit || 'Website by Neotech Designs'} · <a href={settings.brand_footer_link_url || 'https://ctec-shop.co.uk'} target="_blank" rel="noreferrer">{settings.brand_footer_link_label || 'ctec-shop.co.uk'}</a></p>
       </div>
       <div className="footer-column">
         <h3>Free entry</h3>
@@ -1020,7 +1053,7 @@ function DrawBroadcastPage({ setPage }) {
   return <main className={`broadcast-page ${transparent ? 'transparent' : ''} ${compact ? 'compact' : ''} ${safeObs ? 'safe-obs' : ''}`}>
     <section className="broadcast-stage">
       <header className="broadcast-header">
-        <img src="/prizetown-logo.png" alt="Prizetown" />
+        <img src={siteLogo(state || {})} alt="Prizetown" />
         <div>
           <h1>{title}</h1>
           <p>Competition {competitionNumber} · Draw {state?.draw_date ? fmtDate(state.draw_date) : 'date not set'}</p>
@@ -1080,6 +1113,72 @@ function DrawBroadcastPage({ setPage }) {
 
 
 
+
+
+function BrandingPanel({ settingsForm, setSettingsForm, saveSettings, setMessage }) {
+  async function uploadBrandImage(e, field) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const body = new FormData();
+    body.append('file', file);
+    try {
+      const data = await api('/admin/upload', { method: 'POST', body });
+      setSettingsForm({ ...settingsForm, [field]: data.url });
+      setMessage(field === 'logo_url' ? 'Logo uploaded. Save branding to apply it.' : 'Favicon uploaded. Save branding to apply it.');
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  return <form className="panel branding-panel" onSubmit={saveSettings}>
+    <h1>Branding</h1>
+    <p className="muted">Change Prizetown into your own competition brand without editing code.</p>
+
+    <div className="branding-preview" style={brandStyle(settingsForm)}>
+      <img src={siteLogo(settingsForm)} alt={settingsForm.site_name || 'Site logo'} />
+      <div>
+        <strong>{settingsForm.site_name || 'Your competition site'}</strong>
+        <span>{settingsForm.hero_title || 'Win big prizes'}</span>
+      </div>
+      <button type="button" className="primary">Sample button</button>
+    </div>
+
+    <div className="two">
+      <label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label>
+      <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
+    </div>
+
+    <div className="two">
+      <label>Logo URL<input value={settingsForm.logo_url || ''} onChange={e => setSettingsForm({ ...settingsForm, logo_url: e.target.value })} placeholder="/prizetown-logo.png" /></label>
+      <label className="file-button">Upload logo<input type="file" accept="image/*" onChange={e => uploadBrandImage(e, 'logo_url')} /></label>
+    </div>
+
+    <div className="two">
+      <label>Favicon URL<input value={settingsForm.favicon_url || ''} onChange={e => setSettingsForm({ ...settingsForm, favicon_url: e.target.value })} placeholder="/favicon.ico" /></label>
+      <label className="file-button">Upload favicon<input type="file" accept="image/*" onChange={e => uploadBrandImage(e, 'favicon_url')} /></label>
+    </div>
+
+    <div className="four colour-grid">
+      <label>Primary colour<input type="color" value={settingsForm.brand_primary_color || '#facc15'} onChange={e => setSettingsForm({ ...settingsForm, brand_primary_color: e.target.value })} /></label>
+      <label>Accent colour<input type="color" value={settingsForm.brand_accent_color || '#f97316'} onChange={e => setSettingsForm({ ...settingsForm, brand_accent_color: e.target.value })} /></label>
+      <label>Background<input type="color" value={settingsForm.brand_background_color || '#08101f'} onChange={e => setSettingsForm({ ...settingsForm, brand_background_color: e.target.value })} /></label>
+      <label>Button text<input type="color" value={settingsForm.brand_button_text_color || '#08101f'} onChange={e => setSettingsForm({ ...settingsForm, brand_button_text_color: e.target.value })} /></label>
+    </div>
+
+    <label>Homepage eyebrow<input value={settingsForm.hero_eyebrow || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_eyebrow: e.target.value })} /></label>
+    <label>Homepage title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label>
+    <label>Homepage text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label>
+    <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
+
+    <div className="two">
+      <label>Footer credit<input value={settingsForm.brand_footer_credit || ''} onChange={e => setSettingsForm({ ...settingsForm, brand_footer_credit: e.target.value })} /></label>
+      <label>Footer link label<input value={settingsForm.brand_footer_link_label || ''} onChange={e => setSettingsForm({ ...settingsForm, brand_footer_link_label: e.target.value })} /></label>
+    </div>
+    <label>Footer link URL<input value={settingsForm.brand_footer_link_url || ''} onChange={e => setSettingsForm({ ...settingsForm, brand_footer_link_url: e.target.value })} /></label>
+
+    <button className="primary full">Save branding</button>
+  </form>;
+}
 
 function ModulesPanel({ settingsForm, setSettingsForm, saveSettings }) {
   const modules = [
@@ -1286,6 +1385,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
       mode,
       competition_id: c.id || competitionId || null,
       competition_title: c.title || '',
+      logo_url: settings.logo_url || '/prizetown-logo.png',
       competition_number: c.id ? `#${c.id}` : '',
       draw_date: c.draw_at || '',
       ticket_capacity: Number(c.max_tickets || 0),
@@ -1302,7 +1402,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=93', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=94', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1341,7 +1441,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=93 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=94 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1858,6 +1958,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     modulePostcodes && ['postcode-assign', 'Assign Postcodes', Ticket],
     moduleProfitPlanner && ['profit-planner', 'Profit Planner', Ticket],
     ['modules', 'Modules', Shield],
+    ['branding', 'Branding', Sparkles],
     ['system-check', 'System Check', Shield],
     ['legal-text', 'Legal Text', Shield],
     ['settings', 'Site settings', Shield],
@@ -1903,6 +2004,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} settings={settingsForm} />
           <BroadcastMenuPanel setPage={setPage} settings={settingsForm} />
         </div>}
+
+        {activeTab === 'branding' && <BrandingPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} setMessage={setMessage} />}
 
         {activeTab === 'modules' && <ModulesPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
 
@@ -2068,7 +2171,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </form>}
 
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}>
-          <h1>Site settings</h1>
+          <h1>Site settings</h1><p className="muted">For logo, colours and homepage branding use Admin → Branding.</p>
           <div className="two">
             <label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label>
             <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
@@ -2143,5 +2246,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v93';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v94';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
