@@ -2411,3 +2411,147 @@ label small.muted {
 .draw-actions .primary {
   box-shadow: 0 10px 28px rgba(250,204,21,.18);
 }
+
+
+/* v68 OBS broadcast layout polish */
+.broadcast-page.compact .broadcast-stage {
+  min-height: 100vh;
+  padding: clamp(.65rem, 1.2vw, 1.1rem);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .75rem;
+}
+.broadcast-page.compact .broadcast-header {
+  display: grid;
+  grid-template-columns: auto 1fr minmax(360px, 520px);
+  gap: .9rem;
+  align-items: center;
+  padding: .65rem .85rem;
+  border-radius: 1.1rem;
+}
+.broadcast-page.compact .broadcast-header img {
+  width: clamp(70px, 7vw, 115px);
+  height: auto;
+}
+.broadcast-page.compact .broadcast-header h1 {
+  font-size: clamp(1.55rem, 2.5vw, 3rem);
+  line-height: .98;
+  margin: 0;
+}
+.broadcast-page.compact .broadcast-header p {
+  margin: .25rem 0 0;
+  font-size: clamp(.82rem, 1.05vw, 1rem);
+}
+.broadcast-page.compact .broadcast-clock-rich {
+  min-width: 0;
+  grid-template-columns: 1fr 1fr;
+}
+.broadcast-page.compact .broadcast-clock-rich > div {
+  padding: .45rem .55rem;
+  border-radius: .75rem;
+}
+.broadcast-page.compact .broadcast-clock-rich span {
+  font-size: .62rem;
+}
+.broadcast-page.compact .broadcast-clock-rich strong {
+  font-size: clamp(.95rem, 1.5vw, 1.45rem);
+}
+.broadcast-page.compact .broadcast-clock-rich small {
+  font-size: .7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.broadcast-page.compact .broadcast-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 380px);
+  gap: 1rem;
+  align-items: stretch;
+  min-height: 0;
+}
+.broadcast-page.compact .arnold-broadcast-host {
+  position: absolute;
+  left: 1rem;
+  bottom: 4.7rem;
+  width: min(250px, 18vw);
+  z-index: 8;
+  transform-origin: left bottom;
+}
+.broadcast-page.compact .broadcast-wheel-wrap {
+  min-height: min(72vh, 760px);
+  display: grid;
+  place-items: center;
+  padding-top: 2.9rem;
+  overflow: hidden;
+}
+.broadcast-page.compact .broadcast-wheel {
+  width: min(68vh, 720px);
+  height: min(68vh, 720px);
+  max-width: 100%;
+  max-height: 100%;
+}
+.broadcast-page.compact .broadcast-ticket {
+  font-size: clamp(.68rem, .9vw, .95rem);
+}
+.broadcast-page.compact .broadcast-centre {
+  font-size: clamp(1.25rem, 2.1vw, 2.2rem);
+}
+.broadcast-page.compact .broadcast-info {
+  padding: .8rem;
+  border-radius: 1.1rem;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .7rem;
+}
+.broadcast-page.compact .broadcast-status {
+  font-size: clamp(.95rem, 1.2vw, 1.2rem);
+  padding: .55rem .75rem;
+}
+.broadcast-page.compact .broadcast-stat {
+  padding: .6rem .7rem;
+}
+.broadcast-page.compact .broadcast-stat strong {
+  font-size: clamp(1.25rem, 2vw, 2rem);
+}
+.broadcast-page.compact .broadcast-winner {
+  padding: .85rem;
+}
+.broadcast-page.compact .broadcast-winner h2 {
+  font-size: clamp(1.2rem, 1.9vw, 2rem);
+}
+.broadcast-page.compact .broadcast-winner .winning-ticket {
+  font-size: clamp(1.15rem, 2.3vw, 2.5rem);
+  margin: .2rem 0;
+}
+.broadcast-page.compact .broadcast-winner .winner-name {
+  font-size: clamp(1.65rem, 3.2vw, 3.4rem);
+  line-height: .95;
+}
+.broadcast-page.compact .broadcast-datetime-strip {
+  top: .45rem;
+  width: min(92%, 760px);
+  padding: .42rem .65rem;
+  gap: .45rem;
+  font-size: clamp(.74rem, .95vw, .9rem);
+}
+.broadcast-page.compact .broadcast-footer {
+  padding: .45rem .75rem;
+  font-size: .85rem;
+}
+@media (max-width: 1200px) {
+  .broadcast-page.compact .broadcast-header {
+    grid-template-columns: auto 1fr;
+  }
+  .broadcast-page.compact .broadcast-clock-rich {
+    grid-column: 1 / -1;
+  }
+  .broadcast-page.compact .broadcast-main {
+    grid-template-columns: 1fr;
+  }
+  .broadcast-page.compact .broadcast-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

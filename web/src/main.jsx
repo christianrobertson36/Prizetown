@@ -705,6 +705,7 @@ function DrawBroadcastPage({ setPage }) {
   const [rotation, setRotation] = useState(0);
   const params = new URLSearchParams(window.location.search);
   const transparent = params.get('transparent') === '1';
+  const compact = params.get('compact') !== '0';
 
   useEffect(() => {
     document.body.classList.add('broadcast-body');
@@ -759,7 +760,7 @@ function DrawBroadcastPage({ setPage }) {
   const liveDateText = now.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
   const liveTimeText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  return <main className={`broadcast-page ${transparent ? 'transparent' : ''}`}>
+  return <main className={`broadcast-page ${transparent ? 'transparent' : ''} ${compact ? 'compact' : ''}`}>
     <section className="broadcast-stage">
       <header className="broadcast-header">
         <img src="/prizetown-logo.png" alt="Prizetown" />
@@ -1606,5 +1607,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v67';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v68';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
