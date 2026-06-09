@@ -1331,6 +1331,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   const [loading, setLoading] = useState(false);
   const [winner, setWinner] = useState(null);
   const [spinning, setSpinning] = useState(false);
+  const [testMode, setTestMode] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
@@ -1398,13 +1399,22 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
 
   function loadTestEntries(count = 100) {
     const rows = createTestEntries(count);
+    setCompetitionId('');
     setEntries(rows);
     setWinner(null);
     setSpinning(false);
+    setTestMode(true);
     setRotation(0);
-    setMessage(`${rows.length} test tickets loaded for draw preview.`);
+    setMessage(`${rows.length} test tickets loaded for draw preview. Test mode does not record an official winner, so you can spin repeatedly.`);
     publishBroadcastState({
-      ...broadcastBase(rows, 'ready', null, { ticket_capacity: count }),
+      ...broadcastBase(rows, 'ready', null, {
+        competition_id: 'TEST',
+        competition_title: `Test draw preview (${count} tickets)`,
+        competition_number: '#TEST',
+        draw_date: new Date().toISOString(),
+        ticket_capacity: count,
+        draw_method: 'test_preview_local_random'
+      }),
       visual_tickets: visualTicketSample(rows, null)
     });
   }
@@ -1433,7 +1443,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=95', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=96', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1472,7 +1482,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=95 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=96 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1569,9 +1579,10 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
       setWinner(null);
       const result = await api(`/admin/competitions/${competitionId}/draw-entries`);
       const rows = safeArray(result.entries || result);
+      setTestMode(false);
       setEntries(rows);
-      setMessage(`${rows.length} eligible draw tickets loaded.`);
-      publishBroadcastState(broadcastBase(rows, 'ready', null));
+      setMessage(`${rows.length} eligible draw tickets loaded for official secure draw.`);
+      publishBroadcastState(broadcastBase(rows, 'ready', null, { draw_method: 'official_secure_server_ready' }));
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -1589,7 +1600,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     let officialRows = entryList;
     let secureMethod = 'demo_local_preview_only';
 
-    if (competitionId) {
+    if (competitionId && !testMode) {
       try {
         const secure = await api(`/admin/competitions/${competitionId}/secure-draw`, { method: 'POST' });
         picked = secure.winner;
@@ -1602,6 +1613,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
       }
     } else {
       picked = entryList[Math.floor(Math.random() * entryList.length)];
+      secureMethod = testMode ? 'test_preview_local_random_repeatable' : 'demo_local_preview_only';
     }
 
     const finalWinner = {
@@ -1612,7 +1624,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     const wheelTickets = buildWheelTickets(officialRows, finalWinner);
     const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number, rotation);
     const spinMs = speedMs();
-    const spinId = `${competitionId || 'demo'}-${Date.now()}-${picked.ticket_number}`;
+    const spinId = `${testMode ? 'test' : (competitionId || 'demo')}-${Date.now()}-${picked.ticket_number}`;
     const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
 
     setWinner(null);
@@ -1646,7 +1658,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         eligible_count: officialRows.length,
         visual_tickets: wheelTickets
       });
-      setMessage(`Winner selected securely: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'} (${spinSpeed} speed).`);
+      setMessage(`${testMode ? 'Test spin complete' : 'Winner selected securely'}: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'} (${spinSpeed} speed).`);
       stopSpinSound();
     }, spinMs + 700);
   }
@@ -1694,7 +1706,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
 
     <div className="two">
       <label>Competition
-        <select value={competitionId} onChange={e => { setCompetitionId(e.target.value); setEntries([]); setWinner(null); }}>
+        <select value={competitionId} onChange={e => { setCompetitionId(e.target.value); setEntries([]); setWinner(null); setTestMode(false); }}>
           <option value="">Choose competition</option>
           {competitionList.map(c => <option key={c.id} value={c.id}>#{c.id} - {c.title}</option>)}
         </select>
@@ -1713,7 +1725,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
 
     <div className="draw-actions draw-actions-clean">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
-      <button className="primary live-draw-start" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Live draw running...' : 'Start Live Draw'}</button>
+      <button className="primary live-draw-start" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Live draw running...' : testMode ? 'Spin Test Tickets Again' : 'Start Official Live Draw'}</button>
       <button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button>
       {arnoldModuleEnabled && <button className={showArnold ? 'primary arnold-toggle-on' : 'secondary'} type="button" onClick={toggleArnold}>{showArnold ? 'Arnold On' : 'Arnold Off'}</button>}
       <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button>
@@ -1753,9 +1765,10 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     <div className="draw-stats">
       <div><strong>{entryList.length}</strong><span>eligible tickets loaded</span></div>
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
-      <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
+      <div><strong>{competition?.max_tickets || (testMode ? entryList.length : 0)}</strong><span>ticket capacity</span></div>
+      <div><strong>{testMode ? 'TEST' : 'OFFICIAL'}</strong><span>draw mode</span></div>
     </div>
-    <p className="muted draw-sync-note">Use Start Live Draw to open the live draw window and run a secure server-side draw. The browser only displays the locked result selected by the API.</p>
+    <p className="muted draw-sync-note">{testMode ? 'Test mode: spins are local previews only and can be repeated. They do not record an official winner.' : 'Official mode: Start Official Live Draw opens the live draw window and records one secure server-side winner. Once recorded, the same competition cannot be officially drawn again.'}</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
       <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
@@ -2028,7 +2041,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
-            <h1>Scheduled Auto Draws</h1>
+            <h1>Scheduled Auto Draws</h1><p className="muted"><strong>This is separate from quick test spins.</strong> Test ticket loads below do not trigger scheduled or official draw records.</p>
             <p className="muted">For each competition, set a draw date/time and enable auto draw in Add/Edit Competition. When the competition is sold out or closed and the draw time arrives, Prizetown safely records the winner once and updates the OBS broadcast screen.</p>
             <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Run due auto draws now</button>
           </div>
@@ -2277,5 +2290,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v95';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v96';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
