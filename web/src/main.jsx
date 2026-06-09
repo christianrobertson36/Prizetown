@@ -168,7 +168,10 @@ If a competition is cancelled, Prizetown may refund eligible paid entries or off
   responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
   age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules, terms, privacy notice and free-entry terms.',
   promoter_text: 'Promoter details can be edited in Admin → Legal Text. Add your trading name, address and company details before full public launch.',
-  postal_entry_address: 'Add postal entry address in Admin → Legal Text.'
+  postal_entry_address: 'Add postal entry address in Admin → Legal Text.',
+  cookie_banner_text: 'We use essential cookies/local storage to keep the basket, login and security features working. Optional analytics or marketing cookies will only be used if you accept them.',
+  legal_disclaimer_text: 'Prizetown is for UK residents aged 18+. Please enter responsibly and only spend what you can afford. Free postal entry is available where offered, and all entries are subject to the competition rules, terms and privacy notice.',
+  popup_terms_label: 'I am 18 or over and understand Prizetown is a prize competition platform, not a guaranteed way to make money.'
 };
 function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
@@ -220,9 +223,26 @@ function App() {
   const [message, setMessage] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('prizetown_cart') || '[]'));
   const [selected, setSelected] = useState(null);
+  const [cookieChoice, setCookieChoice] = useState(() => localStorage.getItem('prizetown_cookie_choice') || '');
+  const [showCookiePrefs, setShowCookiePrefs] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(() => localStorage.getItem('prizetown_legal_disclaimer_v1') === 'accepted');
 
   function setPage(next) { setPageState(next); window.history.replaceState(null, '', next === 'home' ? '/' : `/${next}`); }
   function saveCart(next) { setCart(next); localStorage.setItem('prizetown_cart', JSON.stringify(next)); }
+  function saveCookieChoice(choice) {
+    localStorage.setItem('prizetown_cookie_choice', choice);
+    setCookieChoice(choice);
+    setShowCookiePrefs(false);
+  }
+  function resetCookieChoice() {
+    localStorage.removeItem('prizetown_cookie_choice');
+    setCookieChoice('');
+    setShowCookiePrefs(true);
+  }
+  function acceptLegalDisclaimer() {
+    localStorage.setItem('prizetown_legal_disclaimer_v1', 'accepted');
+    setLegalAccepted(true);
+  }
   function goHomeCompetitions() {
     setPage('home');
     setTimeout(() => {
@@ -252,7 +272,9 @@ function App() {
       {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => setPage('login')}><User size={16} /> Login</button>}
     </nav></header>
     {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
-    {page === 'home' && <Home settings={settings} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
+    {!cookieChoice && <CookieConsent settings={settings} setPage={setPage} onChoice={saveCookieChoice} showPrefs={showCookiePrefs} setShowPrefs={setShowCookiePrefs} />}
+    {!legalAccepted && <LegalDisclaimer settings={settings} setPage={setPage} onAccept={acceptLegalDisclaimer} />}
+    {page === 'home' && <Home settings={settings} resetCookieChoice={resetCookieChoice} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'terms' && <LegalPage title="Terms and Conditions" text={settings.terms_text || defaultSettings.terms_text} settings={settings} setPage={setPage} />}
@@ -310,7 +332,7 @@ function ArnoldBroadcastHost({ mode = 'idle', winner }) {
   </div>;
 }
 
-function Home({ settings, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
+function Home({ settings, resetCookieChoice, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   function openCompetition(c) {
     setSelected(c);
     setTimeout(() => {
@@ -441,13 +463,14 @@ return <main>
       <div className="footer-column">
         <h3>Transparency</h3>
         <p>Competition details, ticket limits, closing dates and draw information are shown clearly before entry.</p>
-        <div className="footer-links">
+        <nav className="footer-links" aria-label="Footer legal links">
           <button type="button" onClick={() => setPage('terms')}>Terms</button>
           <button type="button" onClick={() => setPage('privacy')}>Privacy</button>
           <button type="button" onClick={() => setPage('free-entry')}>Free entry</button>
           <button type="button" onClick={() => setPage('cookies')}>Cookies</button>
           <button type="button" onClick={() => setPage('refunds')}>Refunds</button>
-        </div>
+          <button type="button" onClick={resetCookieChoice}>Cookie settings</button>
+        </nav>
       </div>
     </footer>}
   </main>;
@@ -1438,6 +1461,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <label>Winner publication text<textarea rows="5" value={settingsForm.winner_publication_text || ''} onChange={e => setSettingsForm({ ...settingsForm, winner_publication_text: e.target.value })} /></label>
           <label>Responsible play text<textarea rows="5" value={settingsForm.responsible_play_text || ''} onChange={e => setSettingsForm({ ...settingsForm, responsible_play_text: e.target.value })} /></label>
           <label>Age confirmation text<textarea rows="4" value={settingsForm.age_confirmation_text || ''} onChange={e => setSettingsForm({ ...settingsForm, age_confirmation_text: e.target.value })} /></label>
+          <label>Cookie popup text<textarea rows="5" value={settingsForm.cookie_banner_text || ''} onChange={e => setSettingsForm({ ...settingsForm, cookie_banner_text: e.target.value })} /></label>
+          <label>First-visit legal disclaimer popup<textarea rows="6" value={settingsForm.legal_disclaimer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, legal_disclaimer_text: e.target.value })} /></label>
+          <label>Popup checkbox wording<textarea rows="4" value={settingsForm.popup_terms_label || ''} onChange={e => setSettingsForm({ ...settingsForm, popup_terms_label: e.target.value })} /></label>
           <button className="primary full">Save legal text</button>
         </form>}
 
@@ -1460,6 +1486,47 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 }
 
 
+
+function CookieConsent({ settings, setPage, onChoice, showPrefs, setShowPrefs }) {
+  return <div className="cookie-banner" role="dialog" aria-label="Cookie notice">
+    <div>
+      <strong>Cookie choices</strong>
+      <p>{settings.cookie_banner_text || defaultSettings.cookie_banner_text}</p>
+      {showPrefs && <div className="cookie-prefs">
+        <label className="check-row"><input type="checkbox" checked readOnly /> Essential cookies/local storage — required for login, basket and security</label>
+        <label className="check-row"><input type="checkbox" disabled /> Analytics cookies — not active yet</label>
+        <label className="check-row"><input type="checkbox" disabled /> Marketing cookies — not active yet</label>
+      </div>}
+      <button type="button" className="footer-text-link" onClick={() => setPage('cookies')}>Read cookie notice</button>
+    </div>
+    <div className="cookie-actions">
+      <button type="button" onClick={() => setShowPrefs(!showPrefs)}>{showPrefs ? 'Hide options' : 'Manage options'}</button>
+      <button type="button" className="secondary" onClick={() => onChoice('essential')}>Essential only</button>
+      <button type="button" className="primary" onClick={() => onChoice('all')}>Accept all</button>
+    </div>
+  </div>;
+}
+
+function LegalDisclaimer({ settings, setPage, onAccept }) {
+  return <div className="modal-backdrop legal-disclaimer-backdrop">
+    <section className="panel legal-disclaimer-modal" role="dialog" aria-label="Important Prizetown notice">
+      <h1>Important notice</h1>
+      <p>{settings.legal_disclaimer_text || defaultSettings.legal_disclaimer_text}</p>
+      <label className="check-row important-check">
+        <input type="checkbox" onChange={e => { if (e.target.checked) onAccept(); }} />
+        <span>{settings.popup_terms_label || defaultSettings.popup_terms_label}</span>
+      </label>
+      <div className="legal-modal-links">
+        <button type="button" className="footer-text-link" onClick={() => setPage('terms')}>Terms</button>
+        <button type="button" className="footer-text-link" onClick={() => setPage('privacy')}>Privacy</button>
+        <button type="button" className="footer-text-link" onClick={() => setPage('free-entry')}>Free entry</button>
+        <button type="button" className="footer-text-link" onClick={() => setPage('cookies')}>Cookies</button>
+      </div>
+      <button type="button" className="primary full" onClick={onAccept}>I understand</button>
+    </section>
+  </div>;
+}
+
 function LegalPage({ title, text, settings, setPage }) {
   return <main className="legal-main">
     <section className="panel legal-panel">
@@ -1476,5 +1543,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v63';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v64';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

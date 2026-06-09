@@ -2201,3 +2201,115 @@ label small.muted {
   font-family: inherit;
   line-height: 1.45;
 }
+
+
+/* v64 cookie/legal popups and polished footer legal links */
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .9rem;
+  margin-top: .75rem;
+  align-items: center;
+}
+.footer-links button,
+.footer-text-link,
+.legal-modal-links button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: rgba(254,243,199,.82);
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: .93rem;
+  line-height: 1.4;
+}
+.footer-links button::after {
+  content: "";
+  display: block;
+  height: 2px;
+  width: 0;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #facc15, #f59e0b);
+  transition: width .18s ease;
+}
+.footer-links button:hover,
+.footer-text-link:hover,
+.legal-modal-links button:hover {
+  color: #facc15;
+}
+.footer-links button:hover::after {
+  width: 100%;
+}
+
+.cookie-banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 80;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: end;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  background: rgba(15,23,42,.96);
+  border: 1px solid rgba(250,204,21,.28);
+  box-shadow: 0 24px 80px rgba(0,0,0,.55);
+}
+.cookie-banner strong {
+  color: #facc15;
+  font-size: 1.05rem;
+}
+.cookie-banner p {
+  margin: .35rem 0 .6rem;
+  color: rgba(255,255,255,.82);
+}
+.cookie-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+.cookie-prefs {
+  display: grid;
+  gap: .35rem;
+  margin: .55rem 0;
+  padding: .6rem;
+  border-radius: .85rem;
+  background: rgba(255,255,255,.05);
+}
+.legal-disclaimer-backdrop {
+  z-index: 75;
+}
+.legal-disclaimer-modal {
+  max-width: 620px;
+  margin: 8vh auto;
+  padding: 1.25rem;
+}
+.legal-disclaimer-modal h1 {
+  color: #facc15;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+.legal-modal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin: .9rem 0 1rem;
+}
+@media (max-width: 760px) {
+  .cookie-banner {
+    grid-template-columns: 1fr;
+  }
+  .cookie-actions {
+    justify-content: stretch;
+  }
+  .cookie-actions button {
+    flex: 1;
+  }
+}
