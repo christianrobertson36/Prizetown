@@ -646,3 +646,9 @@ details { margin-top: 1rem; color: #c8cada; }
 .quick-picks button {
   min-width: 7rem;
 }
+
+
+/* v34 force refresh */
+.competitions-anchor {
+  scroll-margin-top: 5.5rem;
+}
