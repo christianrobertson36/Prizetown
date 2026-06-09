@@ -287,7 +287,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v36' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v37' }));
 
 
 async function getSettingsObject() {
@@ -371,6 +371,49 @@ function ensureCompetitionOpen(competition) {
   if (competition.closes_at && new Date(competition.closes_at).getTime() <= now) throw new Error('Competition is closed');
   if (competition.draw_at && new Date(competition.draw_at).getTime() <= now) throw new Error('Competition draw date has passed');
 }
+
+
+let drawBroadcastState = {
+  mode: 'idle',
+  competition_id: null,
+  competition_title: '',
+  competition_number: '',
+  draw_date: '',
+  ticket_capacity: 0,
+  eligible_count: 0,
+  visual_tickets: [],
+  winner: null,
+  updated_at: new Date().toISOString()
+};
+
+app.get('/draw/broadcast-state', (_req, res) => {
+  res.json(drawBroadcastState);
+});
+
+app.post('/admin/draw/broadcast-state', auth('admin'), (req, res) => {
+  drawBroadcastState = {
+    ...drawBroadcastState,
+    ...(req.body || {}),
+    updated_at: new Date().toISOString()
+  };
+  res.json(drawBroadcastState);
+});
+
+app.post('/admin/draw/broadcast-reset', auth('admin'), (_req, res) => {
+  drawBroadcastState = {
+    mode: 'idle',
+    competition_id: null,
+    competition_title: '',
+    competition_number: '',
+    draw_date: '',
+    ticket_capacity: 0,
+    eligible_count: 0,
+    visual_tickets: [],
+    winner: null,
+    updated_at: new Date().toISOString()
+  };
+  res.json(drawBroadcastState);
+});
 
 app.get('/competitions', async (_req, res) => {
   const result = await query(`
@@ -911,7 +954,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v36 built in draw only)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v37 OBS draw broadcast)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

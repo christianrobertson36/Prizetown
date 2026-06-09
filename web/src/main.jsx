@@ -98,6 +98,7 @@ function App() {
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
+    {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
     {page === 'admin' && <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />}
     {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
@@ -210,6 +211,117 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
 function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
 
 
+
+function DrawBroadcastPage({ setPage }) {
+  const [state, setState] = useState(null);
+  const [now, setNow] = useState(new Date());
+  const [rotation, setRotation] = useState(0);
+  const params = new URLSearchParams(window.location.search);
+  const transparent = params.get('transparent') === '1';
+
+  useEffect(() => {
+    document.body.classList.add('broadcast-body');
+    if (transparent) document.body.classList.add('broadcast-transparent');
+    return () => {
+      document.body.classList.remove('broadcast-body');
+      document.body.classList.remove('broadcast-transparent');
+    };
+  }, [transparent]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadState() {
+      try {
+        const data = await api('/draw/broadcast-state');
+        if (!active) return;
+        setState(data);
+        if (data.mode === 'spinning') {
+          setRotation(prev => prev + 360 * 6 + Math.floor(Math.random() * 360));
+        }
+      } catch {
+        if (active) setState(s => s || { mode: 'offline', visual_tickets: [] });
+      }
+    }
+    loadState();
+    const poll = setInterval(loadState, 1000);
+    const clock = setInterval(() => setNow(new Date()), 1000);
+    return () => {
+      active = false;
+      clearInterval(poll);
+      clearInterval(clock);
+    };
+  }, []);
+
+  useEffect(() => {
+    function key(e) {
+      if (e.key === 'Escape') setPage('admin');
+    }
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [setPage]);
+
+  const tickets = state?.visual_tickets || [];
+  const winner = state?.winner;
+  const mode = state?.mode || 'idle';
+  const title = state?.competition_title || 'Waiting for competition';
+  const competitionNumber = state?.competition_number || '—';
+  const eligible = state?.eligible_count || 0;
+  const capacity = state?.ticket_capacity || 0;
+
+  return <main className={`broadcast-page ${transparent ? 'transparent' : ''}`}>
+    <section className="broadcast-stage">
+      <header className="broadcast-header">
+        <img src="/prizetown-logo.png" alt="Prizetown" />
+        <div>
+          <h1>{title}</h1>
+          <p>Competition {competitionNumber} · Draw {state?.draw_date ? fmtDate(state.draw_date) : 'date not set'}</p>
+        </div>
+        <div className="broadcast-clock">
+          <strong>{now.toLocaleTimeString()}</strong>
+          <span>{now.toLocaleDateString()}</span>
+        </div>
+      </header>
+
+      <div className="broadcast-main">
+        <div className="broadcast-wheel-wrap">
+          <div className="broadcast-pointer">▼</div>
+          <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
+            {tickets.length === 0 ? <div className="broadcast-wheel-empty">Load tickets in admin</div> : tickets.map((e, i) => {
+              const angle = (360 / tickets.length) * i;
+              return <span className="broadcast-ticket" key={`${e.ticket_number}-${i}`} style={{ transform: `rotate(${angle}deg) translateY(-15.6rem)` }}>#{e.ticket_number}</span>;
+            })}
+            <div className="broadcast-centre">PRIZETOWN<br/><small>LIVE DRAW</small></div>
+          </div>
+        </div>
+
+        <aside className="broadcast-info">
+          <div className={`broadcast-status ${mode}`}>
+            {mode === 'spinning' ? 'SPINNING NOW' : mode === 'winner' ? 'WINNER SELECTED' : mode === 'ready' ? 'READY TO DRAW' : 'WAITING'}
+          </div>
+          <div className="broadcast-stat"><span>Eligible tickets</span><strong>{eligible}</strong></div>
+          <div className="broadcast-stat"><span>Ticket capacity</span><strong>{capacity}</strong></div>
+          <div className="broadcast-stat"><span>Visual slices</span><strong>{tickets.length}</strong></div>
+
+          {winner ? <div className="broadcast-winner">
+            <h2>Winner</h2>
+            <p className="winning-ticket">#{winner.ticket_number}</p>
+            <p className="winner-name">{winner.customer_name || 'Customer'}</p>
+          </div> : <div className="broadcast-waiting">
+            <h2>Awaiting spin</h2>
+            <p>Use the admin draw controls to load tickets and start the live draw.</p>
+          </div>}
+        </aside>
+      </div>
+
+      <footer className="broadcast-footer">
+        <span>Official Prizetown live draw</span>
+        <span>{state?.updated_at ? `Last sync ${new Date(state.updated_at).toLocaleTimeString()}` : 'Waiting for sync'}</span>
+      </footer>
+    </section>
+  </main>;
+}
+
+
 function BuiltInDrawWheel({ competitions, setMessage }) {
   const [competitionId, setCompetitionId] = useState('');
   const [entries, setEntries] = useState([]);
@@ -227,6 +339,53 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     return () => clearInterval(t);
   }, []);
 
+  async function publishBroadcastState(nextState) {
+    try {
+      await api('/admin/draw/broadcast-state', { method: 'POST', body: JSON.stringify(nextState) });
+    } catch (err) {
+      setMessage(`Broadcast sync failed: ${err.message}`);
+    }
+  }
+
+  function visualTicketSample(rows) {
+    if (!rows || rows.length === 0) return [];
+    if (rows.length <= 120) return rows.map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
+    const step = Math.ceil(rows.length / 120);
+    return rows.filter((_, i) => i % step === 0).slice(0, 120).map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
+  }
+
+  function broadcastBase(rows = entries, mode = 'ready', picked = winner) {
+    return {
+      mode,
+      competition_id: competition?.id || competitionId || null,
+      competition_title: competition?.title || '',
+      competition_number: competition?.id ? `#${competition.id}` : '',
+      draw_date: competition?.draw_at || '',
+      ticket_capacity: competition?.max_tickets || 0,
+      eligible_count: rows.length || 0,
+      visual_tickets: visualTicketSample(rows),
+      winner: picked ? {
+        ticket_number: picked.ticket_number,
+        customer_name: picked.customer_name || picked.name || 'Customer',
+        email: picked.email || picked.customer_email || ''
+      } : null
+    };
+  }
+
+  function openBroadcastScreen() {
+    window.open('/draw-broadcast', 'prizetown_draw_broadcast');
+  }
+
+  async function resetBroadcast() {
+    try {
+      await api('/admin/draw/broadcast-reset', { method: 'POST' });
+      setWinner(null);
+      setMessage('Broadcast draw screen reset.');
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
   async function loadEntries() {
     if (!competitionId) return setMessage('Choose a competition first.');
     try {
@@ -235,6 +394,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       const rows = await api(`/admin/competitions/${competitionId}/draw-entries`);
       setEntries(rows || []);
       setMessage(`${rows.length} eligible draw tickets loaded.`);
+      await publishBroadcastState(broadcastBase(rows || [], 'ready', null));
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -250,9 +410,11 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     setWinner(null);
     setSpinning(true);
     setRotation(prev => prev + extra);
+    publishBroadcastState(broadcastBase(entries, 'spinning', null));
     setTimeout(() => {
       setWinner(picked);
       setSpinning(false);
+      publishBroadcastState(broadcastBase(entries, 'winner', picked));
       setMessage(`Winner selected: ticket #${picked.ticket_number} - ${picked.customer_name || picked.email || 'Customer'}`);
     }, 5200);
   }
@@ -314,7 +476,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     <div className="draw-actions">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary" onClick={spinDraw} disabled={spinning || entries.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entries.length === 0}>Download entries CSV</button>
+      <button className="secondary" onClick={csvDownload} disabled={entries.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button>
     </div>
 
     <div className="draw-stats">
@@ -445,5 +607,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v36';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v37';
 createRoot(document.getElementById('root')).render(<App />);
