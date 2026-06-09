@@ -262,6 +262,11 @@ function App() {
   const active = competitions.filter(c => c.status === 'active');
   const homepageCompetitions = active.length > 0 ? active : competitions;
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+  if (page === 'draw-broadcast') {
+    return <DrawBroadcastPage setPage={setPage} />;
+  }
+
   return <div>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src="/prizetown-logo.png" alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
@@ -284,7 +289,6 @@ function App() {
     {page === 'refunds' && <LegalPage title="Refunds and Cancellations" text={settings.refund_text || defaultSettings.refund_text} settings={settings} setPage={setPage} />}
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
-    {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
     {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} postcodeZones={adminPostcodeZones} postcodeAssignments={adminPostcodeAssignments} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} setPage={setPage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
@@ -706,6 +710,7 @@ function DrawBroadcastPage({ setPage }) {
   const params = new URLSearchParams(window.location.search);
   const transparent = params.get('transparent') === '1';
   const compact = params.get('compact') !== '0';
+  const safeObs = params.get('safe') !== '0';
 
   useEffect(() => {
     document.body.classList.add('broadcast-body');
@@ -760,7 +765,7 @@ function DrawBroadcastPage({ setPage }) {
   const liveDateText = now.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
   const liveTimeText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  return <main className={`broadcast-page ${transparent ? 'transparent' : ''} ${compact ? 'compact' : ''}`}>
+  return <main className={`broadcast-page ${transparent ? 'transparent' : ''} ${compact ? 'compact' : ''} ${safeObs ? 'safe-obs' : ''}`}>
     <section className="broadcast-stage">
       <header className="broadcast-header">
         <img src="/prizetown-logo.png" alt="Prizetown" />
@@ -1607,5 +1612,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v68';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v69';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
