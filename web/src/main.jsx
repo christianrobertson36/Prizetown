@@ -754,6 +754,10 @@ function DrawBroadcastPage({ setPage }) {
   const competitionNumber = state?.competition_number || '—';
   const eligible = state?.eligible_count || 0;
   const capacity = state?.ticket_capacity || 0;
+  const drawDateText = state?.draw_date ? new Date(state.draw_date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : 'Draw date not set';
+  const drawTimeText = state?.draw_date ? new Date(state.draw_date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Time not set';
+  const liveDateText = now.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  const liveTimeText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return <main className={`broadcast-page ${transparent ? 'transparent' : ''}`}>
     <section className="broadcast-stage">
@@ -763,15 +767,28 @@ function DrawBroadcastPage({ setPage }) {
           <h1>{title}</h1>
           <p>Competition {competitionNumber} · Draw {state?.draw_date ? fmtDate(state.draw_date) : 'date not set'}</p>
         </div>
-        <div className="broadcast-clock">
-          <strong>{now.toLocaleTimeString()}</strong>
-          <span>{now.toLocaleDateString()}</span>
+        <div className="broadcast-clock broadcast-clock-rich">
+          <div>
+            <span>Live time</span>
+            <strong>{liveTimeText}</strong>
+            <small>{liveDateText}</small>
+          </div>
+          <div>
+            <span>Draw scheduled</span>
+            <strong>{drawTimeText}</strong>
+            <small>{drawDateText}</small>
+          </div>
         </div>
       </header>
 
       <div className="broadcast-main">
         {state?.show_arnold !== false && <ArnoldBroadcastHost mode={mode} winner={winner} />}
         <div className="broadcast-wheel-wrap">
+          <div className="broadcast-datetime-strip">
+            <span><strong>Draw:</strong> {drawDateText}</span>
+            <span><strong>Time:</strong> {drawTimeText}</span>
+            <span><strong>Live:</strong> {liveTimeText}</span>
+          </div>
           <div className="broadcast-pointer">▼</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ transform: `rotate(${rotation}deg)` }}>
             {tickets.length === 0 ? <div className="broadcast-wheel-empty">Load tickets in admin</div> : tickets.map((e, i) => {
@@ -797,7 +814,7 @@ function DrawBroadcastPage({ setPage }) {
             <p className="muted">Final draw winner confirmed</p>
           </div> : <div className="broadcast-waiting">
             <h2>Awaiting spin</h2>
-            <p>Use the admin draw controls to load tickets and start the live draw.</p>
+            <p>Draw date and live clock are shown on this broadcast screen for OBS.</p>
           </div>}
         </aside>
       </div>
@@ -1559,5 +1576,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v65';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v66';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
