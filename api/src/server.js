@@ -189,6 +189,56 @@ function cleanLaunchPriority(value) {
   return ['low', 'normal', 'high'].includes(v) ? v : 'normal';
 }
 
+function competitionProfitPlan(input = {}) {
+  const ticketPricePence = toInt(input.ticket_price_pence);
+  const maxTickets = toInt(input.max_tickets);
+  const prizeCostPence = toInt(input.prize_cost_pence);
+  const marketingBudgetPence = toInt(input.marketing_budget_pence);
+  const otherBufferPence = toInt(input.other_buffer_pence);
+  const feePercent = Number(input.payment_fee_percent ?? 4);
+  const cleanFeePercent = Number.isFinite(feePercent) ? Math.max(0, feePercent) : 4;
+  const vatEnabled = input.vat_enabled === true || String(input.vat_enabled).toLowerCase() === 'true';
+
+  const maxRevenuePence = ticketPricePence * maxTickets;
+  const paymentFeesPence = Math.round(maxRevenuePence * (cleanFeePercent / 100));
+  const vatPence = vatEnabled ? Math.round(maxRevenuePence / 6) : 0;
+  const estimatedProfitPence = maxRevenuePence - prizeCostPence - paymentFeesPence - marketingBudgetPence - otherBufferPence - vatPence;
+  const profitMarginPercent = maxRevenuePence > 0 ? (estimatedProfitPence / maxRevenuePence) * 100 : 0;
+  const prizePercent = maxRevenuePence > 0 ? (prizeCostPence / maxRevenuePence) * 100 : 0;
+  const targetProfitPence = Math.round(maxRevenuePence * 0.25);
+
+  let status = 'unknown';
+  let warning = 'Add ticket price and max tickets to calculate profit.';
+  if (maxRevenuePence > 0) {
+    if (estimatedProfitPence < 0) {
+      status = 'loss';
+      warning = 'Loss-making: costs are higher than maximum ticket revenue.';
+    } else if (profitMarginPercent < 15) {
+      status = 'risky';
+      warning = 'Risky: profit margin is below 15%. Reduce prize/costs or raise ticket cap/price.';
+    } else if (profitMarginPercent < 25) {
+      status = 'caution';
+      warning = 'Caution: margin is below the built-in 25% target.';
+    } else {
+      status = 'good';
+      warning = 'Good: estimated margin meets the 25% minimum target.';
+    }
+  }
+
+  return {
+    target_margin_percent: 25,
+    max_revenue_pence: maxRevenuePence,
+    prize_percent: Number(prizePercent.toFixed(1)),
+    payment_fees_pence: paymentFeesPence,
+    vat_pence: vatPence,
+    estimated_profit_pence: estimatedProfitPence,
+    profit_margin_percent: Number(profitMarginPercent.toFixed(1)),
+    target_profit_pence: targetProfitPence,
+    status,
+    warning
+  };
+}
+
 async function initDb() {
   await query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -362,6 +412,11 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS max_per_order INTEGER NOT NULL DEFAULT 2500;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Instant Wins';
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS postcode_mode TEXT NOT NULL DEFAULT 'all';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS prize_cost_pence INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS marketing_budget_pence INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS other_buffer_pence INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS payment_fee_percent NUMERIC NOT NULL DEFAULT 4;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS vat_enabled BOOLEAN NOT NULL DEFAULT FALSE;
 
     INSERT INTO site_settings (key, value) VALUES
       ('site_name', 'Prizetown'),
@@ -386,6 +441,11 @@ async function initDb() {
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS max_per_order INTEGER NOT NULL DEFAULT 2500;
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Instant Wins';
     ALTER TABLE competitions ADD COLUMN IF NOT EXISTS postcode_mode TEXT NOT NULL DEFAULT 'all';
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS prize_cost_pence INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS marketing_budget_pence INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS other_buffer_pence INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS payment_fee_percent NUMERIC NOT NULL DEFAULT 4;
+    ALTER TABLE competitions ADD COLUMN IF NOT EXISTS vat_enabled BOOLEAN NOT NULL DEFAULT FALSE;
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
@@ -449,7 +509,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v60' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v61' }));
 
 
 async function getSettingsObject() {
@@ -641,6 +701,11 @@ app.get('/competitions/:id/entries', async (req, res) => {
   res.json(result.rows);
 });
 
+
+
+app.post('/admin/profit-planner', auth('admin'), async (req, res) => {
+  res.json(competitionProfitPlan(req.body || {}));
+});
 
 app.get('/admin/postcode-zones', auth('admin'), async (_req, res) => {
   const result = await query('SELECT * FROM postcode_zones ORDER BY active DESC, launch_priority DESC, type ASC, code ASC');
@@ -869,10 +934,10 @@ app.post('/admin/competitions', auth('admin'), async (req, res) => {
   const c = req.body;
   const result = await query(`
     INSERT INTO competitions
-    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category, postcode_mode)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+    (title, slug, description, question, answer, free_entry_text, rules_text, closes_at, min_age, age_restricted, ticket_price_pence, max_tickets, max_per_user, draw_at, status, image_url, prize_summary, ticket_presets, max_per_order, category, postcode_mode, prize_cost_pence, marketing_budget_pence, other_buffer_pence, payment_fee_percent, vat_enabled)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
     RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all']);
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', toInt(c.prize_cost_pence), toInt(c.marketing_budget_pence), toInt(c.other_buffer_pence), Number(c.payment_fee_percent ?? 4), c.vat_enabled === true]);
   await audit(req.user, 'competition_created', `Created competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
 });
@@ -884,9 +949,10 @@ app.patch('/admin/competitions/:id', auth('admin'), async (req, res) => {
       title=$1, slug=$2, description=$3, question=$4, answer=$5, free_entry_text=$6, rules_text=$7,
       closes_at=$8, min_age=$9, age_restricted=$10, ticket_price_pence=$11, max_tickets=$12, max_per_user=$13, draw_at=$14, status=$15, image_url=$16,
       prize_summary=$17, ticket_presets=$18, max_per_order=$19, category=$20, postcode_mode=$21,
+      prize_cost_pence=$22, marketing_budget_pence=$23, other_buffer_pence=$24, payment_fee_percent=$25, vat_enabled=$26,
       updated_at=NOW()
-    WHERE id=$22 RETURNING *
-  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', req.params.id]);
+    WHERE id=$27 RETURNING *
+  `, [c.title, c.slug, c.description || '', c.question || '', c.answer || '', c.free_entry_text || '', c.rules_text || '', c.closes_at || null, toInt(c.min_age, 18), c.age_restricted !== false, toInt(c.ticket_price_pence), toInt(c.max_tickets, 100), toInt(c.max_per_user, 10), c.draw_at || null, c.status || 'draft', c.image_url || '', c.prize_summary || '', c.ticket_presets || '10,20,50,100,250,500,1000,2500', toInt(c.max_per_order, 2500), c.category || 'Instant Wins', c.postcode_mode === 'selected' ? 'selected' : 'all', toInt(c.prize_cost_pence), toInt(c.marketing_budget_pence), toInt(c.other_buffer_pence), Number(c.payment_fee_percent ?? 4), c.vat_enabled === true, req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Competition not found' });
   await audit(req.user, 'competition_updated', `Updated competition ${result.rows[0].title}`);
   res.json(result.rows[0]);
@@ -1361,7 +1427,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v60 postcode CSV import)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v61 profit planner)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

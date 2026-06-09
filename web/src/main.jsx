@@ -927,7 +927,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
 
 function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, postcodeZones = [], postcodeAssignments = [], reload, setMessage, setPage }) {
-  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all' };
+  const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all', prize_cost_pence: 0, marketing_budget_pence: 0, other_buffer_pence: 0, payment_fee_percent: 4, vat_enabled: false };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -941,6 +941,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [drawResults, setDrawResults] = useState([]);
   const [postcodeForm, setPostcodeForm] = useState({ code: '', label: '', estimated_population: 0, estimated_households: 0, launch_priority: 'normal', notes: '', active: true });
   const [assignForm, setAssignForm] = useState({ competition_ids: [], mode: 'all', zone_ids: [] });
+  const [profitForm, setProfitForm] = useState({ ticket_price_pence: 199, max_tickets: 500, prize_cost_pence: 25000, marketing_budget_pence: 10000, other_buffer_pence: 5000, payment_fee_percent: 4, vat_enabled: false });
+  const [profitPlan, setProfitPlan] = useState(null);
   useEffect(() => { setSettingsForm({ ...defaultSettings, ...settings }); }, [settings]);
 
   const liveCount = competitions.filter(c => c.status === 'active').length;
@@ -988,6 +990,58 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     } catch (err) {
       setMessage(err.message);
     }
+  }
+
+  function poundsToPence(value) {
+    return Math.round(Number(value || 0) * 100);
+  }
+  function penceToPounds(value) {
+    return (Number(value || 0) / 100).toFixed(2);
+  }
+  function money(value) {
+    return `£${(Number(value || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  function localProfitPlan(input) {
+    const ticketPricePence = Number(input.ticket_price_pence || 0);
+    const maxTickets = Number(input.max_tickets || 0);
+    const prizeCostPence = Number(input.prize_cost_pence || 0);
+    const marketingBudgetPence = Number(input.marketing_budget_pence || 0);
+    const otherBufferPence = Number(input.other_buffer_pence || 0);
+    const feePercent = Number(input.payment_fee_percent || 0);
+    const maxRevenuePence = ticketPricePence * maxTickets;
+    const paymentFeesPence = Math.round(maxRevenuePence * (feePercent / 100));
+    const vatPence = input.vat_enabled ? Math.round(maxRevenuePence / 6) : 0;
+    const estimatedProfitPence = maxRevenuePence - prizeCostPence - marketingBudgetPence - otherBufferPence - paymentFeesPence - vatPence;
+    const profitMarginPercent = maxRevenuePence > 0 ? estimatedProfitPence / maxRevenuePence * 100 : 0;
+    const prizePercent = maxRevenuePence > 0 ? prizeCostPence / maxRevenuePence * 100 : 0;
+    let status = 'unknown';
+    let warning = 'Add ticket price and max tickets to calculate profit.';
+    if (maxRevenuePence > 0) {
+      if (estimatedProfitPence < 0) { status = 'loss'; warning = 'Loss-making: costs are higher than maximum revenue.'; }
+      else if (profitMarginPercent < 15) { status = 'risky'; warning = 'Risky: margin is below 15%.'; }
+      else if (profitMarginPercent < 25) { status = 'caution'; warning = 'Caution: margin is below the built-in 25% target.'; }
+      else { status = 'good'; warning = 'Good: estimated margin meets the 25% minimum target.'; }
+    }
+    return { target_margin_percent: 25, max_revenue_pence: maxRevenuePence, prize_percent: Number(prizePercent.toFixed(1)), payment_fees_pence: paymentFeesPence, vat_pence: vatPence, estimated_profit_pence: estimatedProfitPence, profit_margin_percent: Number(profitMarginPercent.toFixed(1)), target_profit_pence: Math.round(maxRevenuePence * .25), status, warning };
+  }
+  function updateProfitField(field, value) {
+    const next = { ...profitForm, [field]: value };
+    setProfitForm(next);
+    setProfitPlan(localProfitPlan(next));
+  }
+  function loadCompetitionIntoPlanner(c) {
+    const next = {
+      ticket_price_pence: Number(c.ticket_price_pence || 0),
+      max_tickets: Number(c.max_tickets || 0),
+      prize_cost_pence: Number(c.prize_cost_pence || 0),
+      marketing_budget_pence: Number(c.marketing_budget_pence || 0),
+      other_buffer_pence: Number(c.other_buffer_pence || 0),
+      payment_fee_percent: Number(c.payment_fee_percent || 4),
+      vat_enabled: c.vat_enabled === true
+    };
+    setProfitForm(next);
+    setProfitPlan(localProfitPlan(next));
+    setActiveTab('profit-planner');
   }
 
   async function savePostcodeZone(e) {
@@ -1064,7 +1118,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -1080,7 +1134,20 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Seed demo competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} · {c.entries_sold || 0}/{c.max_tickets} tickets · postcode: {assignmentLabel(c.id)} · instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} · closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
 
-        {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><label>Postcode availability<select value={form.postcode_mode || 'all'} onChange={e => updateField('postcode_mode', e.target.value)}><option value="all">All postcodes</option><option value="selected">Selected postcode zones</option></select><small className="muted">Use Assign Postcodes for selecting the exact zones.</small></label><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label></div><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
+        {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><label>Postcode availability<select value={form.postcode_mode || 'all'} onChange={e => updateField('postcode_mode', e.target.value)}><option value="all">All postcodes</option><option value="selected">Selected postcode zones</option></select><small className="muted">Use Assign Postcodes for selecting the exact zones.</small></label>
+            <div className="planner-inline">
+              <h2>Profit planner inputs</h2>
+              <p className="muted">These figures feed the 25% margin planner and warnings.</p>
+              <div className="three">
+                <label>Prize cost £<input type="number" step="0.01" value={penceToPounds(form.prize_cost_pence || 0)} onChange={e => updateField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
+                <label>Marketing £<input type="number" step="0.01" value={penceToPounds(form.marketing_budget_pence || 0)} onChange={e => updateField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
+                <label>Other buffer £<input type="number" step="0.01" value={penceToPounds(form.other_buffer_pence || 0)} onChange={e => updateField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
+              </div>
+              <div className="two">
+                <label>Payment fee %<input type="number" step="0.1" value={form.payment_fee_percent || 4} onChange={e => updateField('payment_fee_percent', Number(e.target.value))} /></label>
+                <label className="check-row"><input type="checkbox" checked={form.vat_enabled === true} onChange={e => updateField('vat_enabled', e.target.checked)} /> Include VAT estimate</label>
+              </div>
+            </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /></label></div><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
 
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
@@ -1178,6 +1245,55 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           </div>
         </div>}
 
+
+        {activeTab === 'profit-planner' && <div className="admin-split profit-planner-admin">
+          <form className="panel" onSubmit={e => { e.preventDefault(); setProfitPlan(localProfitPlan(profitForm)); }}>
+            <h1>Competition Profit Planner</h1>
+            <p className="muted">Built-in target: at least <strong>25% estimated profit margin</strong> after prize, payment fees, marketing, buffer and optional VAT.</p>
+
+            <div className="two">
+              <label>Ticket price £<input type="number" step="0.01" value={penceToPounds(profitForm.ticket_price_pence)} onChange={e => updateProfitField('ticket_price_pence', poundsToPence(e.target.value))} /></label>
+              <label>Max tickets<input type="number" value={profitForm.max_tickets} onChange={e => updateProfitField('max_tickets', Number(e.target.value))} /></label>
+            </div>
+            <div className="three">
+              <label>Prize cost £<input type="number" step="0.01" value={penceToPounds(profitForm.prize_cost_pence)} onChange={e => updateProfitField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
+              <label>Marketing budget £<input type="number" step="0.01" value={penceToPounds(profitForm.marketing_budget_pence)} onChange={e => updateProfitField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
+              <label>Other buffer £<input type="number" step="0.01" value={penceToPounds(profitForm.other_buffer_pence)} onChange={e => updateProfitField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
+            </div>
+            <div className="two">
+              <label>Payment fee %<input type="number" step="0.1" value={profitForm.payment_fee_percent} onChange={e => updateProfitField('payment_fee_percent', Number(e.target.value))} /></label>
+              <label className="check-row"><input type="checkbox" checked={profitForm.vat_enabled === true} onChange={e => updateProfitField('vat_enabled', e.target.checked)} /> Include VAT estimate</label>
+            </div>
+            <button className="primary full">Calculate margin</button>
+          </form>
+
+          <div className="panel profit-result-panel">
+            <h1>Result</h1>
+            {(() => {
+              const plan = profitPlan || localProfitPlan(profitForm);
+              return <div className={`profit-result ${plan.status}`}>
+                <div className="profit-status">{plan.status.toUpperCase()}</div>
+                <p>{plan.warning}</p>
+                <div className="profit-grid">
+                  <span>Max revenue <strong>{money(plan.max_revenue_pence)}</strong></span>
+                  <span>Target profit 25% <strong>{money(plan.target_profit_pence)}</strong></span>
+                  <span>Prize % <strong>{plan.prize_percent}%</strong></span>
+                  <span>Payment fees <strong>{money(plan.payment_fees_pence)}</strong></span>
+                  <span>VAT estimate <strong>{money(plan.vat_pence)}</strong></span>
+                  <span>Estimated profit <strong>{money(plan.estimated_profit_pence)}</strong></span>
+                  <span>Profit margin <strong>{plan.profit_margin_percent}%</strong></span>
+                </div>
+                <p className="muted">Suggested rule: keep profit margin at 25%+ before launching. Use caution below 25%, and avoid loss-making competitions.</p>
+              </div>;
+            })()}
+
+            <h2>Load existing competition</h2>
+            <div className="mini-list">
+              {competitions.map(c => <button type="button" key={c.id} onClick={() => loadCompetitionIntoPlanner(c)}>{c.title}</button>)}
+            </div>
+          </div>
+        </div>}
+
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}><h1>Site settings</h1><div className="two"><label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label><label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label></div><label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label><label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label><label>Global free entry route<textarea value={settingsForm.free_entry_global || ''} onChange={e => setSettingsForm({ ...settingsForm, free_entry_global: e.target.value })} /></label><label>Terms / legal text<textarea value={settingsForm.terms_text || ''} onChange={e => setSettingsForm({ ...settingsForm, terms_text: e.target.value })} /></label><label>Responsible play text<textarea value={settingsForm.responsible_play_text || ''} onChange={e => setSettingsForm({ ...settingsForm, responsible_play_text: e.target.value })} /></label><button className="primary full">Save site settings</button></form>}
 
         {activeTab === 'audit' && <div className="panel list-panel"><h1>Audit log</h1>{(auditLogs || []).length === 0 && <p className="muted">No audit log entries yet.</p>}{(auditLogs || []).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} · {a.details} · {new Date(a.created_at).toLocaleString()}</p></div></div>)}</div>}
@@ -1188,5 +1304,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v60';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v61';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

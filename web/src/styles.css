@@ -2065,3 +2065,69 @@ label small.muted {
 .file-button input {
   display: none;
 }
+
+
+/* v61 competition profit planner */
+.planner-inline {
+  margin: 1rem 0;
+  padding: .9rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.2);
+  border: 1px solid rgba(250,204,21,.16);
+}
+.planner-inline h2,
+.profit-result-panel h2 {
+  margin: 0 0 .4rem;
+  color: #facc15;
+  font-size: 1.05rem;
+}
+.profit-result {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+}
+.profit-result.good { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); }
+.profit-result.caution { border-color: rgba(250,204,21,.38); background: rgba(250,204,21,.12); }
+.profit-result.risky { border-color: rgba(249,115,22,.42); background: rgba(249,115,22,.12); }
+.profit-result.loss { border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.13); }
+.profit-status {
+  display: inline-flex;
+  padding: .42rem .7rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,.28);
+  color: #fef3c7;
+  font-weight: 1000;
+  letter-spacing: .05em;
+  margin-bottom: .55rem;
+}
+.profit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: .65rem;
+  margin: 1rem 0;
+}
+.profit-grid span {
+  display: grid;
+  gap: .25rem;
+  padding: .75rem;
+  border-radius: .85rem;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(254,243,199,.68);
+}
+.profit-grid strong {
+  color: #fff;
+  font-size: 1.15rem;
+}
+.mini-list {
+  display: grid;
+  gap: .45rem;
+  margin-top: .6rem;
+  max-height: 18rem;
+  overflow: auto;
+}
+.mini-list button {
+  text-align: left;
+  justify-content: flex-start;
+}
