@@ -488,6 +488,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
+  const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
+  const spinAudioRef = useRef(null);
 
   const competitionList = safeArray(competitions);
   const entryList = safeArray(entries);
@@ -558,6 +560,55 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     }
   }
 
+  async function uploadSpinSound(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      setMessage('Please choose an audio file such as MP3, WAV, M4A or OGG.');
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setSpinSoundUrl(localUrl);
+    localStorage.setItem('prizetownSpinSoundUrl', localUrl);
+    setMessage(`Spin sound selected: ${file.name}`);
+
+    // Try server upload as well, if the current API allows audio uploads.
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const uploaded = await api('/admin/upload', { method: 'POST', body });
+      if (uploaded?.url) {
+        const finalUrl = imageUrl(uploaded.url);
+        setSpinSoundUrl(finalUrl);
+        localStorage.setItem('prizetownSpinSoundUrl', finalUrl);
+        setMessage(`Spin sound uploaded: ${file.name}`);
+      }
+    } catch (err) {
+      console.warn('Audio upload not available, using local browser sound for this device', err);
+    }
+  }
+
+  function stopSpinSound() {
+    const audio = spinAudioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  async function playSpinSound() {
+    const audio = spinAudioRef.current;
+    if (!audio || !spinSoundUrl) return;
+    try {
+      audio.currentTime = 0;
+      audio.loop = true;
+      await audio.play();
+    } catch (err) {
+      console.warn('Spin sound could not auto-play', err);
+      setMessage('Spin started. Browser blocked sound autoplay; click the page once then spin again if you need audio.');
+    }
+  }
+
   async function loadEntries() {
     if (!competitionId) return setMessage('Choose a competition first.');
     try {
@@ -582,14 +633,16 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     const extra = 360 * 7 + Math.floor(Math.random() * 360);
     setWinner(null);
     setSpinning(true);
+    playSpinSound();
     setRotation(prev => prev + extra);
-    publishBroadcastState(broadcastBase(entries, 'spinning', null));
+    publishBroadcastState(broadcastBase(entryList, 'spinning', null));
     setTimeout(() => {
       setWinner(picked);
       setSpinning(false);
-      publishBroadcastState(broadcastBase(entries, 'winner', picked));
+      publishBroadcastState(broadcastBase(entryList, 'winner', picked));
       setMessage(`Winner selected: ticket #${picked.ticket_number} - ${picked.customer_name || picked.email || 'Customer'}`);
-    }, 5200);
+      stopSpinSound();
+    }, 10400);
   }
 
   function csvDownload() {
@@ -615,11 +668,11 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     URL.revokeObjectURL(url);
   }
 
-  return <section className="panel draw-room">
+  return <section className="panel draw-room"><audio ref={spinAudioRef} src={spinSoundUrl || undefined} preload="auto" />
     <div className="draw-room-head">
       <div>
         <h2>Built-in Final Draw Wheel</h2><p className="draw-official-note"><strong>Official Prizetown draw tool:</strong> this replaces the old external wheel link and runs directly inside the site.</p>
-        <p className="muted">Runs inside Prizetown. Suitable for large draws: the winner is picked from the full eligible ticket list, while the wheel display is optimised for browser performance.</p>
+        <p className="muted">Runs inside Prizetown. Suitable for large draws: the winner is picked from the full eligible ticket list. The wheel now spins for around 10 seconds and can play your uploaded spin sound.</p>
       </div>
       <div className="draw-clock">
         <strong>{drawTime.toLocaleDateString()}</strong>
@@ -649,7 +702,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
     <div className="draw-actions">
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Spinning...' : 'Spin draw wheel'}</button>
-      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button>
+      <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button><button className="secondary" onClick={openBroadcastScreen}>Open OBS Broadcast Screen</button><button className="danger" onClick={resetBroadcast}>Reset Broadcast</button><label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>{spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
     </div>
 
     <div className="draw-stats">
@@ -783,5 +836,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v44';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v45';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

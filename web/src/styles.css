@@ -744,7 +744,7 @@ details { margin-top: 1rem; color: #c8cada; }
   background:
     conic-gradient(from 0deg, #7c2d12, #ca8a04, #713f12, #b45309, #78350f, #f59e0b, #7c2d12);
   box-shadow: 0 2rem 5rem rgba(0,0,0,.38), inset 0 0 2rem rgba(0,0,0,.42);
-  transition: transform 5.2s cubic-bezier(.08,.72,.08,1);
+  transition: transform 10.4s cubic-bezier(.08,.72,.08,1);
 }
 .draw-wheel.spinning {
   filter: saturate(1.2) brightness(1.08);
@@ -937,7 +937,7 @@ details { margin-top: 1rem; color: #c8cada; }
     0 2rem 7rem rgba(0,0,0,.55),
     inset 0 0 4rem rgba(0,0,0,.48),
     0 0 3rem rgba(250,204,21,.25);
-  transition: transform 6.2s cubic-bezier(.08,.72,.08,1);
+  transition: transform 12.4s cubic-bezier(.08,.72,.08,1);
 }
 .broadcast-wheel.is-spinning {
   filter: saturate(1.25) brightness(1.12);
@@ -1346,4 +1346,26 @@ details { margin-top: 1rem; color: #c8cada; }
 }
 .final-draw-only .draw-room {
   margin: 0;
+}
+
+
+/* v45 longer spin and sound upload */
+.sound-upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  padding: .72rem 1rem;
+  border-radius: .85rem;
+  border: 1px solid rgba(250,204,21,.38);
+  background: rgba(250,204,21,.12);
+  color: #fde68a;
+  font-weight: 900;
+  cursor: pointer;
+}
+.sound-upload-button input {
+  display: none;
+}
+.sound-upload-button:hover {
+  background: rgba(250,204,21,.20);
 }
