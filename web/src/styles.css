@@ -3315,3 +3315,41 @@ body.broadcast-body #root {
     left: 50%;
   }
 }
+
+
+/* v79 pointer and spin alignment fix */
+.trusted-wheel-wrap {
+  position: relative;
+  overflow: visible;
+}
+.trusted-wheel-pointer {
+  left: 50% !important;
+  top: -1.35rem !important;
+  transform: translateX(-50%) !important;
+  z-index: 30;
+}
+.trusted-wheel-pointer span {
+  top: -2.15rem !important;
+}
+.trusted-wheel-draw {
+  justify-items: center !important;
+}
+.trusted-wheel-svg {
+  display: block;
+}
+.trusted-wheel-rotor {
+  transition: transform 14s cubic-bezier(.05,.82,.05,1) !important;
+}
+.broadcast-page.safe-obs .trusted-wheel-pointer {
+  left: 50% !important;
+  top: -1.15rem !important;
+}
+.broadcast-page.safe-obs .trusted-wheel-wrap {
+  align-self: center;
+  justify-self: center;
+}
+.admin-reveal-machine-wrap .trusted-wheel-draw,
+.wheel-stage .trusted-wheel-draw {
+  margin-left: auto;
+  margin-right: auto;
+}

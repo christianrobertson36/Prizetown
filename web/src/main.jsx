@@ -95,7 +95,7 @@ function buildWheelTickets(rows = [], winner = null) {
   return groups;
 }
 
-function wheelRotationForWinner(tickets = [], winnerTicket) {
+function wheelRotationForWinner(tickets = [], winnerTicket, currentRotation = 0) {
   const rows = safeArray(tickets);
   const total = Math.max(1, rows.length);
   const index = Math.max(0, rows.findIndex(seg => {
@@ -103,7 +103,10 @@ function wheelRotationForWinner(tickets = [], winnerTicket) {
     return n >= Number(seg.from || seg.ticket_number || 0) && n <= Number(seg.to || seg.ticket_number || 0);
   }));
   const slice = 360 / total;
-  return 360 * 8 - (index * slice);
+  const winningAngle = index * slice;
+  const currentNormalised = ((Number(currentRotation || 0) % 360) + 360) % 360;
+  const correction = (360 - ((currentNormalised + winningAngle) % 360)) % 360;
+  return Number(currentRotation || 0) + (360 * 12) + correction;
 }
 
 function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW' }) {
@@ -116,8 +119,8 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
   const showLabels = segments.length <= 60;
 
   return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
-    <div className="trusted-wheel-pointer"><span>STOP POINT</span></div>
     <div className="trusted-wheel-wrap">
+      <div className="trusted-wheel-pointer"><span>STOP POINT</span></div>
       <svg className="trusted-wheel-svg" viewBox="0 0 500 500" role="img" aria-label="Prizetown draw wheel">
         <g className="trusted-wheel-rotor" style={{ transform: `rotate(${rotation}deg)`, transformOrigin: '250px 250px' }}>
           {segments.map((seg, i) => {
@@ -1161,8 +1164,8 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       email: picked.email || picked.customer_email || ''
     };
     const wheelTickets = buildWheelTickets(entryList, finalWinner);
-    const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number);
-    const spinMs = 11000;
+    const targetRotation = wheelRotationForWinner(wheelTickets, picked.ticket_number, rotation);
+    const spinMs = 14000;
     const spinId = `${competitionId || 'draw'}-${Date.now()}-${picked.ticket_number}`;
     const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
 
@@ -1763,5 +1766,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v78';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v79';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
