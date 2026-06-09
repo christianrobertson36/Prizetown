@@ -203,14 +203,16 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
         <p>{settings.hero_text}</p>
         {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
       </div>
-      <div className="hero-card draw-card">
-        <Clock size={38} />
-        <h3>Pick a poster</h3>
-        <p>Tap a scrolling competition poster below to open the full prize page, ticket choices, entry list and instant wins.</p>
+      <div className="hero-card draw-card pick-poster-card">
+        <img className="pick-poster-logo" src="/prizetown-logo.png" alt="Prizetown" />
+        <img className="pick-poster-arnold" src="/arnold-highlife-poster.png" alt="Arnold Blackndeckka living the high life" />
+        <div className="pick-poster-copy">
+          <p className="eyebrow"><Sparkles size={16} /> Hosted by Arnold</p>
+          <h3>Pick a poster</h3>
+          <p>Tap a scrolling competition poster below to open the full prize page, ticket choices, entry list and instant wins.</p>
+        </div>
       </div>
     </section>
-
-    <section className="hero-logo-strip"><img src="/prizetown-logo.png" alt="Prizetown" /></section>
 
     <section className="homepage-arnold panel">
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
@@ -222,7 +224,24 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
 
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — demo instant prizes are ready to trigger.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
 
-    {typeof WebsiteFooter === 'function' ? <WebsiteFooter settings={settings} setPage={setPage} /> : <section className="panel info-panel"><h2>Free entry and terms</h2><p>{settings.free_entry_global}</p><p className="muted">{settings.responsible_play_text}</p><details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details><p className="muted">{settings.footer_text}</p></section>}
+    {typeof WebsiteFooter === 'function' ? <WebsiteFooter settings={settings} setPage={setPage} /> : <footer className="site-footer">
+      <div className="footer-brand">
+        <img src="/prizetown-logo.png" alt="Prizetown" />
+        <p>{settings.footer_text}</p>
+      </div>
+      <div className="footer-column">
+        <h3>Free entry</h3>
+        <p>{settings.free_entry_global}</p>
+      </div>
+      <div className="footer-column">
+        <h3>Responsible play</h3>
+        <p>{settings.responsible_play_text}</p>
+      </div>
+      <div className="footer-column">
+        <h3>Terms</h3>
+        <details><summary>Site terms / legal text</summary><p>{settings.terms_text}</p></details>
+      </div>
+    </footer>}
   </main>;
 }
 
@@ -895,5 +914,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v50';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v51';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

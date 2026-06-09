@@ -1534,3 +1534,126 @@ details { margin-top: 1rem; color: #c8cada; }
     display: none;
   }
 }
+
+
+/* v51 homepage Pick a poster and website footer polish */
+.pick-poster-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: .85rem;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 50% 14%, rgba(250,204,21,.26), transparent 13rem),
+    linear-gradient(180deg, rgba(255,255,255,.09), rgba(0,0,0,.22));
+  border: 1px solid rgba(250,204,21,.28);
+}
+.pick-poster-logo {
+  width: min(100%, 18rem);
+  max-height: 5.5rem;
+  object-fit: contain;
+  justify-self: center;
+  filter: drop-shadow(0 .5rem 1rem rgba(0,0,0,.45));
+}
+.pick-poster-arnold {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(250,204,21,.35);
+  box-shadow:
+    0 1rem 2.6rem rgba(0,0,0,.42),
+    0 0 2rem rgba(250,204,21,.16);
+}
+.pick-poster-copy {
+  position: relative;
+  z-index: 2;
+  padding: .9rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.42);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.pick-poster-copy h3 {
+  margin-top: .25rem;
+  font-size: clamp(1.6rem, 2.3vw, 2.4rem);
+}
+.pick-poster-copy p {
+  color: #fef3c7;
+}
+
+/* make any remaining logo strip smaller if present */
+.hero-logo-strip {
+  display: none;
+}
+
+/* Proper website footer */
+.site-footer,
+.website-footer,
+.footer {
+  margin-top: 2.5rem;
+  padding: clamp(1.4rem, 3vw, 2.5rem);
+  border-radius: 1.4rem 1.4rem 0 0;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(250,204,21,.18), transparent 18rem),
+    linear-gradient(135deg, rgba(8,8,10,.98), rgba(25,19,7,.96));
+  border-top: 1px solid rgba(250,204,21,.35);
+  box-shadow: 0 -1rem 3rem rgba(0,0,0,.28);
+  display: grid;
+  grid-template-columns: minmax(14rem, 1.4fr) repeat(3, minmax(11rem, 1fr));
+  gap: 1.4rem;
+  color: #fef3c7;
+}
+.footer-brand img,
+.site-footer img,
+.website-footer img {
+  width: min(15rem, 100%);
+  max-height: 5rem;
+  object-fit: contain;
+  margin-bottom: .8rem;
+  filter: drop-shadow(0 .5rem 1rem rgba(0,0,0,.45));
+}
+.footer-brand p,
+.footer-column p,
+.site-footer p,
+.website-footer p {
+  color: rgba(254,243,199,.78);
+  line-height: 1.55;
+  margin: .35rem 0;
+}
+.footer-column h3,
+.site-footer h3,
+.website-footer h3 {
+  color: #facc15;
+  margin: 0 0 .55rem;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.site-footer details,
+.website-footer details {
+  padding: .65rem .75rem;
+  border-radius: .75rem;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.09);
+}
+.site-footer summary,
+.website-footer summary {
+  cursor: pointer;
+  color: #fde68a;
+  font-weight: 800;
+}
+@media (max-width: 900px) {
+  .site-footer,
+  .website-footer,
+  .footer {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .site-footer,
+  .website-footer,
+  .footer {
+    grid-template-columns: 1fr;
+  }
+}
