@@ -75,6 +75,56 @@ function toInt(value, fallback = 0) {
   return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
 }
 
+function postcodeZoneRecommendation(population = 0, households = 0) {
+  const pop = toInt(population);
+  const homes = toInt(households);
+  if (!pop && !homes) {
+    return {
+      band: 'unknown',
+      suggested_max_tickets: 100,
+      suggested_prize: '£10-£25 starter prize',
+      guidance: 'Add estimated population or households to get a better recommendation.'
+    };
+  }
+
+  const score = pop || homes * 2.3;
+
+  if (score < 10000) {
+    return {
+      band: 'small',
+      suggested_max_tickets: 100,
+      suggested_prize: '£10-£50 starter prize',
+      guidance: 'Small area: keep ticket limits low and build trust with simple local prizes.'
+    };
+  }
+
+  if (score < 50000) {
+    return {
+      band: 'medium',
+      suggested_max_tickets: 500,
+      suggested_prize: '£25-£150 local prize',
+      guidance: 'Medium area: good for regular local draws with modest prize growth.'
+    };
+  }
+
+  if (score < 150000) {
+    return {
+      band: 'large',
+      suggested_max_tickets: 1500,
+      suggested_prize: '£100-£500 headline local prize',
+      guidance: 'Large area: enough audience for bigger local campaigns and more ticket capacity.'
+    };
+  }
+
+  return {
+    band: 'regional',
+    suggested_max_tickets: 3000,
+    suggested_prize: '£250-£1,000+ regional prize',
+    guidance: 'Regional-size area: use stronger promotion, clear odds, and staged prize growth.'
+  };
+}
+
+
 async function initDb() {
   await query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -93,6 +143,9 @@ async function initDb() {
       label TEXT NOT NULL DEFAULT '',
       type TEXT NOT NULL DEFAULT 'outcode',
       active BOOLEAN NOT NULL DEFAULT TRUE,
+      estimated_population INTEGER NOT NULL DEFAULT 0,
+      estimated_households INTEGER NOT NULL DEFAULT 0,
+      launch_priority TEXT NOT NULL DEFAULT 'normal',
       notes TEXT NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -278,6 +331,9 @@ async function initDb() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS postcode_outcode TEXT NOT NULL DEFAULT '';
     CREATE INDEX IF NOT EXISTS idx_users_postcode_area ON users(postcode_area);
     CREATE INDEX IF NOT EXISTS idx_users_postcode_outcode ON users(postcode_outcode);
+    ALTER TABLE postcode_zones ADD COLUMN IF NOT EXISTS estimated_population INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE postcode_zones ADD COLUMN IF NOT EXISTS estimated_households INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE postcode_zones ADD COLUMN IF NOT EXISTS launch_priority TEXT NOT NULL DEFAULT 'normal';
     CREATE INDEX IF NOT EXISTS idx_postcode_zones_active ON postcode_zones(active);
     CREATE INDEX IF NOT EXISTS idx_competition_postcode_zones_zone ON competition_postcode_zones(zone_id);
   `);
@@ -329,7 +385,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v58' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v59' }));
 
 
 async function getSettingsObject() {
@@ -523,8 +579,11 @@ app.get('/competitions/:id/entries', async (req, res) => {
 
 
 app.get('/admin/postcode-zones', auth('admin'), async (_req, res) => {
-  const result = await query('SELECT * FROM postcode_zones ORDER BY active DESC, type ASC, code ASC');
-  res.json(result.rows);
+  const result = await query('SELECT * FROM postcode_zones ORDER BY active DESC, launch_priority DESC, type ASC, code ASC');
+  res.json(result.rows.map(row => ({
+    ...row,
+    recommendation: postcodeZoneRecommendation(row.estimated_population, row.estimated_households)
+  })));
 });
 
 app.post('/admin/postcode-zones', auth('admin'), async (req, res) => {
@@ -547,39 +606,51 @@ app.post('/admin/postcode-zones', auth('admin'), async (req, res) => {
 
     const label = String(req.body.label || '').trim();
     const notes = String(req.body.notes || '').trim();
+    const estimatedPopulation = toInt(req.body.estimated_population);
+    const estimatedHouseholds = toInt(req.body.estimated_households);
+    const launchPriority = ['low', 'normal', 'high'].includes(String(req.body.launch_priority || '').toLowerCase()) ? String(req.body.launch_priority).toLowerCase() : 'normal';
 
     const result = await query(`
-      INSERT INTO postcode_zones (code, label, type, active, notes)
-      VALUES ($1,$2,$3,$4,$5)
+      INSERT INTO postcode_zones (code, label, type, active, estimated_population, estimated_households, launch_priority, notes)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       ON CONFLICT (code) DO UPDATE SET
         label=EXCLUDED.label,
         type=EXCLUDED.type,
         active=EXCLUDED.active,
+        estimated_population=EXCLUDED.estimated_population,
+        estimated_households=EXCLUDED.estimated_households,
+        launch_priority=EXCLUDED.launch_priority,
         notes=EXCLUDED.notes,
         updated_at=NOW()
       RETURNING *
-    `, [code, label, type, req.body.active !== false, notes]);
+    `, [code, label, type, req.body.active !== false, estimatedPopulation, estimatedHouseholds, launchPriority, notes]);
 
     await audit(req.user, 'postcode_zone_saved', `Saved postcode zone ${code}`);
-    res.json(result.rows[0]);
+    const row = result.rows[0];
+    res.json({ ...row, recommendation: postcodeZoneRecommendation(row.estimated_population, row.estimated_households) });
   } catch (err) {
     res.status(400).json({ error: err.message || 'Could not save postcode zone' });
   }
 });
 
 app.patch('/admin/postcode-zones/:id', auth('admin'), async (req, res) => {
+  const launchPriority = ['low', 'normal', 'high'].includes(String(req.body.launch_priority || '').toLowerCase()) ? String(req.body.launch_priority).toLowerCase() : 'normal';
   const result = await query(`
     UPDATE postcode_zones SET
       label=$1,
       active=$2,
-      notes=$3,
+      estimated_population=$3,
+      estimated_households=$4,
+      launch_priority=$5,
+      notes=$6,
       updated_at=NOW()
-    WHERE id=$4
+    WHERE id=$7
     RETURNING *
-  `, [String(req.body.label || '').trim(), req.body.active !== false, String(req.body.notes || '').trim(), req.params.id]);
+  `, [String(req.body.label || '').trim(), req.body.active !== false, toInt(req.body.estimated_population), toInt(req.body.estimated_households), launchPriority, String(req.body.notes || '').trim(), req.params.id]);
   if (!result.rows[0]) return res.status(404).json({ error: 'Postcode zone not found' });
   await audit(req.user, 'postcode_zone_updated', `Updated postcode zone ${result.rows[0].code}`);
-  res.json(result.rows[0]);
+  const row = result.rows[0];
+  res.json({ ...row, recommendation: postcodeZoneRecommendation(row.estimated_population, row.estimated_households) });
 });
 
 app.delete('/admin/postcode-zones/:id', auth('admin'), async (req, res) => {
@@ -1151,7 +1222,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v58 competition postcode assignment)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v59 postcode population recommendations)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

@@ -1993,3 +1993,45 @@ label small.muted {
   font-size: 1rem;
   color: #facc15;
 }
+
+
+/* v59 postcode population and prize sizing recommendations */
+.rich-zone-row {
+  align-items: flex-start;
+}
+.zone-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin: .55rem 0;
+}
+.zone-metrics span,
+.zone-band {
+  padding: .38rem .55rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.065);
+  border: 1px solid rgba(255,255,255,.09);
+  color: rgba(254,243,199,.86);
+  font-size: .82rem;
+  font-weight: 850;
+}
+.zone-band.small { background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.28); }
+.zone-band.medium { background: rgba(250,204,21,.15); border-color: rgba(250,204,21,.28); }
+.zone-band.large { background: rgba(59,130,246,.16); border-color: rgba(59,130,246,.28); }
+.zone-band.regional { background: rgba(236,72,153,.16); border-color: rgba(236,72,153,.28); }
+.zone-band.unknown { background: rgba(148,163,184,.14); border-color: rgba(148,163,184,.25); }
+.zone-recommendation {
+  margin-top: .45rem;
+  padding: .65rem .75rem;
+  border-radius: .85rem;
+  background: rgba(250,204,21,.10);
+  border: 1px solid rgba(250,204,21,.18);
+  color: #fef3c7;
+  font-size: .92rem;
+  line-height: 1.45;
+}
+.zone-recommendation small {
+  display: block;
+  margin-top: .25rem;
+  color: rgba(254,243,199,.68);
+}

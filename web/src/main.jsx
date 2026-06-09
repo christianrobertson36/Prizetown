@@ -939,7 +939,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [drawWinnerEntryId, setDrawWinnerEntryId] = useState('');
   const [drawNotes, setDrawNotes] = useState('');
   const [drawResults, setDrawResults] = useState([]);
-  const [postcodeForm, setPostcodeForm] = useState({ code: '', label: '', notes: '', active: true });
+  const [postcodeForm, setPostcodeForm] = useState({ code: '', label: '', estimated_population: 0, estimated_households: 0, launch_priority: 'normal', notes: '', active: true });
   const [assignForm, setAssignForm] = useState({ competition_ids: [], mode: 'all', zone_ids: [] });
   useEffect(() => { setSettingsForm({ ...defaultSettings, ...settings }); }, [settings]);
 
@@ -963,7 +963,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     try {
       const saved = await api('/admin/postcode-zones', { method: 'POST', body: JSON.stringify(postcodeForm) });
       setMessage(`Postcode zone saved: ${saved.code}`);
-      setPostcodeForm({ code: '', label: '', notes: '', active: true });
+      setPostcodeForm({ code: '', label: '', estimated_population: 0, estimated_households: 0, launch_priority: 'normal', notes: '', active: true });
       reload();
     } catch (err) {
       setMessage(err.message);
@@ -1066,6 +1066,11 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <p className="muted">Add areas like <strong>BB</strong> or outcodes like <strong>BB1</strong>. Later, competitions can be assigned to all zones or selected zones.</p>
             <label>Area or outcode<input value={postcodeForm.code} onChange={e => setPostcodeForm({ ...postcodeForm, code: e.target.value.toUpperCase() })} placeholder="BB or BB1" required /></label>
             <label>Display label<input value={postcodeForm.label} onChange={e => setPostcodeForm({ ...postcodeForm, label: e.target.value })} placeholder="Blackburn area" /></label>
+            <div className="two">
+              <label>Estimated population<input type="number" value={postcodeForm.estimated_population || 0} onChange={e => setPostcodeForm({ ...postcodeForm, estimated_population: Number(e.target.value) })} /></label>
+              <label>Estimated households<input type="number" value={postcodeForm.estimated_households || 0} onChange={e => setPostcodeForm({ ...postcodeForm, estimated_households: Number(e.target.value) })} /></label>
+            </div>
+            <label>Launch priority<select value={postcodeForm.launch_priority || 'normal'} onChange={e => setPostcodeForm({ ...postcodeForm, launch_priority: e.target.value })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label>
             <label>Notes<textarea value={postcodeForm.notes} onChange={e => setPostcodeForm({ ...postcodeForm, notes: e.target.value })} placeholder="Starter local draw area, launch area, etc." /></label>
             <label className="check-row"><input type="checkbox" checked={postcodeForm.active !== false} onChange={e => setPostcodeForm({ ...postcodeForm, active: e.target.checked })} /> <span>Active zone</span></label>
             <button className="primary full">Save postcode zone</button>
@@ -1073,8 +1078,21 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <div className="panel list-panel">
             <h1>Listed zones</h1>
             {postcodeZones.length === 0 && <p className="muted">No postcode zones yet. Add your first postcode area or outcode.</p>}
-            {postcodeZones.map(z => <div className="list-row postcode-zone-row" key={z.id}>
-              <div><strong>{z.code}</strong><p>{z.label || (z.type === 'area' ? 'Postcode area' : 'Postcode outcode')} · {z.type} · {z.active ? 'active' : 'inactive'}{z.notes ? ` · ${z.notes}` : ''}</p></div>
+            {postcodeZones.map(z => <div className="list-row postcode-zone-row rich-zone-row" key={z.id}>
+              <div>
+                <strong>{z.code}</strong>
+                <p>{z.label || (z.type === 'area' ? 'Postcode area' : 'Postcode outcode')} · {z.type} · {z.active ? 'active' : 'inactive'} · priority {z.launch_priority || 'normal'}</p>
+                <div className="zone-metrics">
+                  <span>Population: {Number(z.estimated_population || 0).toLocaleString()}</span>
+                  <span>Households: {Number(z.estimated_households || 0).toLocaleString()}</span>
+                  <span className={`zone-band ${z.recommendation?.band || 'unknown'}`}>{z.recommendation?.band || 'unknown'}</span>
+                </div>
+                <div className="zone-recommendation">
+                  <b>Suggested:</b> {z.recommendation?.suggested_prize || 'Add population data'} · max tickets {z.recommendation?.suggested_max_tickets || 100}
+                  <small>{z.recommendation?.guidance || ''}</small>
+                </div>
+                {z.notes && <p className="muted">{z.notes}</p>}
+              </div>
               <button type="button" onClick={() => togglePostcodeZone(z)}>{z.active ? 'Deactivate' : 'Activate'}</button>
               <button type="button" className="danger" onClick={() => deletePostcodeZone(z.id)}><Trash2 size={16} /></button>
             </div>)}
@@ -1130,5 +1148,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v58';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v59';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
