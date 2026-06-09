@@ -613,114 +613,16 @@ details { margin-top: 1rem; color: #c8cada; }
 }
 
 
-/* v32 Prize Fund Transparency calculator */
-.panel-lite {
-  padding: 1rem;
-  margin: 1rem 0;
-  border-radius: 1.2rem;
-  background: rgba(255,255,255,.055);
-  border: 1px solid rgba(255,255,255,.1);
-}
-.fund-calculator h2,
-.public-fund h2 {
-  margin: 0;
-}
-.fund-preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-  gap: .65rem;
-  margin-top: .85rem;
-}
-.fund-preview div {
-  padding: .8rem;
-  border-radius: .9rem;
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.08);
-}
-.fund-preview strong {
-  display: block;
-  color: #fde047;
-  font-size: 1.25rem;
-}
-.fund-preview span {
-  color: #c8cada;
-  font-weight: 750;
-  font-size: .88rem;
-}
-.fund-bars {
-  display: grid;
-  gap: .65rem;
-  margin: .9rem 0;
-}
-.fund-bars div {
-  display: grid;
-  gap: .28rem;
-}
-.fund-bars span {
-  color: #f7f7fb;
-  font-weight: 850;
-}
-.fund-bars b {
-  color: #fde047;
-  font-size: .92rem;
-}
-.fund-bars i {
-  display: block;
-  height: .55rem;
-  border-radius: 999px;
-  background: rgba(255,255,255,.12);
-  overflow: hidden;
-}
-.fund-bars em {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #fde047, #f97316);
-}
-.public-fund {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(250,204,21,.14), transparent 16rem),
-    rgba(255,255,255,.055);
-}
-
-
-/* v33 simpler pounds + percentage fund calculator */
-.fund-total {
-  display: grid;
-  gap: .25rem;
-  padding: .9rem;
+/* v32 basket stability */
+.basket-notice {
   margin: .8rem 0;
-  border-radius: 1rem;
-  background: rgba(250,204,21,.1);
-  border: 1px solid rgba(250,204,21,.18);
+  padding: .8rem 1rem;
+  border-radius: .9rem;
+  border: 1px solid rgba(250, 204, 21, .34);
+  background: rgba(250, 204, 21, .11);
+  color: #fde68a;
+  font-weight: 800;
 }
-.fund-total span,
-.fund-total small {
-  color: #c8cada;
-  font-weight: 750;
-}
-.fund-total strong {
-  color: #fde047;
-  font-size: 1.55rem;
-}
-.fund-percent-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: .75rem;
-}
-.fund-percent-grid label {
-  padding: .8rem;
-  border-radius: 1rem;
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.08);
-}
-.fund-percent-grid input {
-  font-size: 1.2rem;
-  font-weight: 900;
-}
-.fund-percent-grid small {
-  display: block;
-  margin-top: .25rem;
-  color: #fde047;
-  font-weight: 900;
+#competition-details {
+  scroll-margin-top: 5.5rem;
 }
