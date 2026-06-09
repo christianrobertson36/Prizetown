@@ -127,7 +127,7 @@ function App() {
   return <div>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src="/prizetown-logo.png" alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
-      <button type="button" onClick={goHomeCompetitions}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button>
+      <button type="button" onClick={scrollToCompetitions}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
       {user?.role === 'admin' && <button onClick={() => { setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
@@ -195,6 +195,10 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
     }, 80);
   }
 
+  function scrollToCompetitions() {
+    document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   return <main>
     <section className="hero compact-hero northern-hero">
       <div>
@@ -209,19 +213,19 @@ function Home({ settings, competitions, instantWinners, user, setPage, cart, sav
             <strong>Pick the prize. Watch the draw. Live the moment.</strong>
           </div>
           <div className="hero-prize-grid">
-            <button type="button" onClick={goHomeCompetitions} className="hero-prize-tile car">
+            <button type="button" onClick={scrollToCompetitions} className="hero-prize-tile car">
               <img src="/arnold-supercar-nightlife.png" alt="" />
               <span>Cars</span>
             </button>
-            <button type="button" onClick={goHomeCompetitions} className="hero-prize-tile cash">
+            <button type="button" onClick={scrollToCompetitions} className="hero-prize-tile cash">
               <img src="/arnold-rooftop-celebration.png" alt="" />
               <span>Cash & wins</span>
             </button>
-            <button type="button" onClick={goHomeCompetitions} className="hero-prize-tile luxury">
+            <button type="button" onClick={scrollToCompetitions} className="hero-prize-tile luxury">
               <img src="/arnold-yacht-golden-hour.png" alt="" />
               <span>Luxury</span>
             </button>
-            <button type="button" onClick={goHomeCompetitions} className="hero-prize-tile travel">
+            <button type="button" onClick={scrollToCompetitions} className="hero-prize-tile travel">
               <img src="/arnold-private-jet.png" alt="" />
               <span>Travel</span>
             </button>
@@ -986,5 +990,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v53';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v54';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
