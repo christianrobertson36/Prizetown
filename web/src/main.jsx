@@ -601,6 +601,7 @@ return <main>
     </section>
 
     {wheelDemoEnabled && (
+      <>
       <section className="wheel-of-luck-section panel"><div className="wheel-of-luck-copy">
         <p className="eyebrow"><Trophy size={16} /> Wheel of Luck</p>
         <h2>Try the Prizetown Wheel of Luck</h2>
@@ -674,6 +675,7 @@ return <main>
         </article>
       </div>
     </section>
+      </>
     )}
 
     <section id="competitions" className="competitions-anchor"><CompetitionScroller competitions={competitions} setSelected={openCompetition} /></section>
@@ -1300,7 +1302,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=92', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=93', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1339,7 +1341,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=92 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=93 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -2141,5 +2143,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v92';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v93';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
