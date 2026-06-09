@@ -46,52 +46,115 @@ function fallbackPosterUrl(c) {
   return `/demo-posters/${competitionTheme(c).key}.svg`;
 }
 
-function DrawRevealMachine({ mode = 'idle', winner = null, label = 'PRIZETOWN FINAL DRAW' }) {
-  const isSpinning = mode === 'spinning';
-  const isWinner = mode === 'winner' && winner;
-  return <div className={`draw-reveal-machine ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
-    <div className="draw-reveal-orb">
-      <div className="draw-reveal-ring one"></div>
-      <div className="draw-reveal-ring two"></div>
-      <div className="draw-reveal-ring three"></div>
-      <div className="draw-reveal-core">
-        <strong>{isWinner ? `#${winner.ticket_number}` : isSpinning ? 'DRAWING' : 'READY'}</strong>
-        <span>{isWinner ? 'WINNING TICKET' : isSpinning ? 'LIVE DRAW IN PROGRESS' : label}</span>
-      </div>
-    </div>
-    <div className="draw-reveal-result">
-      {isWinner ? <>
-        <p className="reveal-kicker">Winner selected</p>
-        <h2>Ticket #{winner.ticket_number}</h2>
-        <h3>{winner.customer_name || winner.name || 'Customer'}</h3>
-      </> : isSpinning ? <>
-        <p className="reveal-kicker">Drawing live</p>
-        <h2>Please wait...</h2>
-        <h3>Winner will reveal after the animation</h3>
-      </> : <>
-        <p className="reveal-kicker">Ready</p>
-        <h2>Waiting for draw</h2>
-        <h3>Load tickets or send an OBS test</h3>
-      </>}
-    </div>
-  </div>;
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const angle = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + (r * Math.cos(angle)), y: cy + (r * Math.sin(angle)) };
 }
 
+function wheelSlicePath(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+}
 
 function WheelNumberLabels() {
   return null;
 }
 
 function buildWheelTickets(rows = [], winner = null) {
-  const safeRows = safeArray(rows);
-  const count = Math.max(24, Math.min(80, safeRows.length || 36));
-  return Array.from({ length: count }, (_, i) => ({ ticket_number: i + 1, customer_name: '' }));
+  const safeRows = safeArray(rows)
+    .filter(e => Number(e?.ticket_number || e?.ticket || 0) > 0)
+    .sort((a, b) => Number(a.ticket_number || a.ticket) - Number(b.ticket_number || b.ticket));
+
+  if (safeRows.length === 0) {
+    return Array.from({ length: 24 }, (_, i) => ({ label: `#${i + 1}`, from: i + 1, to: i + 1, ticket_number: i + 1 }));
+  }
+
+  if (safeRows.length <= 60) {
+    return safeRows.map(e => {
+      const n = Number(e.ticket_number || e.ticket);
+      return { ticket_number: n, from: n, to: n, label: `#${n}`, customer_name: e.customer_name || e.name || '' };
+    });
+  }
+
+  const groups = [];
+  const groupSize = Math.ceil(safeRows.length / 60);
+  for (let i = 0; i < safeRows.length; i += groupSize) {
+    const chunk = safeRows.slice(i, i + groupSize);
+    const first = Number(chunk[0].ticket_number || chunk[0].ticket);
+    const last = Number(chunk[chunk.length - 1].ticket_number || chunk[chunk.length - 1].ticket);
+    groups.push({
+      from: first,
+      to: last,
+      ticket_number: first,
+      label: first === last ? `#${first}` : `#${first}–#${last}`,
+      customer_name: ''
+    });
+  }
+  return groups;
 }
 
 function wheelRotationForWinner(tickets = [], winnerTicket) {
-  return 360 * 9 + 135;
+  const rows = safeArray(tickets);
+  const total = Math.max(1, rows.length);
+  const index = Math.max(0, rows.findIndex(seg => {
+    const n = Number(winnerTicket || 0);
+    return n >= Number(seg.from || seg.ticket_number || 0) && n <= Number(seg.to || seg.ticket_number || 0);
+  }));
+  const slice = 360 / total;
+  return 360 * 8 - (index * slice);
 }
 
+function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW' }) {
+  const rows = safeArray(tickets);
+  const isSpinning = mode === 'spinning';
+  const isWinner = mode === 'winner' && winner;
+  const segments = rows.length ? rows : Array.from({ length: 24 }, (_, i) => ({ label: `#${i + 1}`, from: i + 1, to: i + 1 }));
+  const slice = 360 / Math.max(1, segments.length);
+  const colours = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'];
+  const showLabels = segments.length <= 60;
+
+  return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
+    <div className="trusted-wheel-pointer"><span>STOP POINT</span></div>
+    <div className="trusted-wheel-wrap">
+      <svg className="trusted-wheel-svg" viewBox="0 0 500 500" role="img" aria-label="Prizetown draw wheel">
+        <g className="trusted-wheel-rotor" style={{ transform: `rotate(${rotation}deg)`, transformOrigin: '250px 250px' }}>
+          {segments.map((seg, i) => {
+            const start = -slice / 2 + i * slice;
+            const end = start + slice;
+            const mid = i * slice;
+            const text = polarToCartesian(250, 250, 178, mid);
+            const isWinningSegment = winner && Number(winner.ticket_number || 0) >= Number(seg.from || seg.ticket_number || 0) && Number(winner.ticket_number || 0) <= Number(seg.to || seg.ticket_number || 0);
+            return <g key={`${seg.label || seg.ticket_number || i}-${i}`} className={isWinningSegment ? 'winning-segment' : ''}>
+              <path d={wheelSlicePath(250, 250, 230, start, end)} fill={colours[i % colours.length]} />
+              {showLabels && <text x={text.x} y={text.y} textAnchor="middle" dominantBaseline="middle" className="trusted-wheel-label">{seg.label || `#${seg.ticket_number || i + 1}`}</text>}
+            </g>;
+          })}
+        </g>
+        <circle cx="250" cy="250" r="105" className="trusted-wheel-centre" />
+        <text x="250" y="235" textAnchor="middle" className="trusted-wheel-centre-title">PRIZETOWN</text>
+        <text x="250" y="268" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
+      </svg>
+    </div>
+    <div className="trusted-wheel-result">
+      {isWinner ? <>
+        <p className="reveal-kicker">Winner selected</p>
+        <h2>Ticket #{winner.ticket_number}</h2>
+        <h3>{winner.customer_name || winner.name || 'Customer'}</h3>
+      </> : isSpinning ? <>
+        <p className="reveal-kicker">Drawing live</p>
+        <h2>Wheel spinning...</h2>
+        <h3>The winner will reveal when the wheel stops</h3>
+      </> : <>
+        <p className="reveal-kicker">Ready</p>
+        <h2>{label}</h2>
+        <h3>{segments.length} wheel segments ready</h3>
+      </>}
+    </div>
+    <p className="trusted-wheel-note">The wheel display is generated from eligible entries. Large draws use grouped ticket ranges, with the exact winning ticket shown in the reveal.</p>
+  </div>;
+}
 
 
 const defaultSettings = {
@@ -851,7 +914,7 @@ function DrawBroadcastPage({ setPage }) {
             <span><strong>Time:</strong> {drawTimeText}</span>
             <span><strong>Live:</strong> {liveTimeText}</span>
           </div>
-          <DrawRevealMachine mode={mode} winner={displayWinner} label="PRIZETOWN FINAL DRAW" />
+          <TrustedWheelDraw mode={mode} winner={displayWinner} tickets={tickets} rotation={rotation} label="PRIZETOWN FINAL DRAW" />
         </div>
 
         <aside className="broadcast-info">
@@ -1206,10 +1269,10 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">This screen now uses a clean reveal machine instead of a numbered wheel. The ticket number is shown only after the locked draw result is ready.</p>
+    <p className="muted draw-sync-note">This screen now uses a trusted Wheel-of-Fortune style draw. Small draws show ticket numbers; larger draws show ranges, and the exact winning ticket appears in the reveal.</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
-      <DrawRevealMachine mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} label="ADMIN DRAW PREVIEW" />
+      <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
     </div>
 
     {winner && <div className="winner-card">
@@ -1700,5 +1763,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v77';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v78';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
