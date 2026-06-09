@@ -3881,3 +3881,27 @@ body.broadcast-body #root {
 .draw-arnold-row img {
   filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
 }
+
+
+/* v90 fixes: system/debug, Arnold visible, black labels and higher segment support */
+.arnold-toggle-on {
+  box-shadow: 0 0 24px rgba(250,204,21,.24);
+}
+.trusted-wheel-label {
+  fill: #050505 !important;
+  stroke: rgba(255,255,255,.96) !important;
+  stroke-width: 5px !important;
+}
+.trusted-wheel-label-oriented {
+  fill: #050505 !important;
+}
+.trusted-wheel-draw .trusted-wheel-label {
+  font-weight: 1000;
+}
+.draw-arnold-row {
+  display: block !important;
+  margin-bottom: .9rem;
+}
+.arnold-broadcast-host {
+  display: grid !important;
+}

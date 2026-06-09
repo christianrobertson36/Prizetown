@@ -71,7 +71,9 @@ function buildWheelTickets(rows = [], winner = null) {
     return Array.from({ length: 24 }, (_, i) => ({ label: `#${i + 1}`, from: i + 1, to: i + 1, ticket_number: i + 1 }));
   }
 
-  if (safeRows.length <= 60) {
+  const maxSegments = safeRows.length <= 100 ? safeRows.length : safeRows.length <= 250 ? 120 : safeRows.length <= 500 ? 160 : 200;
+
+  if (safeRows.length <= maxSegments) {
     return safeRows.map(e => {
       const n = Number(e.ticket_number || e.ticket);
       return { ticket_number: n, from: n, to: n, label: `#${n}`, customer_name: e.customer_name || e.name || '' };
@@ -79,7 +81,7 @@ function buildWheelTickets(rows = [], winner = null) {
   }
 
   const groups = [];
-  const groupSize = Math.ceil(safeRows.length / 60);
+  const groupSize = Math.ceil(safeRows.length / maxSegments);
   for (let i = 0; i < safeRows.length; i += groupSize) {
     const chunk = safeRows.slice(i, i + groupSize);
     const first = Number(chunk[0].ticket_number || chunk[0].ticket);
@@ -116,7 +118,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
   const segments = rows.length ? rows : Array.from({ length: 24 }, (_, i) => ({ label: `#${i + 1}`, from: i + 1, to: i + 1 }));
   const slice = 360 / Math.max(1, segments.length);
   const colours = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'];
-  const showLabels = segments.length <= 60;
+  const showLabels = segments.length <= 100;
 
   return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
     <div className="trusted-wheel-wrap">
@@ -1146,7 +1148,11 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
   const [showArnold, setShowArnold] = useState(() => {
     const saved = localStorage.getItem('prizetown_draw_show_arnold');
-    return saved === null ? true : saved !== 'false';
+    if (saved === 'false') {
+      localStorage.setItem('prizetown_draw_show_arnold', 'true');
+      return true;
+    }
+    return true;
   });
   const [spinSpeed, setSpinSpeed] = useState(() => localStorage.getItem('prizetown_draw_spin_speed') || 'standard');
   const spinAudioRef = useRef(null);
@@ -1190,11 +1196,17 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
   function createTestEntries(count = 100) {
     const demoNames = ['Alex Brown', 'Sam Roberts', 'Jamie Khan', 'Taylor Morgan', 'Jordan Smith', 'Casey Jones', 'Riley Walker', 'Charlie Lee'];
-    return Array.from({ length: count }, (_, i) => ({
-      ticket_number: i + 1,
+    const pool = Array.from({ length: Math.max(count * 3, count + 50) }, (_, i) => i + 1);
+    const picked = [];
+    for (let i = 0; i < count; i += 1) {
+      const index = Math.floor(Math.random() * pool.length);
+      picked.push(pool.splice(index, 1)[0]);
+    }
+    return picked.sort((a, b) => a - b).map((ticketNumber, i) => ({
+      ticket_number: ticketNumber,
       customer_name: demoNames[i % demoNames.length],
-      email: `test${i + 1}@prizetown.local`,
-      order_id: `TEST-${String(i + 1).padStart(4, '0')}`,
+      email: `test${ticketNumber}@prizetown.local`,
+      order_id: `TEST-${String(ticketNumber).padStart(4, '0')}`,
       payment_status: 'paid'
     }));
   }
@@ -1235,7 +1247,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
   }
 
   function openBroadcastScreen() {
-    const live = window.open('/draw-live?obs=1&v=89', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    const live = window.open('/draw-live?obs=1&v=90', 'prizetown_live_draw', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
     try { live?.focus?.(); } catch {}
     return live;
   }
@@ -1274,7 +1286,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
         })
       });
       setWinner(testWinner);
-      setMessage('OBS test sent. Open /draw-live?obs=1&v=89 or refresh the OBS Browser Source.');
+      setMessage('OBS test sent. Open /draw-live?obs=1&v=90 or refresh the OBS Browser Source.');
     } catch (err) {
       setMessage(err.message);
     }
@@ -1517,6 +1529,7 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
       <button className="secondary" onClick={loadEntries} disabled={loading}>{loading ? 'Loading...' : 'Load eligible tickets'}</button>
       <button className="primary live-draw-start" onClick={spinDraw} disabled={spinning || entryList.length === 0}>{spinning ? 'Live draw running...' : 'Start Live Draw'}</button>
       <button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button>
+      <button className={showArnold ? 'primary arnold-toggle-on' : 'secondary'} type="button" onClick={toggleArnold}>{showArnold ? 'Arnold On' : 'Arnold Off'}</button>
       <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button>
       <label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>
       {spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
@@ -1772,7 +1785,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
   const tabs = [
     ['overview', 'Overview', ClipboardList], ['competitions', 'Competitions', Trophy], ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus],
-    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
+    ['instant-wins', 'Instant wins', Zap], ['draws', 'Final draw', ListChecks], ['free-entries', 'Free entries', Ticket], ['postcode-zones', 'Postcode Zones', Shield], ['postcode-assign', 'Assign Postcodes', Ticket], ['profit-planner', 'Profit Planner', Ticket], ['system-check', 'System Check', Shield], ['legal-text', 'Legal Text', Shield], ['settings', 'Site settings', Shield], ['audit', 'Audit log', ListChecks]
   ];
 
   return <main className="admin-main">
@@ -1814,6 +1827,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
           <BroadcastMenuPanel setPage={setPage} />
         </div>}
+
+        {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
 
@@ -2050,5 +2065,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v89';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v90';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);

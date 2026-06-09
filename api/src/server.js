@@ -515,7 +515,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v89' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v90' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -598,7 +598,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v89' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v90' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add('ok', 'Configured upload directory', uploadDir);
 
@@ -615,7 +615,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v89',
+    version: 'v90',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -1220,17 +1220,28 @@ async function allocateTickets(client, { competition, user, orderId, quantity, p
     [competition.id]
   );
   const usedSet = new Set(used.rows.map(r => Number(r.ticket_number)));
+  const available = [];
+  for (let n = 1; n <= Number(competition.max_tickets || 0); n += 1) {
+    if (!usedSet.has(n)) available.push(n);
+  }
+  if (available.length < quantity) throw new Error('Not enough tickets remaining');
+
+  const chosen = [];
+  for (let i = 0; i < quantity; i += 1) {
+    const pickIndex = crypto.randomInt(0, available.length);
+    const [ticketNumber] = available.splice(pickIndex, 1);
+    chosen.push(ticketNumber);
+  }
+
   const entries = [];
-  for (let n = 1; n <= competition.max_tickets && entries.length < quantity; n += 1) {
-    if (usedSet.has(n)) continue;
+  for (const ticketNumber of chosen) {
     const inserted = await client.query(`
       INSERT INTO entries (competition_id,user_id,order_id,customer_name,customer_email,ticket_number,payment_status)
       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *
-    `, [competition.id, user?.id || null, orderId, user?.name || '', user?.email || '', n, paymentStatus]);
+    `, [competition.id, user?.id || null, orderId, user?.name || '', user?.email || '', ticketNumber, paymentStatus]);
     entries.push(inserted.rows[0]);
   }
-  if (entries.length !== quantity) throw new Error('Not enough tickets remaining');
-  return entries;
+  return entries.sort((a, b) => Number(a.ticket_number) - Number(b.ticket_number));
 }
 
 function ticketListContains(csv, ticketNumber) {
@@ -1780,7 +1791,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v89 wheel label and Arnold return)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v90 random ticket numbers debug arnold)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
