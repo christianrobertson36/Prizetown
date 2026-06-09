@@ -99,8 +99,10 @@ function App() {
     {page === 'cart' && <Cart settings={settings} user={user} setPage={setPage} cart={cart} saveCart={saveCart} reload={load} reloadAccount={loadAccount} setMessage={setMessage} />}
     {page === 'account' && <Account user={user} entries={entries} orders={orders} setPage={setPage} reload={loadAccount} />}
     {page === 'draw-broadcast' && <DrawBroadcastPage setPage={setPage} />}
-    {page === 'admin' && <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
-      <BroadcastMenuPanel setPage={setPage} />}
+    {page === 'admin' && user?.role === 'admin' && <>
+      <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} />
+      <BroadcastMenuPanel setPage={setPage} />
+    </>}
     {page === 'admin' && user?.role === 'admin' && <Admin settings={settings} setSettings={setSettings} competitions={competitions} entries={adminEntries} orders={adminOrders} auditLogs={adminAudit} instantWins={adminInstantWins} reload={async () => { await load(); await loadAdminData(); }} setMessage={setMessage} />}
     {page === 'admin' && user?.role !== 'admin' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} />}
   </div>;
@@ -732,5 +734,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v39';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v40';
 createRoot(document.getElementById('root')).render(<App />);
