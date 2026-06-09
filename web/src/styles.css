@@ -2823,3 +2823,68 @@ body.broadcast-body #root {
 .wheel-pointer::after {
   content: "";
 }
+
+
+/* v75 professional visual draw animation - no wheel ticket numbers */
+.wheel-number-labels,
+.wheel-number-label,
+.wheel-label,
+.broadcast-ticket,
+.draw-wheel [class*="ticket"],
+.broadcast-wheel [class*="ticket"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+.broadcast-pointer,
+.wheel-pointer {
+  display: none !important;
+}
+.draw-wheel,
+.broadcast-wheel {
+  transform: none !important;
+  position: relative;
+}
+.draw-wheel .wheel-colour-slices,
+.broadcast-wheel .wheel-colour-slices {
+  transform: rotate(var(--spin-rotation, 0deg)) !important;
+  transition: transform 11s cubic-bezier(.08,.78,.08,1) !important;
+}
+.draw-wheel .wheel-colour-slices::before,
+.broadcast-wheel .wheel-colour-slices::before {
+  content: "DRAWING LIVE";
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,.92);
+  font-weight: 1000;
+  letter-spacing: .12em;
+  font-size: clamp(.85rem, 1.2vw, 1.25rem);
+  text-shadow: 0 2px 12px rgba(0,0,0,.75);
+}
+.draw-wheel:not(.spinning) .wheel-colour-slices::before,
+.broadcast-wheel:not(.is-spinning) .wheel-colour-slices::before {
+  content: "READY";
+}
+.draw-wheel .wheel-centre,
+.broadcast-wheel .broadcast-centre {
+  transform: translate(-50%, -50%) !important;
+  rotate: 0deg !important;
+  z-index: 20;
+  box-shadow: 0 0 45px rgba(250,204,21,.35);
+}
+.broadcast-winner,
+.winner-card {
+  border: 2px solid rgba(34,197,94,.42);
+  box-shadow: 0 0 42px rgba(34,197,94,.18);
+}
+.broadcast-winner .winning-ticket,
+.winner-card strong {
+  color: #facc15;
+}
+.draw-sync-note::before {
+  content: "Live draw safety: ";
+  color: #facc15;
+  font-weight: 1000;
+}

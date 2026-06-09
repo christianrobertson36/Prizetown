@@ -46,38 +46,18 @@ function fallbackPosterUrl(c) {
   return `/demo-posters/${competitionTheme(c).key}.svg`;
 }
 
-function WheelNumberLabels({ tickets = [], radius = 42 }) {
-  const rows = safeArray(tickets).slice(0, 80);
-  const total = Math.max(1, rows.length);
-  return <div className="wheel-number-labels" aria-hidden="true">
-    {rows.map((e, i) => {
-      const angle = (360 / total) * i;
-      return <span
-        key={`${e.ticket_number || e.ticket || i}-${i}`}
-        className="wheel-number-label"
-        style={{ transform: `rotate(${angle}deg) translateY(-${radius}%) rotate(${-angle}deg)` }}
-      >#{e.ticket_number || e.ticket || i + 1}</span>;
-    })}
-  </div>;
+function WheelNumberLabels() {
+  return null;
 }
 
 function buildWheelTickets(rows = [], winner = null) {
   const safeRows = safeArray(rows);
-  if (safeRows.length <= 80) return safeRows.map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
-  const pickedTicket = Number(winner?.ticket_number || 0);
-  const selected = safeRows.filter(e => Number(e.ticket_number) === pickedTicket);
-  const step = Math.max(1, Math.ceil(safeRows.length / 79));
-  const sampled = safeRows.filter((_, i) => i % step === 0).slice(0, 79);
-  const merged = [...selected, ...sampled].filter((e, idx, arr) => arr.findIndex(x => Number(x.ticket_number) === Number(e.ticket_number)) === idx);
-  return merged.slice(0, 80).map(e => ({ ticket_number: e.ticket_number, customer_name: e.customer_name || e.name || '' }));
+  const count = Math.max(24, Math.min(80, safeRows.length || 36));
+  return Array.from({ length: count }, (_, i) => ({ ticket_number: i + 1, customer_name: '' }));
 }
 
 function wheelRotationForWinner(tickets = [], winnerTicket) {
-  const rows = safeArray(tickets);
-  const total = Math.max(1, rows.length);
-  const index = Math.max(0, rows.findIndex(e => Number(e.ticket_number) === Number(winnerTicket)));
-  const angle = (360 / total) * index;
-  return 360 * 8 - angle;
+  return 360 * 9 + 135;
 }
 
 
@@ -842,9 +822,8 @@ function DrawBroadcastPage({ setPage }) {
           <div className="broadcast-pointer">▼</div>
           <div className={`broadcast-wheel ${mode === 'spinning' ? 'is-spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
             <div className="wheel-colour-slices" aria-hidden="true"></div>
-            {tickets.length > 0 && <WheelNumberLabels tickets={tickets} radius={43} />}
             {tickets.length === 0 && <div className="broadcast-wheel-empty">Load tickets in admin</div>}
-            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'SYNCED DRAW WHEEL'}</small></div>
+            <div className="broadcast-centre">PRIZETOWN<br/><small>{mode === 'winner' ? 'WINNER CONFIRMED' : mode === 'spinning' ? 'DRAWING LIVE' : 'VISUAL DRAW'}</small></div>
           </div>
         </div>
 
@@ -863,7 +842,7 @@ function DrawBroadcastPage({ setPage }) {
             <p className="muted">Final draw winner confirmed</p>
           </div> : <div className="broadcast-waiting">
             <h2>Awaiting spin</h2>
-            <p>Draw date and live clock are shown on this broadcast screen for OBS. The wheel is visual only; the confirmed winner appears here after the draw.</p>
+            <p>Draw date and live clock are shown on this broadcast screen for OBS. The draw animation is visual only; the confirmed winner appears here after the locked draw completes.</p>
           </div>}
         </aside>
       </div>
@@ -1197,18 +1176,17 @@ function BuiltInDrawWheel({ competitions, setMessage }) {
 
     <div className="draw-stats">
       <div><strong>{entryList.length}</strong><span>eligible tickets loaded</span></div>
-      <div><strong>{visualEntries.length}</strong><span>visual draw slices</span></div>
+      <div><strong>{entryList.length ? 'ON' : 'OFF'}</strong><span>visual draw animation</span></div>
       <div><strong>{competition?.max_tickets || 0}</strong><span>ticket capacity</span></div>
     </div>
-    <p className="muted draw-sync-note">Admin and OBS now use the same ticket labels and the same final wheel rotation. The pointer should land on the same locked winning ticket shown in the reveal.</p>
+    <p className="muted draw-sync-note">The spinner is visual only. The winning ticket is locked once at spin start and appears only in the final winner reveal, so no wheel number can conflict with the result.</p>
 
     <div className="wheel-stage">
       <div className="wheel-pointer">▼</div>
       <div className={`draw-wheel ${spinning ? 'spinning' : ''}`} style={{ '--spin-rotation': `${rotation}deg` }}>
         <div className="wheel-colour-slices" aria-hidden="true"></div>
-        {visualEntries.length > 0 && <WheelNumberLabels tickets={visualEntries} radius={43} />}
         {visualEntries.length === 0 && <div className="wheel-empty">Load tickets</div>}
-        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'SYNCED DRAW WHEEL'}</small></div>
+        <div className="wheel-centre">PRIZETOWN<br/><small>{winner ? 'WINNER CONFIRMED' : spinning ? 'DRAWING LIVE' : 'VISUAL DRAW'}</small></div>
       </div>
     </div>
 
@@ -1700,5 +1678,5 @@ function LegalPage({ title, text, settings, setPage }) {
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v74';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v75';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
