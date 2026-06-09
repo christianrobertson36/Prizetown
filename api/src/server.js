@@ -125,6 +125,70 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
 }
 
 
+function parseCsvRows(text) {
+  const rows = [];
+  let current = '';
+  let row = [];
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (ch === '"' && inQuotes && next === '"') {
+      current += '"';
+      i += 1;
+      continue;
+    }
+
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (ch === ',' && !inQuotes) {
+      row.push(current);
+      current = '';
+      continue;
+    }
+
+    if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && next === '\n') i += 1;
+      row.push(current);
+      if (row.some(v => String(v || '').trim() !== '')) rows.push(row);
+      row = [];
+      current = '';
+      continue;
+    }
+
+    current += ch;
+  }
+
+  row.push(current);
+  if (row.some(v => String(v || '').trim() !== '')) rows.push(row);
+
+  if (rows.length === 0) return [];
+  const headers = rows.shift().map(h => String(h || '').trim().toLowerCase().replace(/^\ufeff/, ''));
+  return rows.map(values => {
+    const item = {};
+    headers.forEach((header, index) => {
+      item[header] = String(values[index] || '').trim();
+    });
+    return item;
+  });
+}
+
+function boolFromCsv(value, fallback = true) {
+  const v = String(value ?? '').trim().toLowerCase();
+  if (!v) return fallback;
+  return ['true', 'yes', 'y', '1', 'active'].includes(v);
+}
+
+function cleanLaunchPriority(value) {
+  const v = String(value || '').trim().toLowerCase();
+  return ['low', 'normal', 'high'].includes(v) ? v : 'normal';
+}
+
 async function initDb() {
   await query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -385,7 +449,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v59' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v60' }));
 
 
 async function getSettingsObject() {
@@ -659,6 +723,81 @@ app.delete('/admin/postcode-zones/:id', auth('admin'), async (req, res) => {
   res.json({ ok: true });
 });
 
+
+
+app.post('/admin/postcode-zones/import-csv', auth('admin'), upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'CSV file required' });
+    const text = fs.readFileSync(req.file.path, 'utf8');
+    const rows = parseCsvRows(text);
+    if (rows.length === 0) return res.status(400).json({ error: 'CSV is empty' });
+
+    const imported = [];
+    const skipped = [];
+
+    for (const row of rows) {
+      try {
+        const input = String(row.code || row.postcode || row.outcode || row.area || '').trim().toUpperCase().replace(/\s+/g, '');
+        if (!input) {
+          skipped.push({ row, reason: 'Missing code' });
+          continue;
+        }
+
+        let code = input;
+        let type = String(row.type || '').trim().toLowerCase();
+
+        if (/^[A-Z]{1,2}[0-9][0-9A-Z]?$/.test(input)) {
+          type = 'outcode';
+        } else if (/^[A-Z]{1,2}$/.test(input)) {
+          type = 'area';
+        } else {
+          const pc = normalizeUkPostcode(input);
+          code = pc.outcode;
+          type = 'outcode';
+        }
+
+        const label = String(row.label || row.name || '').trim();
+        const active = boolFromCsv(row.active, true);
+        const estimatedPopulation = toInt(row.estimated_population || row.population || row.residents);
+        const estimatedHouseholds = toInt(row.estimated_households || row.households);
+        const launchPriority = cleanLaunchPriority(row.launch_priority || row.priority);
+        const notes = String(row.notes || '').trim();
+
+        const result = await query(`
+          INSERT INTO postcode_zones (code, label, type, active, estimated_population, estimated_households, launch_priority, notes)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+          ON CONFLICT (code) DO UPDATE SET
+            label=EXCLUDED.label,
+            type=EXCLUDED.type,
+            active=EXCLUDED.active,
+            estimated_population=EXCLUDED.estimated_population,
+            estimated_households=EXCLUDED.estimated_households,
+            launch_priority=EXCLUDED.launch_priority,
+            notes=EXCLUDED.notes,
+            updated_at=NOW()
+          RETURNING *
+        `, [code, label, type, active, estimatedPopulation, estimatedHouseholds, launchPriority, notes]);
+
+        imported.push(result.rows[0]);
+      } catch (err) {
+        skipped.push({ code: row.code || '', reason: err.message || 'Could not import row' });
+      }
+    }
+
+    await audit(req.user, 'postcode_zones_csv_imported', `Imported ${imported.length} postcode zones, skipped ${skipped.length}`);
+    res.json({
+      ok: true,
+      imported: imported.length,
+      skipped: skipped.length,
+      skipped_rows: skipped.slice(0, 20),
+      rows: imported.map(row => ({ ...row, recommendation: postcodeZoneRecommendation(row.estimated_population, row.estimated_households) }))
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Could not import postcode CSV' });
+  } finally {
+    if (req.file?.path) fs.unlink(req.file.path, () => {});
+  }
+});
 
 app.get('/admin/competition-postcode-assignments', auth('admin'), async (_req, res) => {
   const result = await query(`
@@ -1222,7 +1361,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v59 postcode population recommendations)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v60 postcode CSV import)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

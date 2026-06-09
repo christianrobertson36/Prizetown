@@ -2035,3 +2035,33 @@ label small.muted {
   margin-top: .25rem;
   color: rgba(254,243,199,.68);
 }
+
+
+/* v60 postcode CSV import */
+.postcode-import-box {
+  margin: 1rem 0;
+  padding: .95rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(250,204,21,.20);
+}
+.postcode-import-box h2 {
+  margin: 0 0 .35rem;
+  color: #facc15;
+  font-size: 1.05rem;
+}
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  padding: .72rem 1rem;
+  border-radius: .8rem;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #111827;
+  font-weight: 1000;
+  cursor: pointer;
+}
+.file-button input {
+  display: none;
+}

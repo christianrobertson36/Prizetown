@@ -958,6 +958,38 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
   async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Demo competitions added.'); reload(); }
+  function downloadPostcodeTemplate() {
+    const headers = ['code','label','type','active','estimated_population','estimated_households','launch_priority','notes'];
+    const sampleRows = [
+      ['BB','Blackburn postcode area','area','TRUE','', '', 'high','Fill population/household estimates from Nomis or ONS data'],
+      ['BB1','BB1 launch outcode','outcode','TRUE','42000','17000','high','Example local starter zone'],
+      ['PR7','PR7 outcode','outcode','TRUE','','','normal','Example future zone']
+    ];
+    const csv = [headers, ...sampleRows].map(row => row.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prizetown-postcode-zones-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importPostcodeCsv(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const body = new FormData();
+    body.append('file', file);
+    try {
+      const result = await api('/admin/postcode-zones/import-csv', { method: 'POST', body });
+      setMessage(`Postcode CSV imported: ${result.imported} saved, ${result.skipped} skipped.`);
+      e.target.value = '';
+      reload();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
   async function savePostcodeZone(e) {
     e.preventDefault();
     try {
@@ -1064,6 +1096,14 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <form className="panel" onSubmit={savePostcodeZone}>
             <h1>Postcode Zones</h1>
             <p className="muted">Add areas like <strong>BB</strong> or outcodes like <strong>BB1</strong>. Later, competitions can be assigned to all zones or selected zones.</p>
+            <div className="postcode-import-box">
+              <h2>CSV import</h2>
+              <p className="muted">Upload columns: code, label, type, active, estimated_population, estimated_households, launch_priority, notes.</p>
+              <div className="row">
+                <label className="file-button">Import CSV<input type="file" accept=".csv,text/csv" onChange={importPostcodeCsv} /></label>
+                <button type="button" className="secondary" onClick={downloadPostcodeTemplate}>Download template</button>
+              </div>
+            </div>
             <label>Area or outcode<input value={postcodeForm.code} onChange={e => setPostcodeForm({ ...postcodeForm, code: e.target.value.toUpperCase() })} placeholder="BB or BB1" required /></label>
             <label>Display label<input value={postcodeForm.label} onChange={e => setPostcodeForm({ ...postcodeForm, label: e.target.value })} placeholder="Blackburn area" /></label>
             <div className="two">
@@ -1148,5 +1188,5 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
 function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v59';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v60';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
