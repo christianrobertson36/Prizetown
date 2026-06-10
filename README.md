@@ -32,6 +32,6 @@ Default ports:
 Default admin:
 
 - Email: admin@prizetown.local
-- Password: admin123
+- Password: ask
 
 Change passwords/secrets before going public.
