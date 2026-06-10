@@ -14,9 +14,9 @@ env:
   REGISTRY: ghcr.io
   OWNER: christianrobertson36
   API_IMAGE: prizetown-api
-  API_TAG: v99
+  API_TAG: v100
   WEB_IMAGE: prizetown-web
-  WEB_TAG: v99
+  WEB_TAG: v100
   VITE_API_URL: https://api.prizetown.co.uk
 
 jobs:
@@ -62,3 +62,4 @@ jobs:
 
       - name: Push web image
         run: docker push $REGISTRY/$OWNER/$WEB_IMAGE:$WEB_TAG
+

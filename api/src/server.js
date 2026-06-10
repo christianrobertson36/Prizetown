@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v99' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v100' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v99' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v100' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(emailConfigured() ? 'ok' : 'warning', 'Transactional email', emailConfigured() ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v99',
+    version: 'v100',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -697,6 +697,62 @@ const allowedSettings = [
   'module_profit_planner_enabled',
   'module_cookie_legal_enabled'
 ];
+
+
+async function sendTransactionalEmail({ to, subject, text, html, event = 'transactional_email', relatedType = null, relatedId = null }) {
+  const recipient = normalizeEmail(to);
+  const safeSubject = String(subject || '').trim();
+
+  if (!recipient) return { ok: false, error: 'Recipient email is required' };
+  if (!safeSubject) return { ok: false, error: 'Email subject is required' };
+  if (!emailConfigured()) return { ok: false, error: 'RESEND_API_KEY is not configured' };
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: emailFrom,
+        to: [recipient],
+        reply_to: emailReplyTo,
+        subject: safeSubject,
+        text: text || '',
+        html: html || undefined
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const error = data?.message || data?.error || `Resend returned ${response.status}`;
+      await query(
+        `INSERT INTO email_logs (event, recipient, subject, status, error, related_type, related_id, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [event, recipient, safeSubject, 'failed', String(error), relatedType, relatedId]
+      ).catch(() => {});
+      return { ok: false, error, provider: 'resend', status: response.status, data };
+    }
+
+    await query(
+      `INSERT INTO email_logs (event, recipient, subject, status, error, related_type, related_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      [event, recipient, safeSubject, 'sent', '', relatedType, relatedId]
+    ).catch(() => {});
+
+    return { ok: true, provider: 'resend', id: data?.id || null };
+  } catch (err) {
+    const error = err?.message || 'Email send failed';
+    await query(
+      `INSERT INTO email_logs (event, recipient, subject, status, error, related_type, related_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      [event, recipient, safeSubject, 'failed', String(error), relatedType, relatedId]
+    ).catch(() => {});
+    return { ok: false, error };
+  }
+}
 
 app.get('/settings', async (_req, res) => {
   res.json(await getSettingsObject());
@@ -1869,8 +1925,9 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v99 secure transactional email)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v100 email sender hotfix)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
   });
+
