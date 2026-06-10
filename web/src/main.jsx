@@ -2133,6 +2133,19 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'modules' && <ModulesPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
 
+        {activeTab === 'launch-checklist' && <div className="panel list-panel"><h1>Launch checklist</h1><p className="muted">Use this before sending real customers to the site.</p>{[
+          ['Active competitions', competitions.filter(c => c.status === 'active').length > 0, 'At least one competition should be active.'],
+          ['Competition draw dates', competitions.filter(c => c.status === 'active').every(c => !!c.draw_at), 'Every active competition should have a draw date.'],
+          ['Free entry wording', competitions.filter(c => c.status === 'active').every(c => !!(c.free_entry_text || '').trim()), 'Every active competition should explain the free-entry route.'],
+          ['Competition rules', competitions.filter(c => c.status === 'active').every(c => !!(c.rules_text || '').trim()), 'Every active competition should have visible rules.'],
+          ['Support email', !!(settingsForm.support_email || '').trim(), 'Set a customer support email.'],
+          ['Global legal/free entry text', !!(settingsForm.terms_text || '').trim() && !!(settingsForm.free_entry_global || '').trim(), 'Legal pages and global free-entry text should be filled in.'],
+          ['Branding', !!(settingsForm.site_name || '').trim() && !!(settingsForm.hero_title || '').trim(), 'Check site name, homepage title, logo and colours.'],
+          ['Postcode module checked', true, modulePostcodes ? 'Postcode competitions are enabled.' : 'Postcode module is off; site behaves more like a national competition site.'],
+          ['Instant wins checked', true, moduleInstantWins ? 'Instant wins are enabled.' : 'Instant wins are off.'],
+          ['Live draw checked', true, moduleLiveDraw ? 'Live draw / OBS is enabled.' : 'Live draw / OBS is off.']
+        ].map(([title, ok, help]) => <div className="list-row entry-row" key={title}><div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div></div>)}</div>}
+
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
         {activeTab === 'email-test' && <div className="panel settings-panel">
