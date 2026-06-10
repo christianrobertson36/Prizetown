@@ -1797,6 +1797,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [emailTo, setEmailTo] = useState('christian.robertson36@gmail.com');
+  const [emailSending, setEmailSending] = useState(false);
   const [settingsForm, setSettingsForm] = useState({ ...defaultSettings, ...settings });
   const [freeForm, setFreeForm] = useState({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' });
   const [iwForm, setIwForm] = useState({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' });
@@ -1831,6 +1834,31 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function remove(id) { if (!confirm('Delete this competition?')) return; await api(`/admin/competitions/${id}`, { method: 'DELETE' }); setMessage('Competition deleted.'); reload(); }
   function edit(c) { setEditing(c.id); setForm({ ...c, draw_at: c.draw_at ? c.draw_at.slice(0, 16) : '', closes_at: c.closes_at ? c.closes_at.slice(0, 16) : '' }); setActiveTab('competition-form'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   async function saveSettings(e) { e.preventDefault(); try { const saved = await api('/admin/settings', { method: 'PATCH', body: JSON.stringify(settingsForm) }); setSettings({ ...defaultSettings, ...saved }); setMessage('Site settings saved.'); } catch (err) { setMessage(err.message); } }
+
+  async function loadEmailStatus() {
+    try {
+      const status = await api('/admin/email/status');
+      setEmailStatus(status);
+      setMessage(status.configured ? 'Email is configured.' : 'Email is not configured yet.');
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  async function sendAdminTestEmail(e) {
+    e.preventDefault();
+    setEmailSending(true);
+    try {
+      const result = await api('/admin/email/test', { method: 'POST', body: JSON.stringify({ to: emailTo }) });
+      setMessage('Test email sent.');
+      await loadEmailStatus();
+      return result;
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setEmailSending(false);
+    }
+  }
   async function saveFreeEntry(e) { e.preventDefault(); try { const saved = await api('/admin/free-entry', { method: 'POST', body: JSON.stringify(freeForm) }); setMessage(`Manual/free entry recorded. Ticket #${saved.entry.ticket_number}`); setFreeForm({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
@@ -2034,7 +2062,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     {
       title: 'Tools',
       items: [
-        ['system-check', 'System Check', Shield],
+        ['system-check', 'System check', Shield],
+        ['email-test', 'Email test', Shield],
         ['audit', 'Audit log', ListChecks]
       ]
     }
@@ -2105,6 +2134,32 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'modules' && <ModulesPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
+
+        {activeTab === 'email-test' && <div className="panel settings-panel">
+          <h1>Email Status / Test</h1>
+          <p className="muted">Send a test transactional email through Resend using the configured no-reply sender.</p>
+          <div className="admin-split">
+            <form className="panel" onSubmit={sendAdminTestEmail}>
+              <h2>Send test email</h2>
+              <label>Recipient email<input type="email" value={emailTo} onChange={e => setEmailTo(e.target.value)} required /></label>
+              <button className="primary full" disabled={emailSending}>{emailSending ? 'Sending...' : 'Send test email'}</button>
+              <button type="button" className="secondary full" onClick={loadEmailStatus}>Refresh email status</button>
+            </form>
+            <div className="panel list-panel">
+              <h2>Status</h2>
+              {!emailStatus && <p className="muted">Click Refresh email status to load the current email configuration.</p>}
+              {emailStatus && <div>
+                <p><strong>Configured:</strong> {emailStatus.configured ? 'Yes' : 'No'}</p>
+                <p><strong>Provider:</strong> {emailStatus.provider}</p>
+                <p><strong>From:</strong> {emailStatus.from}</p>
+                <p><strong>Reply-to:</strong> {emailStatus.reply_to}</p>
+                <h3>Recent email log</h3>
+                {(emailStatus.recent || []).length === 0 && <p className="muted">No email log entries yet.</p>}
+                {(emailStatus.recent || []).slice(0, 10).map(log => <div className="list-row entry-row" key={log.id}><div><strong>{log.event} · {log.status}</strong><p>{log.recipient} · {log.subject} · {log.error || 'No error'}</p></div></div>)}
+              </div>}
+            </div>
+          </div>
+        </div>}
 
         {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} Â· ticket #{e.ticket_number} Â· {e.payment_status}</p></div></div>)}</div></div>}
 
@@ -2343,3 +2398,4 @@ function Winners({ winners, instantWinners }) { return <main><section className=
 
 window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
+
