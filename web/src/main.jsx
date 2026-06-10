@@ -1,4 +1,4 @@
-
+﻿
 function safeArray(value) {
   if (Array.isArray(value)) return value;
   if (value && Array.isArray(value.rows)) return value.rows;
@@ -32,7 +32,7 @@ function daysLeft(value) {
 function competitionTheme(c) {
   const t = `${c?.title || ''} ${c?.description || ''}`.toLowerCase();
   if (/car|bmw|audi|mercedes|vw|volkswagen|ford|range rover|vehicle/.test(t)) return { key: 'car', label: 'MOTOR' };
-  if (/cash|£|pound|money|voucher|prize pot/.test(t)) return { key: 'cash', label: 'CASH' };
+  if (/cash|Â£|pound|money|voucher|prize pot/.test(t)) return { key: 'cash', label: 'CASH' };
   if (/holiday|trip|travel|flight|hotel|disney|dubai|cruise/.test(t)) return { key: 'holiday', label: 'HOLIDAY' };
   if (/iphone|ipad|phone|ps5|playstation|xbox|nintendo|switch|laptop|macbook|tech|console|tv/.test(t)) return { key: 'tech', label: 'TECH' };
   if (/garden|kitchen|sofa|furniture|home|appliance/.test(t)) return { key: 'home', label: 'HOME' };
@@ -40,7 +40,7 @@ function competitionTheme(c) {
 }
 function shortPrizeLabel(c) {
   const title = String(c?.title || 'Featured Prize').replace(/\s+/g, ' ').trim();
-  return title.length > 34 ? `${title.slice(0, 34)}Ã¢â‚¬Â¦` : title;
+  return title.length > 34 ? `${title.slice(0, 34)}ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦` : title;
 }
 function fallbackPosterUrl(c) {
   return `/demo-posters/${competitionTheme(c).key}.svg`;
@@ -90,7 +90,7 @@ function buildWheelTickets(rows = [], winner = null) {
       from: first,
       to: last,
       ticket_number: first,
-      label: first === last ? `#${first}` : `#${first}Ã¢â‚¬â€œ#${last}`,
+      label: first === last ? `#${first}` : `#${first}ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“#${last}`,
       customer_name: ''
     });
   }
@@ -304,8 +304,8 @@ If a competition is cancelled, Prizetown may refund eligible paid entries or off
   winner_publication_text: 'Winner names, initials, general location and prize details may be published for transparency unless a lawful objection applies.',
   responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
   age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules, terms, privacy notice and free-entry terms.',
-  promoter_text: 'Promoter details can be edited in Admin Ã¢â€ â€™ Legal Text. Add your trading name, address and company details before full public launch.',
-  postal_entry_address: 'Add postal entry address in Admin Ã¢â€ â€™ Legal Text.',
+  promoter_text: 'Promoter details can be edited in Admin ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Legal Text. Add your trading name, address and company details before full public launch.',
+  postal_entry_address: 'Add postal entry address in Admin ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Legal Text.',
   cookie_banner_text: 'We use essential cookies/local storage to keep the basket, login and security features working. Optional analytics or marketing cookies will only be used if you accept them.',
   legal_disclaimer_text: 'Prizetown is for UK residents aged 18+. Please enter responsibly and only spend what you can afford. Free postal entry is available where offered, and all entries are subject to the competition rules, terms and privacy notice.',
   popup_terms_label: 'I am 18 or over and understand Prizetown is a prize competition platform, not a guaranteed way to make money.',
@@ -475,7 +475,7 @@ function ArnoldHost({ stage = 'idle', caption, compact = false }) {
     tickets: 'Tickets loaded. We are ready for the draw.',
     ready: 'Final checks complete. Time to spin.',
     spinning: 'The wheel is spinning. Good luck everyone!',
-    suspense: 'Hold tightÃ¢â‚¬Â¦ Arnold is watching the wheel.',
+    suspense: 'Hold tightÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Arnold is watching the wheel.',
     winner: 'We have a winner!',
     celebration: 'Congratulations from Arnold Blackndeckka!'
   };
@@ -493,7 +493,7 @@ function ArnoldHost({ stage = 'idle', caption, compact = false }) {
 
 function ArnoldBroadcastHost({ mode = 'idle', winner }) {
   const caption = mode === 'winner'
-    ? `Winner selected: ticket #${winner?.ticket_number || 'Ã¢â‚¬â€'}`
+    ? `Winner selected: ticket #${winner?.ticket_number || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}`
     : mode === 'spinning'
       ? 'The live draw is spinning now!'
       : mode === 'ready'
@@ -636,7 +636,7 @@ return <main>
     </section>
 
     {arnoldEnabled && <section className="homepage-arnold panel">
-      <ArnoldHost stage="welcome" caption="IÃ¢â‚¬â„¢m Arnold Blackndeckka, your Prizetown host. IÃ¢â‚¬â„¢ll keep an eye on the draws, winners and big-ticket moments." />
+      <ArnoldHost stage="welcome" caption="IÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢m Arnold Blackndeckka, your Prizetown host. IÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ll keep an eye on the draws, winners and big-ticket moments." />
     </section>}
 
     {wheelDemoEnabled && (
@@ -687,7 +687,7 @@ return <main>
       <div className="highlife-lead">
         <p className="eyebrow"><Sparkles size={16} /> Live the high life</p>
         <h2>Prizes with proper dream-big energy</h2>
-        <p>Cars, cash, tech and luxury lifestyle moments Ã¢â‚¬â€ Arnold brings the VIP feeling while the competition posters do the selling.</p>
+        <p>Cars, cash, tech and luxury lifestyle moments ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Arnold brings the VIP feeling while the competition posters do the selling.</p>
         <div className="highlife-points">
           <span>Live draws</span>
           <span>Instant wins</span>
@@ -721,7 +721,7 @@ return <main>
 
     {selected && <div id="competition-details"><CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} /></div>}
 
-    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet Ã¢â‚¬â€ instant-win prizes will appear here as they are claimed.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
+    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â instant-win prizes will appear here as they are claimed.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
 
 
     <section className="footer-pre-cta">
@@ -1049,7 +1049,7 @@ function DrawBroadcastPage({ setPage }) {
   const displayWinner = winnerReady ? winner : null;
   const mode = winnerReady ? 'winner' : (state?.mode || 'idle');
   const title = state?.competition_title || 'Waiting for competition';
-  const competitionNumber = state?.competition_number || 'Ã¢â‚¬â€';
+  const competitionNumber = state?.competition_number || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â';
   const eligible = state?.eligible_count || 0;
   const capacity = state?.ticket_capacity || 0;
   const drawDateText = state?.draw_date ? new Date(state.draw_date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : 'Draw date not set';
@@ -1313,7 +1313,7 @@ function SystemCheckPanel({ setMessage }) {
       {['error','warning','ok'].map(group => grouped[group].length > 0 && <div className={`system-check-column ${group}`} key={group}>
         <h3>{group === 'ok' ? 'OK' : group === 'warning' ? 'Warnings' : 'Needs fixing'}</h3>
         {grouped[group].map((item, idx) => <article className={`system-check-card ${item.status}`} key={`${group}-${idx}`}>
-          <strong>{item.status === 'ok' ? 'Ã¢Å“â€¦' : item.status === 'warning' ? 'Ã¢Å¡Â Ã¯Â¸Â' : 'Ã¢ÂÅ’'} {item.title}</strong>
+          <strong>{item.status === 'ok' ? 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦' : item.status === 'warning' ? 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â' : 'ÃƒÂ¢Ã‚ÂÃ…â€™'} {item.title}</strong>
           <p>{item.detail}</p>
         </article>)}
       </div>)}
@@ -1690,7 +1690,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     {arnoldModuleEnabled && showArnold && <div className="draw-arnold-row">
       <ArnoldHost
         stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
-        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} Ã¢â‚¬â€ ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
+        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
       />
     </div>}
     <div className="draw-room-head">
@@ -1902,7 +1902,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     return (Number(value || 0) / 100).toFixed(2);
   }
   function money(value) {
-    return `£${(Number(value || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `Â£${(Number(value || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   function localProfitPlan(input) {
     const ticketPricePence = Number(input.ticket_price_pence || 0);
@@ -2094,9 +2094,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               <h2>Profit planner inputs</h2>
               <p className="muted">These figures feed the 25% margin planner and warnings.</p>
               <div className="three">
-                <label>Prize cost £<input type="number" step="0.01" value={penceToPounds(form.prize_cost_pence || 0)} onChange={e => updateField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
-                <label>Marketing £<input type="number" step="0.01" value={penceToPounds(form.marketing_budget_pence || 0)} onChange={e => updateField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
-                <label>Other buffer £<input type="number" step="0.01" value={penceToPounds(form.other_buffer_pence || 0)} onChange={e => updateField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
+                <label>Prize cost Â£<input type="number" step="0.01" value={penceToPounds(form.prize_cost_pence || 0)} onChange={e => updateField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
+                <label>Marketing Â£<input type="number" step="0.01" value={penceToPounds(form.marketing_budget_pence || 0)} onChange={e => updateField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
+                <label>Other buffer Â£<input type="number" step="0.01" value={penceToPounds(form.other_buffer_pence || 0)} onChange={e => updateField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
               </div>
               <div className="two">
                 <label>Payment fee %<input type="number" step="0.1" value={form.payment_fee_percent || 4} onChange={e => updateField('payment_fee_percent', Number(e.target.value))} /></label>
@@ -2117,7 +2117,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           </div>
         </div>}
 
-        {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title}  -  ticket #{w.winning_ticket_number}  -  {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
+        {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="Â£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title}  -  ticket #{w.winning_ticket_number}  -  {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
@@ -2161,7 +2161,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           </div>
         </div>}
 
-        {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email}  -  ticket #{e.ticket_number}  -  {e.payment_status}</p></div></div>)}</div></div>}
+        {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title} ({c.status})</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email}  -  ticket #{e.ticket_number}  -  {e.payment_status}</p></div></div>)}</div></div>}
 
 
         {activeTab === 'postcode-zones' && <div className="admin-split postcode-admin">
@@ -2233,7 +2233,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               {postcodeZones.filter(z => z.active).length === 0 && <p className="muted">No active postcode zones yet. Add zones in Postcode Zones first.</p>}
               {postcodeZones.filter(z => z.active).map(z => <label className="check-row" key={z.id}>
                 <input type="checkbox" checked={(assignForm.zone_ids || []).includes(z.id)} onChange={() => toggleAssignZone(z.id)} />
-                <span><strong>{z.code}</strong> {z.label ? `Ã¢â‚¬â€ ${z.label}` : ''} <em>({z.type})</em></span>
+                <span><strong>{z.code}</strong> {z.label ? `ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${z.label}` : ''} <em>({z.type})</em></span>
               </label>)}
             </div>}
 
@@ -2257,13 +2257,13 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <p className="muted">Built-in target: at least <strong>25% estimated profit margin</strong> after prize, payment fees, marketing, buffer and optional VAT.</p>
 
             <div className="two">
-              <label>Ticket price £<input type="number" step="0.01" value={penceToPounds(profitForm.ticket_price_pence)} onChange={e => updateProfitField('ticket_price_pence', poundsToPence(e.target.value))} /></label>
+              <label>Ticket price Â£<input type="number" step="0.01" value={penceToPounds(profitForm.ticket_price_pence)} onChange={e => updateProfitField('ticket_price_pence', poundsToPence(e.target.value))} /></label>
               <label>Max tickets<input type="number" value={profitForm.max_tickets} onChange={e => updateProfitField('max_tickets', Number(e.target.value))} /></label>
             </div>
             <div className="three">
-              <label>Prize cost £<input type="number" step="0.01" value={penceToPounds(profitForm.prize_cost_pence)} onChange={e => updateProfitField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
-              <label>Marketing budget £<input type="number" step="0.01" value={penceToPounds(profitForm.marketing_budget_pence)} onChange={e => updateProfitField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
-              <label>Other buffer £<input type="number" step="0.01" value={penceToPounds(profitForm.other_buffer_pence)} onChange={e => updateProfitField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
+              <label>Prize cost Â£<input type="number" step="0.01" value={penceToPounds(profitForm.prize_cost_pence)} onChange={e => updateProfitField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
+              <label>Marketing budget Â£<input type="number" step="0.01" value={penceToPounds(profitForm.marketing_budget_pence)} onChange={e => updateProfitField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
+              <label>Other buffer Â£<input type="number" step="0.01" value={penceToPounds(profitForm.other_buffer_pence)} onChange={e => updateProfitField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
             </div>
             <div className="two">
               <label>Payment fee %<input type="number" step="0.1" value={profitForm.payment_fee_percent} onChange={e => updateProfitField('payment_fee_percent', Number(e.target.value))} /></label>
@@ -2300,7 +2300,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </div>}
         {activeTab === 'legal-text' && <form className="panel settings-panel legal-editor" onSubmit={saveSettings}>
           <h1>Legal Text</h1>
-          <p className="muted">Edit the customer-facing legal pages. This is starter wording only Ã¢â‚¬â€ have it checked by a UK solicitor/accountant before taking large volumes of paid entries.</p>
+          <p className="muted">Edit the customer-facing legal pages. This is starter wording only ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â have it checked by a UK solicitor/accountant before taking large volumes of paid entries.</p>
           <div className="two">
             <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
             <label>Postal entry address<input value={settingsForm.postal_entry_address || ''} onChange={e => setSettingsForm({ ...settingsForm, postal_entry_address: e.target.value })} /></label>
@@ -2321,7 +2321,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </form>}
 
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}>
-          <h1>Site settings</h1><p className="muted">For logo, colours and homepage branding use Admin Ã¢â€ â€™ Branding.</p>
+          <h1>Site settings</h1><p className="muted">For logo, colours and homepage branding use Admin ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Branding.</p>
           <div className="two">
             <label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label>
             <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
@@ -2346,9 +2346,9 @@ function CookieConsent({ settings, setPage, onChoice, showPrefs, setShowPrefs })
       <strong>Cookie choices</strong>
       <p>{settings.cookie_banner_text || defaultSettings.cookie_banner_text}</p>
       {showPrefs && <div className="cookie-prefs">
-        <label className="check-row"><input type="checkbox" checked readOnly /> Essential cookies/local storage Ã¢â‚¬â€ required for login, basket and security</label>
-        <label className="check-row"><input type="checkbox" disabled /> Analytics cookies Ã¢â‚¬â€ not active yet</label>
-        <label className="check-row"><input type="checkbox" disabled /> Marketing cookies Ã¢â‚¬â€ not active yet</label>
+        <label className="check-row"><input type="checkbox" checked readOnly /> Essential cookies/local storage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â required for login, basket and security</label>
+        <label className="check-row"><input type="checkbox" disabled /> Analytics cookies ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â not active yet</label>
+        <label className="check-row"><input type="checkbox" disabled /> Marketing cookies ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â not active yet</label>
       </div>}
       <button type="button" className="footer-text-link" onClick={() => setPage('cookies')}>Read cookie notice</button>
     </div>
@@ -2398,4 +2398,6 @@ function Winners({ winners, instantWinners }) { return <main><section className=
 
 window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
+
+
 

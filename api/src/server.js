@@ -89,7 +89,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'unknown',
       suggested_max_tickets: 100,
-      suggested_prize: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£10-ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£25 starter prize',
+      suggested_prize: 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£10-ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£25 starter prize',
       guidance: 'Add estimated population or households to get a better recommendation.'
     };
   }
@@ -100,7 +100,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'small',
       suggested_max_tickets: 100,
-      suggested_prize: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£10-ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£50 starter prize',
+      suggested_prize: 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£10-ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£50 starter prize',
       guidance: 'Small area: keep ticket limits low and build trust with simple local prizes.'
     };
   }
@@ -109,7 +109,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'medium',
       suggested_max_tickets: 500,
-      suggested_prize: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£25-ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£150 local prize',
+      suggested_prize: 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£25-ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£150 local prize',
       guidance: 'Medium area: good for regular local draws with modest prize growth.'
     };
   }
@@ -118,7 +118,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'large',
       suggested_max_tickets: 1500,
-      suggested_prize: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£100-ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£500 headline local prize',
+      suggested_prize: 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£100-ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£500 headline local prize',
       guidance: 'Large area: enough audience for bigger local campaigns and more ticket capacity.'
     };
   }
@@ -126,7 +126,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
   return {
     band: 'regional',
     suggested_max_tickets: 3000,
-    suggested_prize: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£250-ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£1,000+ regional prize',
+    suggested_prize: 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£250-ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£1,000+ regional prize',
     guidance: 'Regional-size area: use stronger promotion, clear odds, and staged prize growth.'
   };
 }
@@ -821,7 +821,7 @@ async function sendOrderConfirmationEmail({ user, order, entries = [] }) {
   if (!user?.email) return { ok: false, error: 'Customer email missing' };
 
   const orderId = order?.id || '';
-  const total = typeof order?.total_pence === 'number' ? `Â£${(order.total_pence / 100).toFixed(2)}` : 'your order total';
+  const total = typeof order?.total_pence === 'number' ? `Ã‚Â£${(order.total_pence / 100).toFixed(2)}` : 'your order total';
   const ticketText = formatTicketList(entries);
   const ticketHtml = formatTicketListHtml(entries);
 
