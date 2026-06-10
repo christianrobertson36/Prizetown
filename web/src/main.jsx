@@ -1800,6 +1800,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const [emailStatus, setEmailStatus] = useState(null);
   const [emailTo, setEmailTo] = useState('christian.robertson36@gmail.com');
   const [emailSending, setEmailSending] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
   const [settingsForm, setSettingsForm] = useState({ ...defaultSettings, ...settings });
   const [freeForm, setFreeForm] = useState({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' });
   const [iwForm, setIwForm] = useState({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' });
@@ -1856,6 +1857,11 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     });
   });
   const customerRows = Array.from(customerMap.values()).sort((a, b) => String(b.last_activity || '').localeCompare(String(a.last_activity || '')));
+  const filteredCustomerRows = customerRows.filter(c => {
+    const q = customerSearch.trim().toLowerCase();
+    if (!q) return true;
+    return String(c.name || '').toLowerCase().includes(q) || String(c.email || '').toLowerCase().includes(q);
+  });
   const instantClaimed = instantWins.filter(w => w.status === 'claimed').length;
 
   function updateField(key, value) { const next = { ...form, [key]: value }; if (key === 'title' && !editing) next.slug = slugify(value); setForm(next); }
@@ -2136,7 +2142,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               </div>
             </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /><small className="muted">Used for scheduled final draws.</small></label></div><label className="check-row important-check"><input type="checkbox" checked={form.auto_draw_enabled === true} onChange={e => updateField('auto_draw_enabled', e.target.checked)} /> <span>Auto-run final draw at scheduled draw date/time once sold out or closed</span></label><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
 
-        {activeTab === 'customers' && <div className="panel list-panel"><div className="row"><h1>Customers</h1><span className="muted">{customerRows.length} stored customer(s)</span></div>{customerRows.length === 0 && <p className="muted">No customers yet. Customers appear here after orders, entries or free/manual entries.</p>}{customerRows.map(c => <div className="list-row entry-row" key={c.email}><div><strong>{c.name || 'Customer'}</strong><p>{c.email}  -  orders: {c.order_count}  -  entries: {c.entry_count}  -  free/manual: {c.free_entry_count}  -  total: {money(c.total_pence || 0)}  -  last: {c.last_activity ? new Date(c.last_activity).toLocaleString() : 'n/a'}</p></div></div>)}</div>}
+        {activeTab === 'customers' && <div className="panel list-panel"><div className="row"><h1>Customers</h1><span className="muted">{filteredCustomerRows.length}/{customerRows.length} stored customer(s)</span></div><label>Search customers<input value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} placeholder="Search name or email" /></label>{customerRows.length === 0 && <p className="muted">No customers yet. Customers appear here after orders, entries or free/manual entries.</p>}{customerRows.length > 0 && filteredCustomerRows.length === 0 && <p className="muted">No customers match that search.</p>}{filteredCustomerRows.map(c => <div className="list-row entry-row" key={c.email}><div><strong>{c.name || 'Customer'}</strong><p>{c.email}  -  orders: {c.order_count}  -  entries: {c.entry_count}  -  free/manual: {c.free_entry_count}  -  total: {money(c.total_pence || 0)}  -  last: {c.last_activity ? new Date(c.last_activity).toLocaleString() : 'n/a'}</p></div></div>)}</div>}
 
         {activeTab === 'orders-entries' && <div className="admin-split">
           <div className="panel list-panel">
