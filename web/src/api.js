@@ -1,4 +1,15 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const ENV_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+function resolveApiUrl() {
+  if (typeof window === 'undefined') return ENV_API_URL;
+  const host = window.location.hostname;
+  if (host === '100.65.239.74') return 'http://100.65.239.74:5051';
+  if (host === '192.168.1.177') return 'http://192.168.1.177:5051';
+  if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:5000';
+  return ENV_API_URL;
+}
+
+const API_URL = resolveApiUrl();
 
 export function getApiUrl() {
   return API_URL;
