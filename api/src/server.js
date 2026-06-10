@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v100' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v101' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,9 +619,9 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v100' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v101' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
-  add(emailConfigured() ? 'ok' : 'warning', 'Transactional email', emailConfigured() ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
+  add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
 
   const summaryParts = [];
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v100',
+    version: 'v101',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -705,7 +705,7 @@ async function sendTransactionalEmail({ to, subject, text, html, event = 'transa
 
   if (!recipient) return { ok: false, error: 'Recipient email is required' };
   if (!safeSubject) return { ok: false, error: 'Email subject is required' };
-  if (!emailConfigured()) return { ok: false, error: 'RESEND_API_KEY is not configured' };
+  if (!resendApiKey) return { ok: false, error: 'RESEND_API_KEY is not configured' };
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
@@ -784,7 +784,7 @@ app.get('/admin/email/status', auth('admin'), async (_req, res) => {
     LIMIT 25
   `).catch(() => ({ rows: [] }));
   res.json({
-    configured: emailConfigured(),
+    configured: !!resendApiKey,
     provider: 'resend',
     from: emailFrom,
     reply_to: emailReplyTo,
@@ -1925,9 +1925,10 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v100 email sender hotfix)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v101 email config hotfix)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
   });
+
 
