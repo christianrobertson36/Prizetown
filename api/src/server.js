@@ -89,7 +89,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'unknown',
       suggested_max_tickets: 100,
-      suggested_prize: 'Ã‚Â£10-Ã‚Â£25 starter prize',
+      suggested_prize: 'Ãƒâ€šÃ‚Â£10-Ãƒâ€šÃ‚Â£25 starter prize',
       guidance: 'Add estimated population or households to get a better recommendation.'
     };
   }
@@ -100,7 +100,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'small',
       suggested_max_tickets: 100,
-      suggested_prize: 'Ã‚Â£10-Ã‚Â£50 starter prize',
+      suggested_prize: 'Ãƒâ€šÃ‚Â£10-Ãƒâ€šÃ‚Â£50 starter prize',
       guidance: 'Small area: keep ticket limits low and build trust with simple local prizes.'
     };
   }
@@ -109,7 +109,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'medium',
       suggested_max_tickets: 500,
-      suggested_prize: 'Ã‚Â£25-Ã‚Â£150 local prize',
+      suggested_prize: 'Ãƒâ€šÃ‚Â£25-Ãƒâ€šÃ‚Â£150 local prize',
       guidance: 'Medium area: good for regular local draws with modest prize growth.'
     };
   }
@@ -118,7 +118,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'large',
       suggested_max_tickets: 1500,
-      suggested_prize: 'Ã‚Â£100-Ã‚Â£500 headline local prize',
+      suggested_prize: 'Ãƒâ€šÃ‚Â£100-Ãƒâ€šÃ‚Â£500 headline local prize',
       guidance: 'Large area: enough audience for bigger local campaigns and more ticket capacity.'
     };
   }
@@ -126,7 +126,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
   return {
     band: 'regional',
     suggested_max_tickets: 3000,
-    suggested_prize: 'Ã‚Â£250-Ã‚Â£1,000+ regional prize',
+    suggested_prize: 'Ãƒâ€šÃ‚Â£250-Ãƒâ€šÃ‚Â£1,000+ regional prize',
     guidance: 'Regional-size area: use stronger promotion, clear odds, and staged prize growth.'
   };
 }
@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v103' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v104' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v103' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v104' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v103',
+    version: 'v104',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -792,6 +792,100 @@ app.get('/admin/email/status', auth('admin'), async (_req, res) => {
     recent: recent.rows
   });
 });
+
+
+function escapeHtml(value = '') {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function formatTicketList(entries = []) {
+  return entries.map(e => {
+    const title = e.competition_title || e.title || 'Competition';
+    return `Ticket #${e.ticket_number} - ${title}`;
+  }).join('\n');
+}
+
+function formatTicketListHtml(entries = []) {
+  return entries.map(e => {
+    const title = escapeHtml(e.competition_title || e.title || 'Competition');
+    return `<li><strong>Ticket #${escapeHtml(e.ticket_number)}</strong> - ${title}</li>`;
+  }).join('');
+}
+
+async function sendOrderConfirmationEmail({ user, order, entries = [] }) {
+  if (!user?.email) return { ok: false, error: 'Customer email missing' };
+
+  const orderId = order?.id || '';
+  const total = typeof order?.total_pence === 'number' ? `£${(order.total_pence / 100).toFixed(2)}` : 'your order total';
+  const ticketText = formatTicketList(entries);
+  const ticketHtml = formatTicketListHtml(entries);
+
+  return sendTransactionalEmail({
+    to: user.email,
+    subject: `Prizetown order confirmation #${orderId}`,
+    text: `Thanks for entering Prizetown.
+
+Order: #${orderId}
+Total: ${total}
+
+Your tickets:
+${ticketText}
+
+We will contact winners using the details on their account. Good luck!
+
+Prizetown
+${publicSiteUrl}`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;">
+      <h1>Thanks for entering Prizetown</h1>
+      <p>Your order has been received.</p>
+      <p><strong>Order:</strong> #${escapeHtml(orderId)}<br><strong>Total:</strong> ${escapeHtml(total)}</p>
+      <h2>Your tickets</h2>
+      <ul>${ticketHtml}</ul>
+      <p>We will contact winners using the details on their account. Good luck!</p>
+      <p><a href="${escapeHtml(publicSiteUrl)}">Visit Prizetown</a></p>
+    </div>`,
+    event: 'order_confirmation',
+    relatedType: 'order',
+    relatedId: order?.id || null
+  });
+}
+
+async function sendFreeEntryConfirmationEmail({ user, competition, entry, instantWins = [] }) {
+  if (!user?.email) return { ok: false, error: 'Customer email missing' };
+
+  const compTitle = competition?.title || entry?.competition_title || 'Competition';
+  const ticketNumber = entry?.ticket_number || '';
+  const instantText = instantWins?.length ? `\nInstant win result: ${instantWins.map(w => w.prize_title || 'Instant win').join(', ')}` : '';
+
+  return sendTransactionalEmail({
+    to: user.email,
+    subject: `Prizetown free entry confirmation - Ticket #${ticketNumber}`,
+    text: `Your free entry has been recorded.
+
+Competition: ${compTitle}
+Ticket: #${ticketNumber}${instantText}
+
+Good luck!
+
+Prizetown
+${publicSiteUrl}`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;">
+      <h1>Your free entry has been recorded</h1>
+      <p><strong>Competition:</strong> ${escapeHtml(compTitle)}<br><strong>Ticket:</strong> #${escapeHtml(ticketNumber)}</p>
+      ${instantWins?.length ? `<p><strong>Instant win result:</strong> ${escapeHtml(instantWins.map(w => w.prize_title || 'Instant win').join(', '))}</p>` : ''}
+      <p>Good luck!</p>
+      <p><a href="${escapeHtml(publicSiteUrl)}">Visit Prizetown</a></p>
+    </div>`,
+    event: 'free_entry_confirmation',
+    relatedType: 'entry',
+    relatedId: entry?.id || null
+  });
+}
 
 app.post('/admin/email/test', auth('admin'), async (req, res) => {
   const to = normalizeEmail(req.body?.to || req.user?.email || '');
@@ -1925,7 +2019,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v103 frontend utf8 fix)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v104 customer email templates)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
