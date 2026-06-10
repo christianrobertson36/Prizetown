@@ -2038,6 +2038,27 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     setMessage(`Loaded ${data.entries.length} eligible draw entries.`);
   }
   function drawText() { return (drawData?.wheel_entries || []).join('\n'); }
+  function downloadCustomersCsv() {
+    if (filteredCustomerRows.length === 0) return setMessage('No customers to export.');
+    const header = ['name','email','order_count','entry_count','free_entry_count','total_pence','last_activity'];
+    const lines = filteredCustomerRows.map(c => [
+      c.name || 'Customer',
+      c.email || '',
+      c.order_count || 0,
+      c.entry_count || 0,
+      c.free_entry_count || 0,
+      c.total_pence || 0,
+      c.last_activity || ''
+    ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(','));
+    const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `prizetown-customers-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function copyDrawList() { await navigator.clipboard.writeText(drawText()); setMessage('Draw list copied. Paste it into built-in Prizetown draw wheel if needed.'); }
 
   function downloadDrawCsv() {
@@ -2142,7 +2163,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               </div>
             </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /><small className="muted">Used for scheduled final draws.</small></label></div><label className="check-row important-check"><input type="checkbox" checked={form.auto_draw_enabled === true} onChange={e => updateField('auto_draw_enabled', e.target.checked)} /> <span>Auto-run final draw at scheduled draw date/time once sold out or closed</span></label><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
 
-        {activeTab === 'customers' && <div className="panel list-panel"><div className="row"><h1>Customers</h1><span className="muted">{filteredCustomerRows.length}/{customerRows.length} stored customer(s)</span></div><label>Search customers<input value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} placeholder="Search name or email" /></label>{customerRows.length === 0 && <p className="muted">No customers yet. Customers appear here after orders, entries or free/manual entries.</p>}{customerRows.length > 0 && filteredCustomerRows.length === 0 && <p className="muted">No customers match that search.</p>}{filteredCustomerRows.map(c => <div className="list-row entry-row" key={c.email}><div><strong>{c.name || 'Customer'}</strong><p>{c.email}  -  orders: {c.order_count}  -  entries: {c.entry_count}  -  free/manual: {c.free_entry_count}  -  total: {money(c.total_pence || 0)}  -  last: {c.last_activity ? new Date(c.last_activity).toLocaleString() : 'n/a'}</p></div></div>)}</div>}
+        {activeTab === 'customers' && <div className="panel list-panel"><div className="row"><h1>Customers</h1><span className="muted">{filteredCustomerRows.length}/{customerRows.length} stored customer(s)</span><button type="button" className="secondary" onClick={downloadCustomersCsv}>Export CSV</button></div><label>Search customers<input value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} placeholder="Search name or email" /></label>{customerRows.length === 0 && <p className="muted">No customers yet. Customers appear here after orders, entries or free/manual entries.</p>}{customerRows.length > 0 && filteredCustomerRows.length === 0 && <p className="muted">No customers match that search.</p>}{filteredCustomerRows.map(c => <div className="list-row entry-row" key={c.email}><div><strong>{c.name || 'Customer'}</strong><p>{c.email}  -  orders: {c.order_count}  -  entries: {c.entry_count}  -  free/manual: {c.free_entry_count}  -  total: {money(c.total_pence || 0)}  -  last: {c.last_activity ? new Date(c.last_activity).toLocaleString() : 'n/a'}</p></div></div>)}</div>}
 
         {activeTab === 'orders-entries' && <div className="admin-split">
           <div className="panel list-panel">
