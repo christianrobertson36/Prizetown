@@ -1967,8 +1967,18 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     for (const sample of samples) {
       const exists = competitions.some(c => String(c.title || '').toLowerCase() === sample.title.toLowerCase());
       if (exists) continue;
-      await api('/admin/competitions', { method: 'POST', body: JSON.stringify(sample) });
-      added++;
+      const payload = {
+        ...sample,
+        slug: sample.slug || slugify(sample.title),
+        answer: sample.answer || sample.correct_answer || 'Gold'
+      };
+      try {
+        await api('/admin/competitions', { method: 'POST', body: JSON.stringify(payload) });
+        added++;
+      } catch (err) {
+        setMessage(`Starter sample failed: ${sample.title}: ${err.message}`);
+        return;
+      }
     }
     setMessage(added ? `Added ${added} starter competition(s).` : 'Starter competitions already exist.');
     reload();
@@ -1976,7 +1986,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function removeStarterCompetitions() {
     const demoMatches = competitions.filter(c => {
       const text = `${c.title || ''} ${c.slug || ''} ${c.description || ''}`.toLowerCase();
-      return text.includes('starter') || text.includes('sample') || text.includes('demo') || text.includes('test') || text.includes('cash') || text.includes('iphone') || text.includes('ps5') || text.includes('holiday') || text.includes('tesla');
+      return text.includes('starter') || text.includes('sample') || text.includes('demo') || text.includes('test') || text.includes('cash') || text.includes('iphone') || text.includes('ps5') || text.includes('holiday') || text.includes('tesla') || text.includes('tech bundle') || text.includes('luxury night') || text.includes('family fun');
     });
     if (demoMatches.length === 0) return setMessage('No obvious starter/sample competitions found.');
     if (!confirm(`Remove ${demoMatches.length} starter/sample competition(s)? This will not touch competitions that do not look like samples.`)) return;
