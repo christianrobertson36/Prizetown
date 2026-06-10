@@ -2081,6 +2081,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       title: 'Core',
       items: [
         ['overview', 'Overview', ClipboardList],
+        ['launch-checklist', 'Launch checklist', Shield],
         ['automation-status', 'Automation status', Shield],
         ['customers', 'Customers', User],
         ['competitions', 'Competitions', Trophy],
