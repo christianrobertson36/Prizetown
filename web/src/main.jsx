@@ -2024,6 +2024,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       title: 'Core',
       items: [
         ['overview', 'Overview', ClipboardList],
+        ['automation-status', 'Automation status', Shield],
         ['competitions', 'Competitions', Trophy],
         ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus]
       ]
@@ -2144,6 +2145,17 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           ['Postcode module checked', true, modulePostcodes ? 'Postcode competitions are enabled.' : 'Postcode module is off; site behaves more like a national competition site.'],
           ['Instant wins checked', true, moduleInstantWins ? 'Instant wins are enabled.' : 'Instant wins are off.'],
           ['Live draw checked', true, moduleLiveDraw ? 'Live draw / OBS is enabled.' : 'Live draw / OBS is off.']
+        ].map(([title, ok, help]) => <div className="list-row entry-row" key={title}><div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div></div>)}</div>}
+
+        {activeTab === 'automation-status' && <div className="panel list-panel"><h1>Automation status</h1><p className="muted">Display-only for now. This shows what Prizetown can already handle automatically and what still needs admin setup.</p>{[
+          ['Active competitions', competitions.filter(c => c.status === 'active').length > 0, competitions.filter(c => c.status === 'active').length + ' active competition(s).'],
+          ['Missing draw dates', competitions.filter(c => c.status === 'active' && !c.draw_at).length === 0, competitions.filter(c => c.status === 'active' && !c.draw_at).length + ' active competition(s) missing draw dates.'],
+          ['Auto draw enabled', competitions.filter(c => c.auto_draw_enabled === true).length > 0, competitions.filter(c => c.auto_draw_enabled === true).length + ' competition(s) have auto draw enabled.'],
+          ['Closed competitions ready for draw', competitions.filter(c => c.status === 'closed' && !c.winner_entry_id).length === 0, competitions.filter(c => c.status === 'closed' && !c.winner_entry_id).length + ' closed competition(s) may need a final draw.'],
+          ['Free-entry setup', competitions.filter(c => c.status === 'active').every(c => !!(c.free_entry_text || '').trim()), 'Active competitions should include free-entry wording.'],
+          ['Rules setup', competitions.filter(c => c.status === 'active').every(c => !!(c.rules_text || '').trim()), 'Active competitions should include rules text.'],
+          ['Email automation', true, 'Order, free-entry and test transactional emails are available when Resend is configured.'],
+          ['Winner publishing', true, 'Winner records and public winner pages are available after final draws.']
         ].map(([title, ok, help]) => <div className="list-row entry-row" key={title}><div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div></div>)}</div>}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
