@@ -89,7 +89,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'unknown',
       suggested_max_tickets: 100,
-      suggested_prize: '£10-£25 starter prize',
+      suggested_prize: 'Ã‚Â£10-Ã‚Â£25 starter prize',
       guidance: 'Add estimated population or households to get a better recommendation.'
     };
   }
@@ -100,7 +100,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'small',
       suggested_max_tickets: 100,
-      suggested_prize: '£10-£50 starter prize',
+      suggested_prize: 'Ã‚Â£10-Ã‚Â£50 starter prize',
       guidance: 'Small area: keep ticket limits low and build trust with simple local prizes.'
     };
   }
@@ -109,7 +109,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'medium',
       suggested_max_tickets: 500,
-      suggested_prize: '£25-£150 local prize',
+      suggested_prize: 'Ã‚Â£25-Ã‚Â£150 local prize',
       guidance: 'Medium area: good for regular local draws with modest prize growth.'
     };
   }
@@ -118,7 +118,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
     return {
       band: 'large',
       suggested_max_tickets: 1500,
-      suggested_prize: '£100-£500 headline local prize',
+      suggested_prize: 'Ã‚Â£100-Ã‚Â£500 headline local prize',
       guidance: 'Large area: enough audience for bigger local campaigns and more ticket capacity.'
     };
   }
@@ -126,7 +126,7 @@ function postcodeZoneRecommendation(population = 0, households = 0) {
   return {
     band: 'regional',
     suggested_max_tickets: 3000,
-    suggested_prize: '£250-£1,000+ regional prize',
+    suggested_prize: 'Ã‚Â£250-Ã‚Â£1,000+ regional prize',
     guidance: 'Regional-size area: use stronger promotion, clear odds, and staged prize growth.'
   };
 }
@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v102' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v103' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v102' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v103' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v102',
+    version: 'v103',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -1925,7 +1925,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v102 admin email test panel)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v103 frontend utf8 fix)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

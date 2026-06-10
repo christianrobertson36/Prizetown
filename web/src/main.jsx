@@ -32,7 +32,7 @@ function daysLeft(value) {
 function competitionTheme(c) {
   const t = `${c?.title || ''} ${c?.description || ''}`.toLowerCase();
   if (/car|bmw|audi|mercedes|vw|volkswagen|ford|range rover|vehicle/.test(t)) return { key: 'car', label: 'MOTOR' };
-  if (/cash|£|pound|money|voucher|prize pot/.test(t)) return { key: 'cash', label: 'CASH' };
+  if (/cash|Ã‚Â£|pound|money|voucher|prize pot/.test(t)) return { key: 'cash', label: 'CASH' };
   if (/holiday|trip|travel|flight|hotel|disney|dubai|cruise/.test(t)) return { key: 'holiday', label: 'HOLIDAY' };
   if (/iphone|ipad|phone|ps5|playstation|xbox|nintendo|switch|laptop|macbook|tech|console|tv/.test(t)) return { key: 'tech', label: 'TECH' };
   if (/garden|kitchen|sofa|furniture|home|appliance/.test(t)) return { key: 'home', label: 'HOME' };
@@ -40,7 +40,7 @@ function competitionTheme(c) {
 }
 function shortPrizeLabel(c) {
   const title = String(c?.title || 'Featured Prize').replace(/\s+/g, ' ').trim();
-  return title.length > 34 ? `${title.slice(0, 34)}…` : title;
+  return title.length > 34 ? `${title.slice(0, 34)}Ã¢â‚¬Â¦` : title;
 }
 function fallbackPosterUrl(c) {
   return `/demo-posters/${competitionTheme(c).key}.svg`;
@@ -90,7 +90,7 @@ function buildWheelTickets(rows = [], winner = null) {
       from: first,
       to: last,
       ticket_number: first,
-      label: first === last ? `#${first}` : `#${first}–#${last}`,
+      label: first === last ? `#${first}` : `#${first}Ã¢â‚¬â€œ#${last}`,
       customer_name: ''
     });
   }
@@ -304,8 +304,8 @@ If a competition is cancelled, Prizetown may refund eligible paid entries or off
   winner_publication_text: 'Winner names, initials, general location and prize details may be published for transparency unless a lawful objection applies.',
   responsible_play_text: '18+ only. Please enter responsibly. Do not spend more than you can afford.',
   age_confirmation_text: 'I confirm I am 18 or over and I agree to the competition rules, terms, privacy notice and free-entry terms.',
-  promoter_text: 'Promoter details can be edited in Admin → Legal Text. Add your trading name, address and company details before full public launch.',
-  postal_entry_address: 'Add postal entry address in Admin → Legal Text.',
+  promoter_text: 'Promoter details can be edited in Admin Ã¢â€ â€™ Legal Text. Add your trading name, address and company details before full public launch.',
+  postal_entry_address: 'Add postal entry address in Admin Ã¢â€ â€™ Legal Text.',
   cookie_banner_text: 'We use essential cookies/local storage to keep the basket, login and security features working. Optional analytics or marketing cookies will only be used if you accept them.',
   legal_disclaimer_text: 'Prizetown is for UK residents aged 18+. Please enter responsibly and only spend what you can afford. Free postal entry is available where offered, and all entries are subject to the competition rules, terms and privacy notice.',
   popup_terms_label: 'I am 18 or over and understand Prizetown is a prize competition platform, not a guaranteed way to make money.',
@@ -475,7 +475,7 @@ function ArnoldHost({ stage = 'idle', caption, compact = false }) {
     tickets: 'Tickets loaded. We are ready for the draw.',
     ready: 'Final checks complete. Time to spin.',
     spinning: 'The wheel is spinning. Good luck everyone!',
-    suspense: 'Hold tight… Arnold is watching the wheel.',
+    suspense: 'Hold tightÃ¢â‚¬Â¦ Arnold is watching the wheel.',
     winner: 'We have a winner!',
     celebration: 'Congratulations from Arnold Blackndeckka!'
   };
@@ -493,7 +493,7 @@ function ArnoldHost({ stage = 'idle', caption, compact = false }) {
 
 function ArnoldBroadcastHost({ mode = 'idle', winner }) {
   const caption = mode === 'winner'
-    ? `Winner selected: ticket #${winner?.ticket_number || '—'}`
+    ? `Winner selected: ticket #${winner?.ticket_number || 'Ã¢â‚¬â€'}`
     : mode === 'spinning'
       ? 'The live draw is spinning now!'
       : mode === 'ready'
@@ -636,7 +636,7 @@ return <main>
     </section>
 
     {arnoldEnabled && <section className="homepage-arnold panel">
-      <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
+      <ArnoldHost stage="welcome" caption="IÃ¢â‚¬â„¢m Arnold Blackndeckka, your Prizetown host. IÃ¢â‚¬â„¢ll keep an eye on the draws, winners and big-ticket moments." />
     </section>}
 
     {wheelDemoEnabled && (
@@ -687,7 +687,7 @@ return <main>
       <div className="highlife-lead">
         <p className="eyebrow"><Sparkles size={16} /> Live the high life</p>
         <h2>Prizes with proper dream-big energy</h2>
-        <p>Cars, cash, tech and luxury lifestyle moments — Arnold brings the VIP feeling while the competition posters do the selling.</p>
+        <p>Cars, cash, tech and luxury lifestyle moments Ã¢â‚¬â€ Arnold brings the VIP feeling while the competition posters do the selling.</p>
         <div className="highlife-points">
           <span>Live draws</span>
           <span>Instant wins</span>
@@ -721,7 +721,7 @@ return <main>
 
     {selected && <div id="competition-details"><CompetitionDetail c={selected} cart={cart} saveCart={saveCart} setMessage={setMessage} setPage={setPage} close={() => setSelected(null)} /></div>}
 
-    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — instant-win prizes will appear here as they are claimed.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
+    <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet Ã¢â‚¬â€ instant-win prizes will appear here as they are claimed.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
 
 
     <section className="footer-pre-cta">
@@ -736,7 +736,7 @@ return <main>
       <div className="footer-brand">
         <img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} />
         <p>{settings.footer_text}</p>
-        <p className="footer-credit">{settings.brand_footer_credit || 'Website by Neotech Designs'} · <a href={settings.brand_footer_link_url || 'https://ctec-shop.co.uk'} target="_blank" rel="noreferrer">{settings.brand_footer_link_label || 'ctec-shop.co.uk'}</a></p>
+        <p className="footer-credit">{settings.brand_footer_credit || 'Website by Neotech Designs'} Ã‚Â· <a href={settings.brand_footer_link_url || 'https://ctec-shop.co.uk'} target="_blank" rel="noreferrer">{settings.brand_footer_link_label || 'ctec-shop.co.uk'}</a></p>
       </div>
       <div className="footer-column">
         <h3>Free entry</h3>
@@ -789,7 +789,7 @@ function CompetitionPost({ c, onOpen }) {
       <small>Draw On {fmtDate(c.draw_at)}</small>
       <div className="poster-countdown">{daysLeft(c.closes_at)}</div>
       <div className="progress"><span style={{ width: `${percent}%` }} /></div>
-      <small><b>{percent}% SOLD</b> · {c.entries_sold || 0}/{c.max_tickets}</small>
+      <small><b>{percent}% SOLD</b> Ã‚Â· {c.entries_sold || 0}/{c.max_tickets}</small>
       <small>{remaining} Tickets Remaining</small>
       <span className="poster-price">{money(c.ticket_price_pence)} Per Entry</span>
       {Number(c.instant_win_total || 0) > 0 && <em><Zap size={13} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</em>}
@@ -801,7 +801,7 @@ function CompetitionPost({ c, onOpen }) {
 
 function CompetitionCard({ c, cart, saveCart, setMessage, setPage, setSelected }) {
   const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100)); const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
-  return <article className="card comp-card"><img src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="card-body"><div className="tag-row"><span className="badge">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'ENDS SOON'}</span>{Number(c.instant_win_total || 0) > 0 && <span className="badge hot"><Zap size={13} /> Instant wins</span>}</div><div className="row"><h3>{c.title}</h3><span>{money(c.ticket_price_pence)} Per Entry</span></div><p>{c.description}</p><p className="muted"><Clock size={14} /> Draw on {fmtDate(c.draw_at)}</p><div className="progress"><span style={{ width: `${percent}%` }} /></div><p className="muted"><strong>{percent}% SOLD</strong> · {c.entries_sold || 0} / {c.max_tickets} · {remaining} tickets remaining</p>{Number(c.instant_win_total || 0) > 0 && <p className="instant-count"><Zap size={15} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</p>}<button className="primary full" onClick={() => setSelected(c)}>Enter now</button><button className="secondary full" onClick={() => setSelected(c)}>View details</button></div></article>;
+  return <article className="card comp-card"><img src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="card-body"><div className="tag-row"><span className="badge">{daysLeft(c.closes_at) === 'Closed' ? 'Closed' : 'ENDS SOON'}</span>{Number(c.instant_win_total || 0) > 0 && <span className="badge hot"><Zap size={13} /> Instant wins</span>}</div><div className="row"><h3>{c.title}</h3><span>{money(c.ticket_price_pence)} Per Entry</span></div><p>{c.description}</p><p className="muted"><Clock size={14} /> Draw on {fmtDate(c.draw_at)}</p><div className="progress"><span style={{ width: `${percent}%` }} /></div><p className="muted"><strong>{percent}% SOLD</strong> Ã‚Â· {c.entries_sold || 0} / {c.max_tickets} Ã‚Â· {remaining} tickets remaining</p>{Number(c.instant_win_total || 0) > 0 && <p className="instant-count"><Zap size={15} /> {c.instant_win_claimed || 0}/{c.instant_win_total} instant wins found</p>}<button className="primary full" onClick={() => setSelected(c)}>Enter now</button><button className="secondary full" onClick={() => setSelected(c)}>View details</button></div></article>;
 }
 
 function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
@@ -823,7 +823,7 @@ function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
     setLocalNotice(`${qty} ticket(s) added to basket. Basket now has ${finalQty} for this competition.`);
     setMessage(`${qty} ticket(s) added to basket.`);
   }
-  return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button>Facebook</button><button>Instagram</button><button>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong> · {c.entries_sold || 0}/{c.max_tickets} · {remaining} tickets remaining · max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<div className="quick-picks"><button type="button" onClick={() => setQuantity(1)}>1 ticket</button><button type="button" onClick={() => setQuantity(5)}>5 tickets</button><button type="button" onClick={() => setQuantity(10)}>10 tickets</button><button type="button" onClick={() => setQuantity(25)}>25 tickets</button></div><p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => setPage('cart')}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'} · ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
+  return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button>Facebook</button><button>Instagram</button><button>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong> Ã‚Â· {c.entries_sold || 0}/{c.max_tickets} Ã‚Â· {remaining} tickets remaining Ã‚Â· max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<div className="quick-picks"><button type="button" onClick={() => setQuantity(1)}>1 ticket</button><button type="button" onClick={() => setQuantity(5)}>5 tickets</button><button type="button" onClick={() => setQuantity(10)}>10 tickets</button><button type="button" onClick={() => setQuantity(25)}>25 tickets</button></div><p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => setPage('cart')}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'} Ã‚Â· ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
 }
 
 function Login({ setUser, setPage, setMessage, settings = {} }) {
@@ -961,7 +961,7 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
   </section></main>;
 }
 
-function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entryList.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div></section></main>; }
+function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entryList.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number} Ã‚Â· {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)} Ã‚Â· {o.entry_count} entries Ã‚Â· {o.status}</p></div></div>)}</div></section></main>; }
 
 
 
@@ -1049,7 +1049,7 @@ function DrawBroadcastPage({ setPage }) {
   const displayWinner = winnerReady ? winner : null;
   const mode = winnerReady ? 'winner' : (state?.mode || 'idle');
   const title = state?.competition_title || 'Waiting for competition';
-  const competitionNumber = state?.competition_number || '—';
+  const competitionNumber = state?.competition_number || 'Ã¢â‚¬â€';
   const eligible = state?.eligible_count || 0;
   const capacity = state?.ticket_capacity || 0;
   const drawDateText = state?.draw_date ? new Date(state.draw_date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : 'Draw date not set';
@@ -1063,7 +1063,7 @@ function DrawBroadcastPage({ setPage }) {
         <img src={siteLogo(state || {})} alt="Prizetown" />
         <div>
           <h1>{title}</h1>
-          <p>Competition {competitionNumber} · Draw {state?.draw_date ? fmtDate(state.draw_date) : 'date not set'}</p>
+          <p>Competition {competitionNumber} Ã‚Â· Draw {state?.draw_date ? fmtDate(state.draw_date) : 'date not set'}</p>
         </div>
         <div className="broadcast-clock broadcast-clock-rich">
           <div>
@@ -1313,7 +1313,7 @@ function SystemCheckPanel({ setMessage }) {
       {['error','warning','ok'].map(group => grouped[group].length > 0 && <div className={`system-check-column ${group}`} key={group}>
         <h3>{group === 'ok' ? 'OK' : group === 'warning' ? 'Warnings' : 'Needs fixing'}</h3>
         {grouped[group].map((item, idx) => <article className={`system-check-card ${item.status}`} key={`${group}-${idx}`}>
-          <strong>{item.status === 'ok' ? '✅' : item.status === 'warning' ? '⚠️' : '❌'} {item.title}</strong>
+          <strong>{item.status === 'ok' ? 'Ã¢Å“â€¦' : item.status === 'warning' ? 'Ã¢Å¡Â Ã¯Â¸Â' : 'Ã¢ÂÅ’'} {item.title}</strong>
           <p>{item.detail}</p>
         </article>)}
       </div>)}
@@ -1690,7 +1690,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     {arnoldModuleEnabled && showArnold && <div className="draw-arnold-row">
       <ArnoldHost
         stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
-        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} — ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
+        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} Ã¢â‚¬â€ ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
       />
     </div>}
     <div className="draw-room-head">
@@ -1902,7 +1902,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     return (Number(value || 0) / 100).toFixed(2);
   }
   function money(value) {
-    return `£${(Number(value || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `Ã‚Â£${(Number(value || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   function localProfitPlan(input) {
     const ticketPricePence = Number(input.ticket_price_pence || 0);
@@ -2085,18 +2085,18 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       </aside>
 
       <section className="admin-content">
-        {activeTab === 'overview' && <div className="panel"><h1>Dashboard overview</h1><div className="stat-grid"><div><strong>{competitions.length}</strong><span>Total competitions</span></div><div><strong>{liveCount}</strong><span>Live competitions</span></div><div><strong>{totalTickets}</strong><span>Tickets allocated</span></div><div><strong>{money(revenue)}</strong><span>Test order value</span></div><div><strong>{instantClaimed}/{instantWins.length}</strong><span>Instant wins claimed</span></div></div><div className="admin-split"><div><h2>Recent orders</h2>{orders.slice(0, 8).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}</div><div><h2>Recent entries</h2>{entries.slice(0, 8).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div></div>}
+        {activeTab === 'overview' && <div className="panel"><h1>Dashboard overview</h1><div className="stat-grid"><div><strong>{competitions.length}</strong><span>Total competitions</span></div><div><strong>{liveCount}</strong><span>Live competitions</span></div><div><strong>{totalTickets}</strong><span>Tickets allocated</span></div><div><strong>{money(revenue)}</strong><span>Test order value</span></div><div><strong>{instantClaimed}/{instantWins.length}</strong><span>Instant wins claimed</span></div></div><div className="admin-split"><div><h2>Recent orders</h2>{orders.slice(0, 8).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} Ã‚Â· {money(o.total_pence)} Ã‚Â· {o.entry_count} entries Ã‚Â· {o.status}</p></div></div>)}</div><div><h2>Recent entries</h2>{entries.slice(0, 8).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} Ã‚Â· ticket #{e.ticket_number} Ã‚Â· {e.payment_status}</p></div></div>)}</div></div></div>}
 
-        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Add starter competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} · {c.entries_sold || 0}/{c.max_tickets} tickets · postcode: {assignmentLabel(c.id)} · instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} · closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
+        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Add starter competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status} Ã‚Â· {c.entries_sold || 0}/{c.max_tickets} tickets Ã‚Â· postcode: {assignmentLabel(c.id)} Ã‚Â· instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0} Ã‚Â· closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
 
         {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><label>Postcode availability<select value={form.postcode_mode || 'all'} onChange={e => updateField('postcode_mode', e.target.value)}><option value="all">All postcodes</option><option value="selected">Selected postcode zones</option></select><small className="muted">Use Assign Postcodes for selecting the exact zones.</small></label>
             <div className="planner-inline">
               <h2>Profit planner inputs</h2>
               <p className="muted">These figures feed the 25% margin planner and warnings.</p>
               <div className="three">
-                <label>Prize cost £<input type="number" step="0.01" value={penceToPounds(form.prize_cost_pence || 0)} onChange={e => updateField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
-                <label>Marketing £<input type="number" step="0.01" value={penceToPounds(form.marketing_budget_pence || 0)} onChange={e => updateField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
-                <label>Other buffer £<input type="number" step="0.01" value={penceToPounds(form.other_buffer_pence || 0)} onChange={e => updateField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
+                <label>Prize cost Ã‚Â£<input type="number" step="0.01" value={penceToPounds(form.prize_cost_pence || 0)} onChange={e => updateField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
+                <label>Marketing Ã‚Â£<input type="number" step="0.01" value={penceToPounds(form.marketing_budget_pence || 0)} onChange={e => updateField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
+                <label>Other buffer Ã‚Â£<input type="number" step="0.01" value={penceToPounds(form.other_buffer_pence || 0)} onChange={e => updateField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
               </div>
               <div className="two">
                 <label>Payment fee %<input type="number" step="0.1" value={form.payment_fee_percent || 4} onChange={e => updateField('payment_fee_percent', Number(e.target.value))} /></label>
@@ -2108,16 +2108,16 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <div className="panel list-panel">
             <h1>Recent orders</h1>
             {orders.length === 0 && <p className="muted">No orders yet.</p>}
-            {orders.slice(0, 60).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} · {money(o.total_pence)} · {o.entry_count} entries · {o.status}</p></div></div>)}
+            {orders.slice(0, 60).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email} Ã‚Â· {money(o.total_pence)} Ã‚Â· {o.entry_count} entries Ã‚Â· {o.status}</p></div></div>)}
           </div>
           <div className="panel list-panel">
             <h1>Recent entries</h1>
             {entries.length === 0 && <p className="muted">No entries yet.</p>}
-            {entries.slice(0, 60).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}
+            {entries.slice(0, 60).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} Ã‚Â· ticket #{e.ticket_number} Ã‚Â· {e.payment_status}</p></div></div>)}
           </div>
         </div>}
 
-        {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} · ticket #{w.winning_ticket_number} · {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
+        {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="Ã‚Â£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title} Ã‚Â· ticket #{w.winning_ticket_number} Ã‚Â· {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
@@ -2155,13 +2155,13 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
                 <p><strong>Reply-to:</strong> {emailStatus.reply_to}</p>
                 <h3>Recent email log</h3>
                 {(emailStatus.recent || []).length === 0 && <p className="muted">No email log entries yet.</p>}
-                {(emailStatus.recent || []).slice(0, 10).map(log => <div className="list-row entry-row" key={log.id}><div><strong>{log.event} � {log.status}</strong><p>{log.recipient} � {log.subject} � {log.error || 'No error'}</p></div></div>)}
+                {(emailStatus.recent || []).slice(0, 10).map(log => <div className="list-row entry-row" key={log.id}><div><strong>{log.event} Â· {log.status}</strong><p>{log.recipient} Â· {log.subject} Â· {log.error || 'No error'}</p></div></div>)}
               </div>}
             </div>
           </div>
         </div>}
 
-        {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} · ticket #{e.ticket_number} · {e.payment_status}</p></div></div>)}</div></div>}
+        {activeTab === 'free-entries' && <div className="admin-split"><form className="panel" onSubmit={saveFreeEntry}><h1>Record manual/free entry</h1><label>Competition<select value={freeForm.competition_id} onChange={e => setFreeForm({ ...freeForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Customer name<input value={freeForm.customer_name} onChange={e => setFreeForm({ ...freeForm, customer_name: e.target.value })} required /></label><label>Customer email<input type="email" value={freeForm.customer_email} onChange={e => setFreeForm({ ...freeForm, customer_email: e.target.value })} required /></label></div><label>Postal/free-entry reference<input value={freeForm.postal_reference} onChange={e => setFreeForm({ ...freeForm, postal_reference: e.target.value })} /></label><label>Notes<textarea value={freeForm.notes} onChange={e => setFreeForm({ ...freeForm, notes: e.target.value })} /></label><button className="primary full">Record free entry</button></form><div className="panel list-panel"><h1>Recent entries</h1>{entries.slice(0, 20).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email} Ã‚Â· ticket #{e.ticket_number} Ã‚Â· {e.payment_status}</p></div></div>)}</div></div>}
 
 
         {activeTab === 'postcode-zones' && <div className="admin-split postcode-admin">
@@ -2193,14 +2193,14 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             {postcodeZones.map(z => <div className="list-row postcode-zone-row rich-zone-row" key={z.id}>
               <div>
                 <strong>{z.code}</strong>
-                <p>{z.label || (z.type === 'area' ? 'Postcode area' : 'Postcode outcode')} · {z.type} · {z.active ? 'active' : 'inactive'} · priority {z.launch_priority || 'normal'}</p>
+                <p>{z.label || (z.type === 'area' ? 'Postcode area' : 'Postcode outcode')} Ã‚Â· {z.type} Ã‚Â· {z.active ? 'active' : 'inactive'} Ã‚Â· priority {z.launch_priority || 'normal'}</p>
                 <div className="zone-metrics">
                   <span>Population: {Number(z.estimated_population || 0).toLocaleString()}</span>
                   <span>Households: {Number(z.estimated_households || 0).toLocaleString()}</span>
                   <span className={`zone-band ${z.recommendation?.band || 'unknown'}`}>{z.recommendation?.band || 'unknown'}</span>
                 </div>
                 <div className="zone-recommendation">
-                  <b>Suggested:</b> {z.recommendation?.suggested_prize || 'Add population data'} · max tickets {z.recommendation?.suggested_max_tickets || 100}
+                  <b>Suggested:</b> {z.recommendation?.suggested_prize || 'Add population data'} Ã‚Â· max tickets {z.recommendation?.suggested_max_tickets || 100}
                   <small>{z.recommendation?.guidance || ''}</small>
                 </div>
                 {z.notes && <p className="muted">{z.notes}</p>}
@@ -2233,7 +2233,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               {postcodeZones.filter(z => z.active).length === 0 && <p className="muted">No active postcode zones yet. Add zones in Postcode Zones first.</p>}
               {postcodeZones.filter(z => z.active).map(z => <label className="check-row" key={z.id}>
                 <input type="checkbox" checked={(assignForm.zone_ids || []).includes(z.id)} onChange={() => toggleAssignZone(z.id)} />
-                <span><strong>{z.code}</strong> {z.label ? `— ${z.label}` : ''} <em>({z.type})</em></span>
+                <span><strong>{z.code}</strong> {z.label ? `Ã¢â‚¬â€ ${z.label}` : ''} <em>({z.type})</em></span>
               </label>)}
             </div>}
 
@@ -2257,13 +2257,13 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <p className="muted">Built-in target: at least <strong>25% estimated profit margin</strong> after prize, payment fees, marketing, buffer and optional VAT.</p>
 
             <div className="two">
-              <label>Ticket price £<input type="number" step="0.01" value={penceToPounds(profitForm.ticket_price_pence)} onChange={e => updateProfitField('ticket_price_pence', poundsToPence(e.target.value))} /></label>
+              <label>Ticket price Ã‚Â£<input type="number" step="0.01" value={penceToPounds(profitForm.ticket_price_pence)} onChange={e => updateProfitField('ticket_price_pence', poundsToPence(e.target.value))} /></label>
               <label>Max tickets<input type="number" value={profitForm.max_tickets} onChange={e => updateProfitField('max_tickets', Number(e.target.value))} /></label>
             </div>
             <div className="three">
-              <label>Prize cost £<input type="number" step="0.01" value={penceToPounds(profitForm.prize_cost_pence)} onChange={e => updateProfitField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
-              <label>Marketing budget £<input type="number" step="0.01" value={penceToPounds(profitForm.marketing_budget_pence)} onChange={e => updateProfitField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
-              <label>Other buffer £<input type="number" step="0.01" value={penceToPounds(profitForm.other_buffer_pence)} onChange={e => updateProfitField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
+              <label>Prize cost Ã‚Â£<input type="number" step="0.01" value={penceToPounds(profitForm.prize_cost_pence)} onChange={e => updateProfitField('prize_cost_pence', poundsToPence(e.target.value))} /></label>
+              <label>Marketing budget Ã‚Â£<input type="number" step="0.01" value={penceToPounds(profitForm.marketing_budget_pence)} onChange={e => updateProfitField('marketing_budget_pence', poundsToPence(e.target.value))} /></label>
+              <label>Other buffer Ã‚Â£<input type="number" step="0.01" value={penceToPounds(profitForm.other_buffer_pence)} onChange={e => updateProfitField('other_buffer_pence', poundsToPence(e.target.value))} /></label>
             </div>
             <div className="two">
               <label>Payment fee %<input type="number" step="0.1" value={profitForm.payment_fee_percent} onChange={e => updateProfitField('payment_fee_percent', Number(e.target.value))} /></label>
@@ -2300,7 +2300,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </div>}
         {activeTab === 'legal-text' && <form className="panel settings-panel legal-editor" onSubmit={saveSettings}>
           <h1>Legal Text</h1>
-          <p className="muted">Edit the customer-facing legal pages. This is starter wording only — have it checked by a UK solicitor/accountant before taking large volumes of paid entries.</p>
+          <p className="muted">Edit the customer-facing legal pages. This is starter wording only Ã¢â‚¬â€ have it checked by a UK solicitor/accountant before taking large volumes of paid entries.</p>
           <div className="two">
             <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
             <label>Postal entry address<input value={settingsForm.postal_entry_address || ''} onChange={e => setSettingsForm({ ...settingsForm, postal_entry_address: e.target.value })} /></label>
@@ -2321,7 +2321,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </form>}
 
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}>
-          <h1>Site settings</h1><p className="muted">For logo, colours and homepage branding use Admin → Branding.</p>
+          <h1>Site settings</h1><p className="muted">For logo, colours and homepage branding use Admin Ã¢â€ â€™ Branding.</p>
           <div className="two">
             <label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label>
             <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
@@ -2332,7 +2332,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <button className="primary full">Save site settings</button>
         </form>}
 
-        {activeTab === 'audit' && <div className="panel list-panel"><h1>Audit log</h1>{(auditLogs || []).length === 0 && <p className="muted">No audit log entries yet.</p>}{(auditLogs || []).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} · {a.details} · {new Date(a.created_at).toLocaleString()}</p></div></div>)}</div>}
+        {activeTab === 'audit' && <div className="panel list-panel"><h1>Audit log</h1>{(auditLogs || []).length === 0 && <p className="muted">No audit log entries yet.</p>}{(auditLogs || []).map(a => <div className="list-row entry-row" key={a.id}><div><strong>{a.action}</strong><p>{a.user_email} Ã‚Â· {a.details} Ã‚Â· {new Date(a.created_at).toLocaleString()}</p></div></div>)}</div>}
       </section>
     </section>
   </main>;
@@ -2346,9 +2346,9 @@ function CookieConsent({ settings, setPage, onChoice, showPrefs, setShowPrefs })
       <strong>Cookie choices</strong>
       <p>{settings.cookie_banner_text || defaultSettings.cookie_banner_text}</p>
       {showPrefs && <div className="cookie-prefs">
-        <label className="check-row"><input type="checkbox" checked readOnly /> Essential cookies/local storage — required for login, basket and security</label>
-        <label className="check-row"><input type="checkbox" disabled /> Analytics cookies — not active yet</label>
-        <label className="check-row"><input type="checkbox" disabled /> Marketing cookies — not active yet</label>
+        <label className="check-row"><input type="checkbox" checked readOnly /> Essential cookies/local storage Ã¢â‚¬â€ required for login, basket and security</label>
+        <label className="check-row"><input type="checkbox" disabled /> Analytics cookies Ã¢â‚¬â€ not active yet</label>
+        <label className="check-row"><input type="checkbox" disabled /> Marketing cookies Ã¢â‚¬â€ not active yet</label>
       </div>}
       <button type="button" className="footer-text-link" onClick={() => setPage('cookies')}>Read cookie notice</button>
     </div>
@@ -2394,7 +2394,7 @@ function LegalPage({ title, text, settings, setPage }) {
   </main>;
 }
 
-function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} · Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
+function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title} Ã‚Â· Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
 
 window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
