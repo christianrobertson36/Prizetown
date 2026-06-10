@@ -1826,6 +1826,36 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const liveCount = competitions.filter(c => c.status === 'active').length;
   const totalTickets = entries.length;
   const revenue = orders.reduce((sum, o) => sum + Number(o.total_pence || 0), 0);
+
+  const customerMap = new Map();
+  function rememberCustomer(email, name, patch = {}) {
+    const key = String(email || '').trim().toLowerCase();
+    if (!key) return;
+    const existing = customerMap.get(key) || { email: key, name: name || 'Customer', order_count: 0, entry_count: 0, free_entry_count: 0, total_pence: 0, last_activity: '' };
+    existing.name = existing.name === 'Customer' && name ? name : existing.name;
+    Object.assign(existing, patch);
+    customerMap.set(key, existing);
+  }
+  orders.forEach(o => {
+    const email = o.customer_email || '';
+    const existing = customerMap.get(String(email).toLowerCase()) || {};
+    rememberCustomer(email, o.customer_name || existing.name, {
+      order_count: Number(existing.order_count || 0) + 1,
+      total_pence: Number(existing.total_pence || 0) + Number(o.total_pence || 0),
+      last_activity: [existing.last_activity, o.created_at].filter(Boolean).sort().pop() || ''
+    });
+  });
+  entries.forEach(e => {
+    const email = e.customer_email || '';
+    const existing = customerMap.get(String(email).toLowerCase()) || {};
+    const isFree = String(e.payment_status || '').includes('free');
+    rememberCustomer(email, e.customer_name || existing.name, {
+      entry_count: Number(existing.entry_count || 0) + 1,
+      free_entry_count: Number(existing.free_entry_count || 0) + (isFree ? 1 : 0),
+      last_activity: [existing.last_activity, e.created_at].filter(Boolean).sort().pop() || ''
+    });
+  });
+  const customerRows = Array.from(customerMap.values()).sort((a, b) => String(b.last_activity || '').localeCompare(String(a.last_activity || '')));
   const instantClaimed = instantWins.filter(w => w.status === 'claimed').length;
 
   function updateField(key, value) { const next = { ...form, [key]: value }; if (key === 'title' && !editing) next.slug = slugify(value); setForm(next); }
@@ -2025,6 +2055,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       items: [
         ['overview', 'Overview', ClipboardList],
         ['automation-status', 'Automation status', Shield],
+        ['customers', 'Customers', User],
         ['competitions', 'Competitions', Trophy],
         ['competition-form', editing ? 'Edit competition' : 'Add competition', Plus]
       ]
@@ -2104,6 +2135,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
                 <label className="check-row"><input type="checkbox" checked={form.vat_enabled === true} onChange={e => updateField('vat_enabled', e.target.checked)} /> Include VAT estimate</label>
               </div>
             </div><div className="two"><label>Closing date<input type="datetime-local" value={form.closes_at || ''} onChange={e => updateField('closes_at', e.target.value)} /></label><label>Draw date<input type="datetime-local" value={form.draw_at || ''} onChange={e => updateField('draw_at', e.target.value)} /><small className="muted">Used for scheduled final draws.</small></label></div><label className="check-row important-check"><input type="checkbox" checked={form.auto_draw_enabled === true} onChange={e => updateField('auto_draw_enabled', e.target.checked)} /> <span>Auto-run final draw at scheduled draw date/time once sold out or closed</span></label><div className="two"><label>Minimum age<input type="number" value={form.min_age || 18} onChange={e => updateField('min_age', Number(e.target.value))} /></label><label className="check-row"><input type="checkbox" checked={form.age_restricted !== false} onChange={e => updateField('age_restricted', e.target.checked)} /> <span>Age restricted</span></label></div><label>Question<input value={form.question} onChange={e => updateField('question', e.target.value)} placeholder="Example: What colour is the sky?" /></label><label>Correct answer<input value={form.answer} onChange={e => updateField('answer', e.target.value)} /></label><label>Free entry route<textarea value={form.free_entry_text} onChange={e => updateField('free_entry_text', e.target.value)} /></label><label>Competition rules<textarea value={form.rules_text || ''} onChange={e => updateField('rules_text', e.target.value)} /></label><label>Prize image<input type="file" accept="image/*" onChange={uploadFile} /></label>{form.image_url && <img className="preview" src={imageUrl(form.image_url)} alt="Preview" />}<button className="primary full"><Plus size={16} /> {editing ? 'Save changes' : 'Add competition'}</button></form>}
+
+        {activeTab === 'customers' && <div className="panel list-panel"><div className="row"><h1>Customers</h1><span className="muted">{customerRows.length} stored customer(s)</span></div>{customerRows.length === 0 && <p className="muted">No customers yet. Customers appear here after orders, entries or free/manual entries.</p>}{customerRows.map(c => <div className="list-row entry-row" key={c.email}><div><strong>{c.name || 'Customer'}</strong><p>{c.email}  -  orders: {c.order_count}  -  entries: {c.entry_count}  -  free/manual: {c.free_entry_count}  -  total: {money(c.total_pence || 0)}  -  last: {c.last_activity ? new Date(c.last_activity).toLocaleString() : 'n/a'}</p></div></div>)}</div>}
 
         {activeTab === 'orders-entries' && <div className="admin-split">
           <div className="panel list-panel">
