@@ -14,6 +14,11 @@ const app = express();
 const port = process.env.PORT || 5000;
 const jwtSecret = process.env.JWT_SECRET || 'dev_secret_change_me';
 const uploadDir = process.env.UPLOAD_DIR || '/app/uploads';
+const publicSiteUrl = process.env.PUBLIC_SITE_URL || 'https://prizetown.co.uk';
+const resendApiKey = process.env.RESEND_API_KEY || '';
+const emailFrom = process.env.EMAIL_FROM || 'Prizetown <no-reply@prizetown.co.uk>';
+const emailReplyTo = process.env.EMAIL_REPLY_TO || 'support@prizetown.co.uk';
+const adminAlertEmail = process.env.ADMIN_ALERT_EMAIL || '';
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -370,6 +375,20 @@ async function initDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS email_logs (
+      id SERIAL PRIMARY KEY,
+      event TEXT NOT NULL DEFAULT '',
+      recipient TEXT NOT NULL DEFAULT '',
+      subject TEXT NOT NULL DEFAULT '',
+      provider TEXT NOT NULL DEFAULT 'resend',
+      provider_id TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
+      error TEXT NOT NULL DEFAULT '',
+      related_type TEXT NOT NULL DEFAULT '',
+      related_id INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS free_entry_requests (
       id SERIAL PRIMARY KEY,
       competition_id INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
@@ -455,6 +474,8 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_entries_user_id ON entries(user_id);
     CREATE INDEX IF NOT EXISTS idx_entries_order_id ON entries(order_id);
     CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+    CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON email_logs(created_at);
+    CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient);
 
     ALTER TABLE users ADD COLUMN IF NOT EXISTS postcode_full TEXT NOT NULL DEFAULT '';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS postcode_area TEXT NOT NULL DEFAULT '';
@@ -515,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v98' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v99' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -598,8 +619,9 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v98' });
+  add('ok', 'API version', 'Prizetown API v87 is running.', { version: 'v99' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
+  add(emailConfigured() ? 'ok' : 'warning', 'Transactional email', emailConfigured() ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
 
   const summaryParts = [];
@@ -615,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v98',
+    version: 'v99',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -639,6 +661,8 @@ async function getSettingsObject() {
 const allowedSettings = [
   'site_name',
   'support_email',
+  'email_from',
+  'email_reply_to',
   'logo_url',
   'favicon_url',
   'brand_primary_color',
@@ -694,6 +718,39 @@ app.patch('/admin/settings', auth('admin'), async (req, res) => {
     }
   }
   res.json(await getSettingsObject());
+});
+
+app.get('/admin/email/status', auth('admin'), async (_req, res) => {
+  const recent = await query(`
+    SELECT id, event, recipient, subject, status, error, related_type, related_id, created_at
+    FROM email_logs
+    ORDER BY created_at DESC
+    LIMIT 25
+  `).catch(() => ({ rows: [] }));
+  res.json({
+    configured: emailConfigured(),
+    provider: 'resend',
+    from: emailFrom,
+    reply_to: emailReplyTo,
+    public_site_url: publicSiteUrl,
+    recent: recent.rows
+  });
+});
+
+app.post('/admin/email/test', auth('admin'), async (req, res) => {
+  const to = normalizeEmail(req.body?.to || req.user?.email || '');
+  if (!to) return res.status(400).json({ error: 'Test recipient email is required' });
+  const result = await sendTransactionalEmail({
+    to,
+    subject: 'Prizetown test email',
+    text: 'This is a Prizetown transactional email test. If you received this, Resend is working.',
+    html: '<div style="font-family:Arial,sans-serif;line-height:1.5;"><h1>Prizetown test email</h1><p>If you received this, Resend is working.</p></div>',
+    event: 'admin_test_email',
+    relatedType: 'admin',
+    relatedId: req.user?.id || null
+  });
+  if (!result.ok) return res.status(400).json({ error: result.error || 'Test email failed', result });
+  res.json({ ok: true, result });
 });
 
 app.post('/auth/register', async (req, res) => {
@@ -1370,7 +1427,8 @@ app.post('/orders', auth(), async (req, res) => {
 
     await client.query('COMMIT');
     await audit(req.user, 'order_created', `Order #${order.id} created with ${allEntries.length} entries`);
-    res.json({ order, entries: allEntries });
+    const email_result = await sendOrderConfirmationEmail({ user, order, entries: allEntries }).catch(err => ({ ok: false, error: err.message || 'Email send failed' }));
+    res.json({ order, entries: allEntries, email_result });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     console.error('Checkout failed', err);
@@ -1406,7 +1464,8 @@ app.post('/competitions/:id/entries/free', auth(), async (req, res) => {
     const entries = await allocateTickets(client, { competition: comp, user, orderId: null, quantity: 1, paymentStatus: 'free' });
     const instant_wins = await claimInstantWins(client, entries);
     await client.query('COMMIT');
-    res.json({ ...entries[0], instant_wins });
+    const email_result = await sendFreeEntryConfirmationEmail({ user, competition: comp, entry: entries[0], instantWins: instant_wins }).catch(err => ({ ok: false, error: err.message || 'Email send failed' }));
+    res.json({ ...entries[0], instant_wins, email_result });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     res.status(400).json({ error: err.message || 'Entry failed' });
@@ -1810,7 +1869,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v98 grouped admin menu)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v99 secure transactional email)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
