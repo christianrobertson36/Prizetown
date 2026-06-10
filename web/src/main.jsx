@@ -151,7 +151,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
         </g>
         <circle cx="250" cy="250" r="108" className="trusted-wheel-centre" />
         <circle cx="250" cy="250" r="66" className="trusted-wheel-logo-ring" />
-        <image href={imageUrl('/wheel-of-luck-logo.svg')} x="190" y="190" width="120" height="120" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
+        <image href="/wheel-of-luck-logo.svg" x="190" y="190" width="120" height="120" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
         <text x="250" y="336" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
       </svg>
     </div>
@@ -1898,7 +1898,81 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function saveFreeEntry(e) { e.preventDefault(); try { const saved = await api('/admin/free-entry', { method: 'POST', body: JSON.stringify(freeForm) }); const emailMsg = saved.email_result?.ok ? ' Confirmation email sent.' : saved.email_result?.error ? ` Email not sent: ${saved.email_result.error}` : ''; setMessage(`Manual/free entry recorded. Ticket #${saved.entry.ticket_number}.${emailMsg}`); setFreeForm({ competition_id: '', customer_name: '', customer_email: '', postal_reference: '', notes: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
-  async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Starter competitions added.'); reload(); }
+  async function seedDemo() {
+    const daysFromNow = days => new Date(Date.now() + days * 86400000).toISOString();
+    const samples = [
+      {
+        title: 'Cash Blast £500',
+        description: 'Win a £500 cash prize. A simple high-impact starter competition for testing tickets, checkout and draw flow.',
+        ticket_price_pence: 199,
+        max_tickets: 500,
+        max_per_user: 25,
+        status: 'active',
+        image_url: '/demo-posters/cash.svg',
+        closes_at: daysFromNow(14),
+        draw_at: daysFromNow(15),
+        question: 'What colour is the Prizetown logo?',
+        correct_answer: 'Gold',
+        free_entry_text: 'Postal entry route available. See the Free Entry page for details.',
+        rules_text: 'Sample competition for testing only.'
+      },
+      {
+        title: 'Tech Bundle',
+        description: 'A bold tech-style prize bundle sample for testing product-style competition posters and checkout.',
+        ticket_price_pence: 249,
+        max_tickets: 750,
+        max_per_user: 20,
+        status: 'active',
+        image_url: '/demo-posters/tech.svg',
+        closes_at: daysFromNow(18),
+        draw_at: daysFromNow(19),
+        question: 'What is 2 + 2?',
+        correct_answer: '4',
+        free_entry_text: 'Postal entry route available. See the Free Entry page for details.',
+        rules_text: 'Sample competition for testing only.'
+      },
+      {
+        title: 'Luxury Night Away',
+        description: 'A polished hotel/night-away sample competition for testing premium poster display.',
+        ticket_price_pence: 199,
+        max_tickets: 600,
+        max_per_user: 20,
+        status: 'active',
+        image_url: '/demo-posters/luxury.svg',
+        closes_at: daysFromNow(21),
+        draw_at: daysFromNow(22),
+        question: 'What town is Prizetown for?',
+        correct_answer: 'Prizetown',
+        free_entry_text: 'Postal entry route available. See the Free Entry page for details.',
+        rules_text: 'Sample competition for testing only.'
+      },
+      {
+        title: 'Family Fun Hamper',
+        description: 'A bright family-prize sample competition for checking softer prize artwork and poster scrolling.',
+        ticket_price_pence: 99,
+        max_tickets: 300,
+        max_per_user: 15,
+        status: 'active',
+        image_url: '/demo-posters/family.svg',
+        closes_at: daysFromNow(10),
+        draw_at: daysFromNow(11),
+        question: 'What do you use to enter?',
+        correct_answer: 'Ticket',
+        free_entry_text: 'Postal entry route available. See the Free Entry page for details.',
+        rules_text: 'Sample competition for testing only.'
+      }
+    ];
+
+    let added = 0;
+    for (const sample of samples) {
+      const exists = competitions.some(c => String(c.title || '').toLowerCase() === sample.title.toLowerCase());
+      if (exists) continue;
+      await api('/admin/competitions', { method: 'POST', body: JSON.stringify(sample) });
+      added++;
+    }
+    setMessage(added ? `Added ${added} starter competition(s).` : 'Starter competitions already exist.');
+    reload();
+  }
   async function removeStarterCompetitions() {
     const demoMatches = competitions.filter(c => {
       const text = `${c.title || ''} ${c.slug || ''} ${c.description || ''}`.toLowerCase();

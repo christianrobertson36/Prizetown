@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#052e16"/>
-      <stop offset="55%" stop-color="#16a34a"/>
+      <stop offset="0%" stop-color="#2e1065"/>
+      <stop offset="55%" stop-color="#a855f7"/>
       <stop offset="100%" stop-color="#020617"/>
     </linearGradient>
     <radialGradient id="glow" cx="50%" cy="35%" r="55%">
-      <stop offset="0%" stop-color="#bbf7d0" stop-opacity=".95"/>
-      <stop offset="45%" stop-color="#16a34a" stop-opacity=".35"/>
+      <stop offset="0%" stop-color="#f5d0fe" stop-opacity=".95"/>
+      <stop offset="45%" stop-color="#a855f7" stop-opacity=".35"/>
       <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
     </radialGradient>
     <filter id="shadow"><feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#000" flood-opacity=".5"/></filter>
@@ -17,10 +17,10 @@
   <rect x="70" y="70" width="760" height="1060" rx="42" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="8"/>
   <text x="450" y="170" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="42" font-weight="900" fill="#fff" letter-spacing="7">PRIZETOWN</text>
   <circle cx="450" cy="425" r="210" fill="#020617" opacity=".52" filter="url(#shadow)"/>
-  <text x="450" y="492" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="190" font-weight="900" fill="#fff">£</text>
-  <text x="450" y="735" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="105" font-weight="900" fill="#fff">CASH</text>
-  <text x="450" y="835" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="74" font-weight="900" fill="#facc15">£500 BLAST</text>
+  <text x="450" y="492" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="190" font-weight="900" fill="#fff">★</text>
+  <text x="450" y="735" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="105" font-weight="900" fill="#fff">LUXURY</text>
+  <text x="450" y="835" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="74" font-weight="900" fill="#facc15">NIGHT AWAY</text>
   <rect x="160" y="915" width="580" height="92" rx="46" fill="#facc15"/>
-  <text x="450" y="976" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="900" fill="#08101f">LIVE CASH DRAW</text>
+  <text x="450" y="976" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="900" fill="#08101f">PREMIUM ESCAPE</text>
   <text x="450" y="1085" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="#fff" opacity=".9">TAP POSTER TO ENTER</text>
 </svg>
