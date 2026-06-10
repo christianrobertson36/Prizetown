@@ -151,7 +151,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
         </g>
         <circle cx="250" cy="250" r="108" className="trusted-wheel-centre" />
         <circle cx="250" cy="250" r="66" className="trusted-wheel-logo-ring" />
-        <image href={siteLogo({})} x="192" y="192" width="116" height="116" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
+        <image href={imageUrl('/wheel-of-luck-logo.svg')} x="190" y="190" width="120" height="120" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
         <text x="250" y="336" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
       </svg>
     </div>
@@ -1899,6 +1899,19 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   async function saveInstantWin(e) { e.preventDefault(); try { const saved = await api('/admin/instant-wins', { method: 'POST', body: JSON.stringify(iwForm) }); setMessage(`Instant win added on ticket #${saved.winning_ticket_number}`); setIwForm({ competition_id: '', prize_title: '', prize_value_pence: 10000, winning_ticket_number: '' }); reload(); } catch (err) { setMessage(err.message); } }
   async function deleteInstant(id) { await api(`/admin/instant-wins/${id}`, { method: 'DELETE' }); setMessage('Instant win deleted.'); reload(); }
   async function seedDemo() { await api('/admin/seed-demo', { method: 'POST' }); setMessage('Starter competitions added.'); reload(); }
+  async function removeStarterCompetitions() {
+    const demoMatches = competitions.filter(c => {
+      const text = `${c.title || ''} ${c.slug || ''} ${c.description || ''}`.toLowerCase();
+      return text.includes('starter') || text.includes('sample') || text.includes('demo') || text.includes('test') || text.includes('cash') || text.includes('iphone') || text.includes('ps5') || text.includes('holiday') || text.includes('tesla');
+    });
+    if (demoMatches.length === 0) return setMessage('No obvious starter/sample competitions found.');
+    if (!confirm(`Remove ${demoMatches.length} starter/sample competition(s)? This will not touch competitions that do not look like samples.`)) return;
+    for (const c of demoMatches) {
+      await api(`/admin/competitions/${c.id}`, { method: 'DELETE' });
+    }
+    setMessage(`Removed ${demoMatches.length} starter/sample competition(s).`);
+    reload();
+  }
   function downloadPostcodeTemplate() {
     const headers = ['code','label','type','active','estimated_population','estimated_households','launch_priority','notes'];
     const sampleRows = [
@@ -2142,6 +2155,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           </details>)}
         </div>
         <button type="button" className="secondary full admin-seed-button" onClick={seedDemo}>Add starter competitions</button>
+        <button type="button" className="danger full admin-seed-button" onClick={removeStarterCompetitions}>Remove starter competitions</button>
       </aside>
 
       <section className="admin-content">
