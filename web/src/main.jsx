@@ -1475,6 +1475,50 @@ function SocialIntegrationsPanel({ settingsForm, setSettingsForm, saveSettings }
   </form>;
 }
 
+function MobilePreviewPanel() {
+  const [device, setDevice] = useState('samsung');
+  const [path, setPath] = useState('/draw-broadcast?mobilePreview=1');
+  const devices = {
+    small: { label: 'Small Android', width: 360, height: 740 },
+    samsung: { label: 'Samsung / Android', width: 412, height: 915 },
+    iphone: { label: 'iPhone', width: 390, height: 844 },
+    large: { label: 'Large phone', width: 430, height: 932 }
+  };
+  const selected = devices[device] || devices.samsung;
+  const previewUrl = window.location.origin + path;
+
+  return <div className="panel mobile-preview-panel">
+    <h1>Mobile Preview</h1>
+    <p className="muted">Use this before changing mobile draw screens. It shows the public live draw page inside phone-sized frames so layout problems are easier to spot.</p>
+    <div className="mobile-preview-controls">
+      {Object.entries(devices).map(([key, item]) => <button type="button" key={key} className={device === key ? 'primary' : 'secondary'} onClick={() => setDevice(key)}>{item.label}</button>)}
+      <button type="button" className="secondary" onClick={() => setPath('/draw-broadcast?mobilePreview=1')}>Live draw</button>
+      <button type="button" className="secondary" onClick={() => setPath('/draw-broadcast?transparent=1&mobilePreview=1')}>Transparent overlay</button>
+      <button type="button" className="secondary" onClick={() => window.open(previewUrl, 'prizetown_mobile_preview')}>Open preview</button>
+    </div>
+    <div className="mobile-preview-layout">
+      <div className="mobile-preview-frame-wrap">
+        <div className="mobile-preview-phone" style={{ width: selected.width, maxWidth: '100%' }}>
+          <div className="mobile-preview-phone-top">{selected.label} - {selected.width} x {selected.height}</div>
+          <iframe title="Prizetown mobile preview" src={previewUrl} style={{ height: selected.height }} />
+        </div>
+      </div>
+      <div className="mobile-preview-checklist">
+        <h2>What to check</h2>
+        <ul>
+          <li>Spinner is visible and centred.</li>
+          <li>No vertical squeezed text.</li>
+          <li>Arnold does not cover the wheel on mobile.</li>
+          <li>Live time, draw date and competition title remain readable.</li>
+          <li>Winner ticket number is readable after the draw finishes.</li>
+          <li>No sideways scrolling.</li>
+        </ul>
+        <p className="muted">Use this page to compare phone sizes before changing the public draw CSS again.</p>
+      </div>
+    </div>
+  </div>;
+}
+
 function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMessage }) {
   const youtubeUrl = settingsForm.youtube_live_url || settingsForm.social_youtube_url || '';
   const channelUrl = settingsForm.social_youtube_url || '';
@@ -2645,6 +2689,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         moduleLiveDraw && ['draw-control', 'Draw Control Room', ListChecks],
         moduleLiveDraw && ['draw-proof', 'Draw Proof', ListChecks],
         moduleLiveDraw && ['stream-helper', 'Stream Helper', ListChecks],
+        moduleLiveDraw && ['mobile-preview', 'Mobile Preview', ListChecks],
         moduleLiveDraw && ['draws', 'Final draw', ListChecks],
         moduleInstantWins && ['instant-wins', 'Instant wins', Zap]
       ].filter(Boolean)
@@ -2821,11 +2866,14 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
+            ['Mobile Preview', 'Use Draws > Mobile Preview to test the live draw page inside phone-sized frames before changing public mobile draw CSS. Check spinner visibility, Arnold overlap, text wrapping and sideways scrolling.'],
             ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
         </div>}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
+
+        {activeTab === 'mobile-preview' && <MobilePreviewPanel />}
 
         {activeTab === 'social-integrations' && <SocialIntegrationsPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
 

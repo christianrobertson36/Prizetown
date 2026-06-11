@@ -5922,114 +5922,76 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
   }
 }
 
-/* v174: Clean mobile public live draw view */
-@media (max-width: 720px) {
-  body.broadcast-body {
-    overflow-x: hidden !important;
-    background: #020817 !important;
-  }
+/* v175: Admin mobile preview tool */
+.mobile-preview-panel {
+  overflow: hidden;
+}
 
-  body.broadcast-body .broadcast-page {
-    display: block !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-height: 100vh !important;
-    padding: .75rem !important;
-    overflow-x: hidden !important;
-  }
+.mobile-preview-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 1rem 0;
+}
 
-  /* Hide OBS/helper clutter on phones */
-  body.broadcast-body [class*="arnold"],
-  body.broadcast-body [class*="Arnold"],
-  body.broadcast-body [class*="ticker"],
-  body.broadcast-body [class*="Ticker"],
-  body.broadcast-body [class*="stats"],
-  body.broadcast-body [class*="Stats"],
-  body.broadcast-body [class*="metric"],
-  body.broadcast-body [class*="Metric"],
-  body.broadcast-body [class*="tile"],
-  body.broadcast-body [class*="Tile"] {
-    display: none !important;
-  }
+.mobile-preview-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 480px) minmax(260px, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
 
-  /* Keep the main title readable */
-  body.broadcast-body .broadcast-page h1 {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: .25rem auto .5rem !important;
-    font-size: clamp(1.7rem, 10vw, 2.7rem) !important;
-    line-height: 1.05 !important;
-    text-align: center !important;
-    white-space: normal !important;
-  }
+.mobile-preview-frame-wrap {
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid rgba(250,204,21,.18);
+  border-radius: 1.25rem;
+  background: rgba(2,6,23,.45);
+}
 
-  body.broadcast-body .broadcast-page h2,
-  body.broadcast-body .broadcast-page h3,
-  body.broadcast-body .broadcast-page p {
-    text-align: center !important;
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-  }
+.mobile-preview-phone {
+  margin: 0 auto;
+  border: 10px solid #050816;
+  border-radius: 2rem;
+  background: #020817;
+  box-shadow: 0 1.5rem 4rem rgba(0,0,0,.38);
+  overflow: hidden;
+}
 
-  body.broadcast-body .broadcast-page > *,
-  body.broadcast-body .broadcast-page section,
-  body.broadcast-body .broadcast-page article,
-  body.broadcast-body .broadcast-page div {
-    position: relative !important;
-    left: auto !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
+.mobile-preview-phone-top {
+  padding: .55rem .75rem;
+  text-align: center;
+  font-weight: 800;
+  color: #facc15;
+  background: #050816;
+  border-bottom: 1px solid rgba(250,204,21,.2);
+}
 
-  body.broadcast-body .trusted-wheel-draw {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: .75rem auto !important;
-    overflow: visible !important;
-  }
+.mobile-preview-phone iframe {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: #020817;
+}
 
-  body.broadcast-body .trusted-wheel-wrap {
-    width: min(92vw, 380px) !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-  }
+.mobile-preview-checklist {
+  padding: 1rem;
+  border: 1px solid rgba(250,204,21,.16);
+  border-radius: 1rem;
+  background: rgba(15,23,42,.55);
+}
 
-  body.broadcast-body .trusted-wheel-svg {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
-    max-height: 44vh !important;
-    margin: 0 auto !important;
-  }
+.mobile-preview-checklist ul {
+  margin: .75rem 0 0;
+  padding-left: 1.25rem;
+}
 
-  body.broadcast-body .trusted-wheel-result {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: .6rem auto 0 !important;
-    padding: .7rem !important;
-    text-align: center !important;
-    font-size: .9rem !important;
-    line-height: 1.2 !important;
-  }
+.mobile-preview-checklist li {
+  margin: .45rem 0;
+}
 
-  body.broadcast-body .trusted-wheel-result * {
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  body.broadcast-body .trusted-wheel-centre-number {
-    font-size: 1.8rem !important;
-    stroke-width: 3.5px !important;
-  }
-
-  body.broadcast-body .trusted-wheel-centre-sub {
-    font-size: .52rem !important;
-    letter-spacing: .04em !important;
+@media (max-width: 900px) {
+  .mobile-preview-layout {
+    grid-template-columns: 1fr;
   }
 }
