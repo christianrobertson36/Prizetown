@@ -111,7 +111,7 @@ function wheelRotationForWinner(tickets = [], winnerTicket, currentRotation = 0)
   return Number(currentRotation || 0) + (360 * 9) + correction;
 }
 
-function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW' }) {
+function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW', spinnerStyle = 'classic' }) {
   const rows = safeArray(tickets);
   const isSpinning = mode === 'spinning';
   const isWinner = mode === 'winner' && winner;
@@ -119,6 +119,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
   const slice = 360 / Math.max(1, segments.length);
   const colours = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'];
   const showLabels = segments.length <= 100;
+  const useTicketSquares = spinnerStyle === 'ticket-squares';
 
   return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
     <div className="trusted-wheel-wrap">
@@ -136,6 +137,24 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
             const mid = i * slice;
             const textPoint = polarToCartesian(250, 250, 202, mid);
             const isWinningSegment = winner && Number(winner.ticket_number || 0) >= Number(seg.from || seg.ticket_number || 0) && Number(winner.ticket_number || 0) <= Number(seg.to || seg.ticket_number || 0);
+            if (useTicketSquares) {
+              const totalSquares = Math.max(1, segments.length);
+              const angle = (i / totalSquares) * Math.PI * 2 - Math.PI / 2;
+              const radius = 188;
+              const x = 250 + Math.cos(angle) * radius;
+              const y = 250 + Math.sin(angle) * radius;
+              const size = totalSquares > 800 ? 3 : totalSquares > 400 ? 4 : totalSquares > 200 ? 5 : 7;
+              return <rect
+                key={'ticket-square-' + (seg.label || seg.ticket_number || i) + '-' + i}
+                className={isWinningSegment ? 'ticket-square winning-segment' : 'ticket-square'}
+                x={x - size / 2}
+                y={y - size / 2}
+                width={size}
+                height={size}
+                rx={Math.max(1, size / 4)}
+                fill={colours[i % colours.length]}
+              />;
+            }
             return <g key={`${seg.label || seg.ticket_number || i}-${i}`} className={isWinningSegment ? 'winning-segment' : ''}>
               <path d={wheelSlicePath(250, 250, 230, start, end)} fill={colours[i % colours.length]} />
               {showLabels && <text
@@ -1240,6 +1259,7 @@ function DrawBroadcastPage({ setPage }) {
   }, [setPage]);
 
   const tickets = state?.visual_tickets || [];
+  const spinnerStyle = state?.spinner_style || 'classic';
   const winner = state?.winner;
   const revealAt = state?.reveal_at ? new Date(state.reveal_at).getTime() : 0;
   const winnerReady = Boolean(winner) && (state?.mode === 'winner' || (revealAt > 0 && Date.now() >= revealAt));
@@ -1291,7 +1311,7 @@ function DrawBroadcastPage({ setPage }) {
             <span><strong>Time:</strong> {drawTimeText}</span>
             <span><strong>Live:</strong> {liveTimeText}</span>
           </div>
-          <TrustedWheelDraw mode={mode} winner={displayWinner} tickets={tickets} rotation={rotation} label="PRIZETOWN FINAL DRAW" />
+          <TrustedWheelDraw mode={mode} winner={displayWinner} tickets={tickets} rotation={rotation} label="PRIZETOWN FINAL DRAW" spinnerStyle={spinnerStyle} />
         </div>
 
         <aside className="broadcast-info">
@@ -2167,7 +2187,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     <p className="muted draw-sync-note">{testMode ? 'Test mode: spins are local previews only and can be repeated. They do not record an official winner.' : 'Official mode: Start Official Live Draw opens the live draw window and records one secure server-side winner. Once recorded, the same competition cannot be officially drawn again.'}</p>
 
     <div className="wheel-stage reveal-machine-wrap admin-reveal-machine-wrap">
-      <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" />
+      <TrustedWheelDraw mode={spinning ? 'spinning' : winner ? 'winner' : 'idle'} winner={winner} tickets={visualEntries} rotation={rotation} label="ADMIN DRAW PREVIEW" spinnerStyle={spinnerStyle} />
     </div>
 
     {winner && <div className="winner-card">

@@ -5681,3 +5681,16 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
   gap: 0.15rem !important;
   padding: 0.25rem 0.5rem !important;
 }
+
+/* v168: Ticket squares spinner renderer */
+.trusted-wheel-svg .ticket-square {
+  stroke: rgba(255,255,255,.55);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 .2rem rgba(0,0,0,.65));
+}
+
+.trusted-wheel-svg .ticket-square.winning-segment {
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 .45rem rgba(255,255,255,.95));
+}
