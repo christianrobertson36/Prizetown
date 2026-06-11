@@ -5440,3 +5440,37 @@ main {
 .help-guide-panel .muted {
   max-width: 780px;
 }
+
+
+/* v152 show full demo poster artwork */
+.poster-image {
+  height: 260px;
+  background: rgba(8, 16, 31, .86);
+}
+
+.poster-image img {
+  object-fit: contain;
+  padding: .45rem;
+  box-sizing: border-box;
+}
+
+.competition-poster {
+  grid-template-rows: 260px auto;
+}
+
+.comp-card > img,
+.detail-img,
+.basket-row img {
+  object-fit: contain;
+  background: rgba(8, 16, 31, .86);
+}
+
+@media (max-width: 800px) {
+  .competition-poster {
+    grid-template-rows: 230px auto;
+  }
+
+  .poster-image {
+    height: 230px;
+  }
+}
