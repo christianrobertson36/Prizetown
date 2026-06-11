@@ -1437,6 +1437,9 @@ function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMes
   const youtubeOpenUrl = youtubeUrl
     ? (youtubeUrl.trim().startsWith('http://') || youtubeUrl.trim().startsWith('https://') ? youtubeUrl.trim() : 'https://' + youtubeUrl.trim().replace(/^\/+/, ''))
     : '';
+  const youtubeChannelOpenUrl = channelUrl
+    ? (channelUrl.trim().startsWith('http://') || channelUrl.trim().startsWith('https://') ? channelUrl.trim() : 'https://' + channelUrl.trim().replace(/^\/+/, ''))
+    : '';
 
   function copyText(label, text) {
     navigator.clipboard?.writeText(text);
@@ -1476,6 +1479,7 @@ function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMes
       <button type="button" className="secondary" onClick={() => copyText('YouTube description', description)}>Copy YouTube description</button>
       <button type="button" className="secondary" onClick={() => copyText('OBS checklist', checklist)}>Copy OBS checklist</button>
       {youtubeOpenUrl && <a className="button secondary" href={youtubeOpenUrl} target="_blank" rel="noopener noreferrer">Open YouTube live</a>}
+      {youtubeChannelOpenUrl && <a className="button secondary" href={youtubeChannelOpenUrl} target="_blank" rel="noopener noreferrer">Open YouTube channel</a>}
     </div>
     <div className="stream-helper-cards">
       <article><strong>OBS Browser Source</strong><span>{obsUrl}</span></article>
