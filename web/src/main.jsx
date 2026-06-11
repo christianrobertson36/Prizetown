@@ -111,14 +111,14 @@ function wheelRotationForWinner(tickets = [], winnerTicket, currentRotation = 0)
   return Number(currentRotation || 0) + (360 * 9) + correction;
 }
 
-function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW', spinnerStyle = 'classic' }) {
+function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation = 0, label = 'PRIZETOWN FINAL DRAW', spinnerStyle = 'classic', showTicketLabels = true }) {
   const rows = safeArray(tickets);
   const isSpinning = mode === 'spinning';
   const isWinner = mode === 'winner' && winner;
   const segments = rows.length ? rows : Array.from({ length: 24 }, (_, i) => ({ label: `#${i + 1}`, from: i + 1, to: i + 1 }));
   const slice = 360 / Math.max(1, segments.length);
   const colours = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'];
-  const showLabels = segments.length <= 100;
+  const showLabels = showTicketLabels && segments.length <= 100;
   const useTicketSquares = spinnerStyle === 'ticket-squares';
   const ticketNumbers = segments.map(seg => Number(seg.ticket_number || seg.from || 0)).filter(Boolean);
   const [shuffleNumber, setShuffleNumber] = useState(ticketNumbers[0] || 1);
@@ -617,6 +617,7 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
   const [demoWinner, setDemoWinner] = useState(null);
   const [demoMode, setDemoMode] = useState('idle');
   const [demoRotation, setDemoRotation] = useState(0);
+  const [demoSpinnerStyle, setDemoSpinnerStyle] = useState(() => localStorage.getItem('prizetown_demo_spinner_style') || settings.spinner_style || 'classic');
   const [demoNames, setDemoNames] = useState('Alex, Sam, Taylor, Jordan, Casey, Morgan, Jamie, Riley, Charlie, Drew, Sky, Bailey');
 
   function refreshDemoNames() {
@@ -750,12 +751,17 @@ return <main>
           <div className="demo-wheel-actions">
             <button type="button" className="secondary" onClick={refreshDemoNames}>Update demo names</button>
             <button type="button" className="primary" onClick={spinDemoWheel} disabled={demoMode === 'spinning'}>{demoMode === 'spinning' ? 'Spinning...' : 'Try the wheel'}</button>
+            <a className="button secondary" href="/draw-broadcast">Watch live draws</a>
+          </div>
+          <div className="demo-wheel-actions demo-style-actions">
+            <button type="button" className={demoSpinnerStyle === 'classic' ? 'primary' : 'secondary'} onClick={() => { setDemoSpinnerStyle('classic'); localStorage.setItem('prizetown_demo_spinner_style', 'classic'); }}>Classic style</button>
+            <button type="button" className={demoSpinnerStyle === 'ticket-squares' ? 'primary' : 'secondary'} onClick={() => { setDemoSpinnerStyle('ticket-squares'); localStorage.setItem('prizetown_demo_spinner_style', 'ticket-squares'); }}>Ticket squares style</button>
           </div>
           <small>Demo only. This does not enter you into a live competition and does not affect official draw results.</small>
         </div>
       </div>
       <div className="wheel-of-luck-demo">
-        <TrustedWheelDraw mode={demoMode} winner={demoWinner} tickets={demoTickets} rotation={demoRotation} label="DEMO WHEEL OF LUCK" />
+        <TrustedWheelDraw mode={demoMode} winner={demoWinner} tickets={demoTickets} rotation={demoRotation} label="DEMO WHEEL OF LUCK" spinnerStyle={demoSpinnerStyle} showTicketLabels={false} />
       </div>
     </section>
 
