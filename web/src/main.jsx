@@ -733,6 +733,37 @@ return <main>
       </>
     )}
 
+    <section className="community-proof-section">
+      <div className="community-proof-copy">
+        <p className="eyebrow"><Sparkles size={16} /> Local trust</p>
+        <h2>Built for local prize nights, clear entries and fair draws.</h2>
+        <p>Prizetown is designed around postcode-aware competitions, visible ticket numbers, public entry lists and winner results customers can check before and after each draw.</p>
+        <div className="community-proof-actions">
+          <button type="button" className="primary" onClick={() => setPage('entry-lists')}>View entry lists</button>
+          <button type="button" className="secondary" onClick={() => setPage('winners')}>View winners</button>
+          <button type="button" className="secondary" onClick={() => setPage('free-entry')}>Free entry route</button>
+        </div>
+      </div>
+      <div className="community-proof-grid">
+        <article>
+          <strong>Postcode focus</strong>
+          <span>{postcodesEnabled ? 'Competitions can be limited by postcode zones for local launches.' : 'Postcode tools can be switched on when local competitions are needed.'}</span>
+        </article>
+        <article>
+          <strong>Public ticket lists</strong>
+          <span>Customers can check allocated ticket numbers before a final draw.</span>
+        </article>
+        <article>
+          <strong>Responsible entry</strong>
+          <span>18+ only. Enter for entertainment and never spend more than you can afford.</span>
+        </article>
+        <article>
+          <strong>Free postal route</strong>
+          <span>Free-entry wording is visible and editable before public launch.</span>
+        </article>
+      </div>
+    </section>
+
     <section className="live-activity-strip">
       <div className="live-activity-head">
         <p className="eyebrow"><Ticket size={16} /> Live activity</p>
