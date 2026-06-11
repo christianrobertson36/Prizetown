@@ -2536,6 +2536,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Email Test', 'Use Email test to confirm Resend transactional emails are configured and working. If emails fail, check the Resend API key and sender domain setup.'],
             ['Audit Log', 'Use Audit log to review important admin/system actions. Useful for checking what changed and when.'],
             ['Security Reminder', 'Before real payments, change default admin credentials, use a strong JWT secret, protect admin access, verify payment webhooks, keep database backups and test restore.'],
+            ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
         </div>}

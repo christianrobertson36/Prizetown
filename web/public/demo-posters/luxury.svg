@@ -1,26 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" role="img" aria-label="LUXURY BREAK">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#2e1065"/>
-      <stop offset="55%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#020617"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="35%" r="55%">
-      <stop offset="0%" stop-color="#f5d0fe" stop-opacity=".95"/>
-      <stop offset="45%" stop-color="#a855f7" stop-opacity=".35"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+    <radialGradient id="spot" cx="50%" cy="25%" r="80%">
+      <stop offset="0" stop-color="#a855f7"/>
+      <stop offset="0.55" stop-color="#190713"/>
+      <stop offset="1" stop-color="#020617"/>
     </radialGradient>
-    <filter id="shadow"><feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#000" flood-opacity=".5"/></filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity=".35"/>
+    </filter>
   </defs>
-  <rect width="900" height="1200" rx="54" fill="url(#bg)"/>
-  <circle cx="450" cy="390" r="330" fill="url(#glow)"/>
-  <rect x="70" y="70" width="760" height="1060" rx="42" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="8"/>
-  <text x="450" y="170" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="42" font-weight="900" fill="#fff" letter-spacing="7">PRIZETOWN</text>
-  <circle cx="450" cy="425" r="210" fill="#020617" opacity=".52" filter="url(#shadow)"/>
-  <text x="450" y="492" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="190" font-weight="900" fill="#fff">★</text>
-  <text x="450" y="735" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="105" font-weight="900" fill="#fff">LUXURY</text>
-  <text x="450" y="835" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="74" font-weight="900" fill="#facc15">NIGHT AWAY</text>
-  <rect x="160" y="915" width="580" height="92" rx="46" fill="#facc15"/>
-  <text x="450" y="976" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="900" fill="#08101f">PREMIUM ESCAPE</text>
-  <text x="450" y="1085" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="#fff" opacity=".9">TAP POSTER TO ENTER</text>
+  <rect width="900" height="1200" fill="url(#spot)"/>
+  <circle cx="95" cy="100" r="220" fill="#fff" opacity=".06"/>
+  <circle cx="830" cy="1020" r="260" fill="#facc15" opacity=".10"/>
+  <rect x="70" y="70" width="760" height="1060" rx="58" fill="#ffffff" opacity=".08" stroke="#facc15" stroke-width="5"/>
+  <text x="450" y="155" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="44" font-weight="900" fill="#facc15">PRIZETOWN</text>
+  <text x="450" y="214" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="800" fill="#f5d0fe">HOTEL STYLE PRIZE</text>
+  
+      <g transform="translate(165 250)">
+        <rect x="40" y="90" width="500" height="300" rx="38" fill="#f5d0fe" opacity=".15"/>
+        <path d="M125 370V155h330v215" fill="#fdf4ff"/>
+        <path d="M95 160l195-95 195 95" fill="none" stroke="#facc15" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="175" y="215" width="70" height="70" rx="14" fill="#a855f7"/>
+        <rect x="335" y="215" width="70" height="70" rx="14" fill="#a855f7"/>
+        <path d="M255 370V275h70v95" fill="#190713"/>
+        <path d="M85 405h410" stroke="#facc15" stroke-width="24" stroke-linecap="round"/>
+        <path d="M195 95l18-36 18 36 40 6-29 28 7 39-36-19-36 19 7-39-29-28 40-6z" fill="#facc15"/>
+      </g>
+  <text x="450" y="780" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="80" font-weight="900" fill="#ffffff" filter="url(#shadow)">LUXURY BREAK</text>
+  <text x="450" y="850" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="52" font-weight="900" fill="#facc15">NIGHT AWAY</text>
+  <rect x="160" y="920" width="580" height="92" rx="46" fill="#facc15"/>
+  <text x="450" y="979" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="34" font-weight="900" fill="#08101f">ENTER NOW</text>
+  <text x="450" y="1082" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="800" fill="#fff" opacity=".92">TAP POSTER TO VIEW PRIZE</text>
 </svg>
