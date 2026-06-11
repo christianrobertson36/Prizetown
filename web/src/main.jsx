@@ -639,6 +639,14 @@ return <main>
             <span>Live final draws</span>
             <span>Instant win moments</span>
           </div>
+
+          <div className="launch-trust-strip" aria-label="Launch trust badges">
+            <button type="button" onClick={() => setPage('how-it-works')}>How it works</button>
+            <button type="button" onClick={() => setPage('entry-lists')}>Public entry lists</button>
+            <button type="button" onClick={() => setPage('winners')}>Winners & results</button>
+            <button type="button" onClick={() => setPage('free-entry')}>Free entry route</button>
+            <span>18+ responsible entry</span>
+          </div>
         </div>
       </div>
       <div className="hero-card draw-card pick-poster-card">

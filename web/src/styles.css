@@ -5206,3 +5206,54 @@ main {
     justify-content: center;
   }
 }
+
+
+/* v138 trust badge strip */
+.launch-trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: .75rem;
+}
+
+.launch-trust-strip button,
+.launch-trust-strip span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: .48rem .7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.13);
+  background: rgba(255,255,255,.07);
+  color: #fef3c7;
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.launch-trust-strip button {
+  cursor: pointer;
+}
+
+.launch-trust-strip button:hover {
+  border-color: rgba(250,204,21,.34);
+  background: rgba(250,204,21,.12);
+}
+
+.launch-trust-strip span {
+  color: #bbf7d0;
+  border-color: rgba(34,197,94,.22);
+  background: rgba(34,197,94,.1);
+}
+
+@media (max-width: 560px) {
+  .launch-trust-strip {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .launch-trust-strip button,
+  .launch-trust-strip span {
+    width: 100%;
+  }
+}
