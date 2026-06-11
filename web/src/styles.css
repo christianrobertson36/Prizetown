@@ -5545,3 +5545,18 @@ main {
   font-weight: 850;
   font-size: .82rem;
 }
+
+
+/* v157 draw proof panel */
+.draw-proof-panel { display: grid; gap: 1rem; }
+.draw-proof-summary { display: flex; flex-wrap: wrap; gap: .75rem; }
+.draw-proof-summary article { flex: 1 1 190px; padding: 1rem; border-radius: 1rem; border: 1px solid rgba(250,204,21,.18); background: rgba(255,255,255,.04); }
+.draw-proof-summary strong { display: block; font-size: 1.4rem; color: #facc15; }
+.draw-proof-list { display: grid; gap: .85rem; }
+.draw-proof-card { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.035); }
+.draw-proof-card h3 { margin: 0 0 .3rem; }
+.draw-proof-grid { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: .6rem; margin-top: .75rem; }
+.draw-proof-grid span { border-radius: .85rem; padding: .65rem; background: rgba(15,23,42,.45); }
+.draw-proof-grid b { display: block; color: #facc15; font-size: .78rem; margin-bottom: .2rem; }
+.draw-proof-notes { margin-top: .75rem; padding: .75rem; border-left: 3px solid #facc15; background: rgba(250,204,21,.08); border-radius: .6rem; }
+@media (max-width: 820px) { .draw-proof-card { flex-direction: column; } .draw-proof-grid { grid-template-columns: 1fr 1fr; } }

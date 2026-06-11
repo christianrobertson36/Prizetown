@@ -1542,6 +1542,48 @@ function SystemCheckPanel({ setMessage }) {
   </section>;
 }
 
+function DrawProofPanel({ drawResults = [], setMessage }) {
+  const rows = safeArray(drawResults).slice().sort((a, b) => new Date(b.created_at || b.draw_date || 0) - new Date(a.created_at || a.draw_date || 0));
+
+  function copySummary(r) {
+    const text = [
+      'Prizetown official final draw result',
+      'Competition: ' + (r.competition_title || r.title || 'Competition'),
+      'Winner: ' + (r.winner_name || 'Customer'),
+      'Ticket: #' + (r.ticket_number || 'N/A'),
+      'Draw method: ' + (r.draw_method || r.method || 'secure final draw'),
+      'Recorded: ' + (r.created_at ? fmtDate(r.created_at) : 'saved in Prizetown')
+    ].join(String.fromCharCode(10));
+    navigator.clipboard?.writeText(text);
+    setMessage('Draw proof summary copied.');
+  }
+
+  return <div className="panel draw-proof-panel">
+    <h1>Draw Proof / Audit</h1>
+    <p className="muted">Use this after a live draw to check the saved winner record and copy a simple public result summary for YouTube, Facebook or customer updates.</p>
+    <div className="draw-proof-summary">
+      <article><strong>{rows.length}</strong><span>Saved final draw records</span></article>
+      <article><strong>{rows.filter(r => r.ticket_number).length}</strong><span>Winner tickets recorded</span></article>
+      <article><strong>{rows[0]?.created_at ? fmtDate(rows[0].created_at) : 'No result yet'}</strong><span>Latest result</span></article>
+    </div>
+    {rows.length === 0 ? <div className="empty-state"><h3>No draw results saved yet</h3><p>Run a final draw first. The saved result will appear here for proof and admin audit checks.</p></div> : <div className="draw-proof-list">
+      {rows.map(r => <article className="draw-proof-card" key={r.id || String(r.competition_id || '') + '-' + String(r.ticket_number || '')}>
+        <div>
+          <h3>{r.competition_title || r.title || 'Competition'}</h3>
+          <p className="muted">Recorded: {r.created_at ? fmtDate(r.created_at) : 'saved'} - Method: {r.draw_method || r.method || 'secure final draw'}</p>
+          <div className="draw-proof-grid">
+            <span><b>Winner</b>{r.winner_name || 'Customer'}</span>
+            <span><b>Ticket</b>#{r.ticket_number || 'N/A'}</span>
+            <span><b>Entry ID</b>{r.entry_id || 'N/A'}</span>
+            <span><b>Competition ID</b>{r.competition_id || 'N/A'}</span>
+          </div>
+          {r.notes && <p className="draw-proof-notes">{r.notes}</p>}
+        </div>
+        <button type="button" className="secondary" onClick={() => copySummary(r)}>Copy summary</button>
+      </article>)}
+    </div>}
+  </div>;
+}
 function DrawControlRoom({ competitions = [], setPage, setMessage, reload }) {
   const now = Date.now();
   const rows = safeArray(competitions).filter(c => c.draw_at || c.auto_draw_enabled || c.status === 'closed').sort((a, b) => new Date(a.draw_at || 0) - new Date(b.draw_at || 0));
@@ -1953,7 +1995,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
       e.payment_status || '',
       e.created_at || ''
     ]);
-    const csv = [header, ...rows].map(r => r.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const csv = [header, ...rows].map(r => r.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')).join(String.fromCharCode(10));
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2280,7 +2322,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       ['BB1','BB1 launch outcode','outcode','TRUE','42000','17000','high','Example local starter zone'],
       ['PR7','PR7 outcode','outcode','TRUE','','','normal','Example future zone']
     ];
-    const csv = [headers, ...sampleRows].map(row => row.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...sampleRows].map(row => row.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')).join(String.fromCharCode(10));
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2411,7 +2453,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     try { setDrawResults(await api('/admin/draw-results')); } catch {}
     setMessage(`Loaded ${data.entries.length} eligible draw entries.`);
   }
-  function drawText() { return (drawData?.wheel_entries || []).join('\n'); }
+  function drawText() { return (drawData?.wheel_entries || []).join(String.fromCharCode(10)); }
   function downloadCustomersCsv() {
     if (filteredCustomerRows.length === 0) return setMessage('No customers to export.');
     const header = ['name','email','order_count','entry_count','free_entry_count','total_pence','last_activity'];
@@ -2438,7 +2480,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   function downloadDrawCsv() {
     if (!drawData) return setMessage('Load a draw list first.');
     const header = 'ticket_number,customer_name,customer_email,payment_status\n';
-    const lines = drawData.entries.map(e => [e.ticket_number, e.customer_name, e.customer_email, e.payment_status].map(v => `"${String(v || '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const lines = drawData.entries.map(e => [e.ticket_number, e.customer_name, e.customer_email, e.payment_status].map(v => `"${String(v || '').replaceAll('"', '""')}"`).join(',')).join(String.fromCharCode(10));
     const blob = new Blob([header + lines], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${slugify(drawData.competition.title)}-draw-entries.csv`; a.click(); URL.revokeObjectURL(url);
   }
@@ -2474,6 +2516,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       title: 'Draws',
       items: [
         moduleLiveDraw && ['draw-control', 'Draw Control Room', ListChecks],
+        moduleLiveDraw && ['draw-proof', 'Draw Proof', ListChecks],
         moduleLiveDraw && ['draws', 'Final draw', ListChecks],
         moduleInstantWins && ['instant-wins', 'Instant wins', Zap]
       ].filter(Boolean)
@@ -2576,6 +2619,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title}  -  ticket #{w.winning_ticket_number}  -  {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
         {activeTab === 'draw-control' && <DrawControlRoom competitions={competitions} setPage={setPage} setMessage={setMessage} reload={reload} />}
+        {activeTab === 'draw-proof' && <DrawProofPanel drawResults={drawResults} setMessage={setMessage} />}
 
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
@@ -2631,7 +2675,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Competition Setup', 'Use Competitions to view existing competitions. Use Add competition or Edit competition to set title, image, price, ticket limits, question, answer, rules, free-entry wording, draw date, status and postcode mode.'],
             ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
-            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. The broadcast screen now includes a holding/countdown view before the official wheel and winner reveal.'],
+            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Draw Proof after a draw to review the saved winner record and copy a public result summary. The broadcast screen includes a holding/countdown view before the official wheel and winner reveal.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
