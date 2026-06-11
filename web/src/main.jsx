@@ -529,6 +529,17 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
     : (settings.hero_text || 'Browse live prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.').replace(/postcode /ig, '').replace(/local /ig, '');
 
 
+  const liveCompetitions = safeArray(competitions).filter(c => c.status === 'active');
+  const nextDrawCompetition = liveCompetitions
+    .filter(c => c.draw_at)
+    .sort((a, b) => new Date(a.draw_at).getTime() - new Date(b.draw_at).getTime())[0];
+  const liveActivityStats = [
+    ['Live competitions', liveCompetitions.length || 0],
+    ['Tickets allocated', liveCompetitions.reduce((sum, c) => sum + Number(c.entries_sold || 0), 0)],
+    ['Instant wins claimed', safeArray(instantWinners).length || 0],
+    ['Next draw', nextDrawCompetition ? fmtDate(nextDrawCompetition.draw_at) : 'Coming soon']
+  ];
+
   const demoBaseTickets = useMemo(() => [
     { ticket_number: 1, customer_name: 'Alex' },
     { ticket_number: 2, customer_name: 'Sam' },
@@ -716,6 +727,21 @@ return <main>
     </section>
       </>
     )}
+
+    <section className="live-activity-strip">
+      <div className="live-activity-head">
+        <p className="eyebrow"><Ticket size={16} /> Live activity</p>
+        <h2>Prizetown is moving</h2>
+        <span>Recent activity and draw signals update as competitions grow.</span>
+      </div>
+      <div className="live-activity-grid">
+        {liveActivityStats.map(([label, value]) => <article key={label}>
+          <strong>{value}</strong>
+          <span>{label}</span>
+        </article>)}
+      </div>
+      <button type="button" className="secondary" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>View live competitions</button>
+    </section>
 
     <section id="competitions" className="competitions-anchor"><CompetitionScroller competitions={competitions} setSelected={openCompetition} /></section>
 

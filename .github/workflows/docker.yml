@@ -14,9 +14,9 @@ env:
   REGISTRY: ghcr.io
   OWNER: christianrobertson36
   API_IMAGE: prizetown-api
-  API_TAG: v128
+  API_TAG: v129
   WEB_IMAGE: prizetown-web
-  WEB_TAG: v128
+  WEB_TAG: v129
   VITE_API_URL: https://api.prizetown.co.uk
 
 jobs:
