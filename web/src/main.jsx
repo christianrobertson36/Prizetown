@@ -1332,7 +1332,17 @@ function DrawBroadcastPage({ setPage }) {
             <span><strong>Time:</strong> {drawTimeText}</span>
             <span><strong>Live:</strong> {liveTimeText}</span>
           </div>
-          <TrustedWheelDraw mode={mode} winner={displayWinner} tickets={tickets} rotation={rotation} label="PRIZETOWN FINAL DRAW" spinnerStyle={spinnerStyle} />
+          {mode === 'intro' ? <div className="broadcast-draw-intro">
+            <p className="eyebrow">Prizetown live draw</p>
+            <h2>{title}</h2>
+            <div className="broadcast-intro-grid">
+              <span><strong>Competition</strong>{competitionNumber}</span>
+              <span><strong>Draw mode</strong>{state?.draw_mode || 'Official draw'}</span>
+              <span><strong>Postcode / zone</strong>{state?.postcode_zone_label || state?.postcode_zone || state?.postcode_mode || 'Open competition'}</span>
+              <span><strong>Eligible tickets</strong>{eligible}</span>
+            </div>
+            <p className="broadcast-intro-note">The wheel will start shortly. Good luck everyone.</p>
+          </div> : <TrustedWheelDraw mode={mode} winner={displayWinner} tickets={tickets} rotation={rotation} label="PRIZETOWN FINAL DRAW" spinnerStyle={spinnerStyle} />}
         </div>
 
         <aside className="broadcast-info">
@@ -1801,6 +1811,11 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   const [rotation, setRotation] = useState(0);
   const [drawTime, setDrawTime] = useState(new Date());
   const [spinSoundUrl, setSpinSoundUrl] = useState(localStorage.getItem('prizetownSpinSoundUrl') || '');
+  const [introSoundUrl, setIntroSoundUrl] = useState(localStorage.getItem('prizetownIntroSoundUrl') || '');
+  const [winnerSoundUrl, setWinnerSoundUrl] = useState(localStorage.getItem('prizetownWinnerSoundUrl') || '');
+  const [drawIntroEnabled, setDrawIntroEnabled] = useState(() => localStorage.getItem('prizetownDrawIntroEnabled') !== 'false');
+  const [winnerSoundEnabled, setWinnerSoundEnabled] = useState(() => localStorage.getItem('prizetownWinnerSoundEnabled') !== 'false');
+  const [introDurationSeconds, setIntroDurationSeconds] = useState(() => localStorage.getItem('prizetownIntroDurationSeconds') || '6');
   const arnoldModuleEnabled = featureEnabled(settings, 'module_arnold_enabled');
   const [showArnold, setShowArnold] = useState(() => {
     const saved = localStorage.getItem('prizetown_draw_show_arnold');
@@ -1809,6 +1824,8 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   const [spinSpeed, setSpinSpeed] = useState(() => localStorage.getItem('prizetown_draw_spin_speed') || 'standard');
   const [spinnerStyle, setSpinnerStyle] = useState(() => localStorage.getItem('prizetown_spinner_style') || settings.spinner_style || 'classic');
   const spinAudioRef = useRef(null);
+  const introAudioRef = useRef(null);
+  const winnerAudioRef = useRef(null);
 
   const competitionList = safeArray(competitions);
   const entryList = safeArray(entries);
@@ -1997,6 +2014,47 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     setMessage(next ? 'Arnold host shown on draw screen.' : 'Arnold host hidden for cleaner text/overlay.');
   }
 
+  async function uploadDrawSound(e, setter, storageKey, label) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      setMessage('Please choose an audio file such as MP3, WAV, M4A or OGG.');
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setter(localUrl);
+    localStorage.setItem(storageKey, localUrl);
+    setMessage(`${label} selected: ${file.name}`);
+
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const uploaded = await api('/admin/upload', { method: 'POST', body });
+      if (uploaded?.url) {
+        const finalUrl = imageUrl(uploaded.url);
+        setter(finalUrl);
+        localStorage.setItem(storageKey, finalUrl);
+        setMessage(`${label} uploaded: ${file.name}`);
+      }
+    } catch (err) {
+      console.warn(label + ' upload not available, using local browser sound for this device', err);
+    }
+  }
+
+  async function playOneShotAudio(ref, url, label) {
+    const audio = ref.current;
+    if (!audio || !url) return;
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.loop = false;
+      await audio.play();
+    } catch (err) {
+      console.warn(label + ' could not auto-play', err);
+    }
+  }
+
   async function uploadSpinSound(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2100,6 +2158,30 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     const spinMs = speedMs();
     const spinId = `${testMode ? 'test' : (competitionId || 'demo')}-${Date.now()}-${picked.ticket_number}`;
     const revealAt = new Date(Date.now() + spinMs + 700).toISOString();
+    const introMs = drawIntroEnabled ? Math.max(3, Math.min(12, Number(introDurationSeconds) || 6)) * 1000 : 0;
+    const drawModeLabel = testMode ? 'Test draw' : competition?.auto_draw_enabled ? 'Automatic scheduled draw' : 'Official manual draw';
+    const postcodeLabel = competition?.postcode_zone_label || competition?.postcode_zone || competition?.postcode_mode || competition?.zone_codes || 'Open competition';
+
+    if (introMs > 0) {
+      await publishBroadcastState({
+        ...broadcastBase(wheelTickets, 'intro', null, {
+          winner: null,
+          locked_ticket_number: '',
+          target_rotation: 0,
+          draw_method: secureMethod,
+          draw_mode: drawModeLabel,
+          postcode_zone_label: postcodeLabel,
+          intro_sound_url: introSoundUrl,
+          spin_sound_url: spinSoundUrl,
+          winner_sound_url: winnerSoundUrl
+        }),
+        eligible_count: officialRows.length,
+        visual_tickets: wheelTickets
+      });
+      await playOneShotAudio(introAudioRef, introSoundUrl, 'Intro sound');
+      setMessage(`Draw intro started: ${competition?.title || 'competition'} (${drawModeLabel}).`);
+      await new Promise(resolve => setTimeout(resolve, introMs));
+    }
 
     setWinner(null);
     setSpinning(true);
@@ -2112,7 +2194,12 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         reveal_at: revealAt,
         locked_ticket_number: picked.ticket_number,
         target_rotation: targetRotation,
-        draw_method: secureMethod
+        draw_method: secureMethod,
+        draw_mode: drawModeLabel,
+        postcode_zone_label: postcodeLabel,
+        intro_sound_url: introSoundUrl,
+        spin_sound_url: spinSoundUrl,
+        winner_sound_url: winnerSoundUrl
       }),
       eligible_count: officialRows.length,
       visual_tickets: wheelTickets
@@ -2127,13 +2214,19 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
           reveal_at: new Date(Date.now() - 1000).toISOString(),
           locked_ticket_number: picked.ticket_number,
           target_rotation: targetRotation,
-          draw_method: secureMethod
+        draw_method: secureMethod,
+        draw_mode: drawModeLabel,
+        postcode_zone_label: postcodeLabel,
+        intro_sound_url: introSoundUrl,
+        spin_sound_url: spinSoundUrl,
+        winner_sound_url: winnerSoundUrl
         }),
         eligible_count: officialRows.length,
         visual_tickets: wheelTickets
       });
       setMessage(`${testMode ? 'Test spin complete' : 'Winner selected securely'}: ticket #${picked.ticket_number} - ${finalWinner.customer_name || finalWinner.email || 'Customer'} (${spinSpeed} speed).`);
       stopSpinSound();
+      if (winnerSoundEnabled) playOneShotAudio(winnerAudioRef, winnerSoundUrl, 'Winner sound');
     }, spinMs + 700);
   }
 
@@ -2160,7 +2253,10 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     URL.revokeObjectURL(url);
   }
 
-  return <section className="panel draw-room"><audio ref={spinAudioRef} src={spinSoundUrl || undefined} preload="auto" />
+  return <section className="panel draw-room">
+    <audio ref={introAudioRef} src={introSoundUrl || undefined} preload="auto" />
+    <audio ref={spinAudioRef} src={spinSoundUrl || undefined} preload="auto" />
+    <audio ref={winnerAudioRef} src={winnerSoundUrl || undefined} preload="auto" />
     {arnoldModuleEnabled && showArnold && <div className="draw-arnold-row">
       <ArnoldHost
         stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
@@ -2203,8 +2299,21 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
       <button className="secondary" onClick={openBroadcastScreen}>Open Live Draw Window</button>
       {arnoldModuleEnabled && <button className={showArnold ? 'primary arnold-toggle-on' : 'secondary'} type="button" onClick={toggleArnold}>{showArnold ? 'Arnold On' : 'Arnold Off'}</button>}
       <button className="secondary" onClick={csvDownload} disabled={entryList.length === 0}>Download entries CSV</button>
+      <label className="sound-upload-button">Upload intro sound<input type="file" accept="audio/*" onChange={e => uploadDrawSound(e, setIntroSoundUrl, 'prizetownIntroSoundUrl', 'Intro sound')} /></label>
       <label className="sound-upload-button">Upload spin sound<input type="file" accept="audio/*" onChange={uploadSpinSound} /></label>
-      {spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove sound</button>}
+      <label className="sound-upload-button">Upload winner sound<input type="file" accept="audio/*" onChange={e => uploadDrawSound(e, setWinnerSoundUrl, 'prizetownWinnerSoundUrl', 'Winner sound')} /></label>
+      {spinSoundUrl && <button className="secondary" type="button" onClick={() => { stopSpinSound(); setSpinSoundUrl(''); localStorage.removeItem('prizetownSpinSoundUrl'); setMessage('Spin sound removed.'); }}>Remove spin sound</button>}
+    </div>
+
+    <div className="draw-sound-options">
+      <label><input type="checkbox" checked={drawIntroEnabled} onChange={e => { setDrawIntroEnabled(e.target.checked); localStorage.setItem('prizetownDrawIntroEnabled', String(e.target.checked)); }} /> Show intro before draw</label>
+      <label><input type="checkbox" checked={winnerSoundEnabled} onChange={e => { setWinnerSoundEnabled(e.target.checked); localStorage.setItem('prizetownWinnerSoundEnabled', String(e.target.checked)); }} /> Play winner sound after spin</label>
+      <label>Intro seconds<input type="number" min="3" max="12" value={introDurationSeconds} onChange={e => { setIntroDurationSeconds(e.target.value); localStorage.setItem('prizetownIntroDurationSeconds', e.target.value); }} /></label>
+      <div className="draw-sound-status">
+        <span>Intro: {introSoundUrl ? 'set' : 'not set'}</span>
+        <span>Spin: {spinSoundUrl ? 'set' : 'not set'}</span>
+        <span>Winner: {winnerSoundUrl ? 'set' : 'not set'}</span>
+      </div>
     </div>
 
     <details className="draw-testing-tools">
@@ -2847,6 +2956,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
             ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Stream Helper to save YouTube links and copy OBS setup notes. Use Draw Proof after a draw to review the saved winner record and copy a public result summary.'],
+            ['Draw Intro & Sounds', 'Use Final draw to upload intro, spin and winner sounds. The intro screen identifies the competition, postcode zone and draw mode before the spinner starts, which helps when running several automatic draws one after another.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],

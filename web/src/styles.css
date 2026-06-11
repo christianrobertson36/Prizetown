@@ -6089,3 +6089,101 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     color: #facc15 !important;
   }
 }
+
+/* v179: Draw intro and sound options */
+.broadcast-draw-intro {
+  width: min(760px, 96%);
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid rgba(250,204,21,.28);
+  border-radius: 1.6rem;
+  background: radial-gradient(circle at 50% 0%, rgba(250,204,21,.22), transparent 55%), rgba(2,6,23,.78);
+  box-shadow: 0 1.5rem 4rem rgba(0,0,0,.35);
+  text-align: center;
+}
+
+.broadcast-draw-intro h2 {
+  margin: .35rem 0 1rem;
+  font-size: clamp(1.8rem, 5vw, 4rem);
+  line-height: 1;
+}
+
+.broadcast-intro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.broadcast-intro-grid span {
+  display: grid;
+  gap: .2rem;
+  padding: .85rem;
+  border-radius: 1rem;
+  background: rgba(0,0,0,.45);
+  color: white;
+  font-weight: 850;
+}
+
+.broadcast-intro-grid strong {
+  color: #facc15;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.broadcast-intro-note {
+  color: rgba(255,255,255,.78);
+  font-weight: 800;
+}
+
+.draw-sound-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  align-items: end;
+  margin: .85rem 0;
+  padding: .85rem;
+  border: 1px solid rgba(250,204,21,.16);
+  border-radius: 1rem;
+  background: rgba(15,23,42,.45);
+}
+
+.draw-sound-options label {
+  margin: 0;
+}
+
+.draw-sound-options input[type="number"] {
+  margin-top: .35rem;
+}
+
+.draw-sound-status {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  color: rgba(255,255,255,.72);
+  font-size: .85rem;
+}
+
+.draw-sound-status span {
+  padding: .35rem .55rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,.28);
+}
+
+@media (max-width: 720px) {
+  .broadcast-intro-grid,
+  .draw-sound-options {
+    grid-template-columns: 1fr;
+  }
+
+  body.broadcast-body .broadcast-draw-intro {
+    width: min(100%, 360px);
+    padding: .85rem;
+  }
+
+  body.broadcast-body .broadcast-draw-intro h2 {
+    font-size: 1.55rem;
+  }
+}
