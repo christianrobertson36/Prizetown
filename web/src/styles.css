@@ -5310,3 +5310,29 @@ main {
     width: 100%;
   }
 }
+
+
+/* v140 editable continuous ticker */
+.marquee-track {
+  gap: 3rem;
+  padding-left: 0;
+  animation: prizetownMarquee 34s linear infinite;
+  will-change: transform;
+}
+
+.marquee-track:hover {
+  animation-play-state: running;
+}
+
+.marquee-track span {
+  flex: 0 0 auto;
+}
+
+@keyframes prizetownMarqueeSmooth {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+
+.marquee-track {
+  animation-name: prizetownMarqueeSmooth;
+}

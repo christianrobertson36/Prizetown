@@ -191,6 +191,7 @@ const defaultSettings = {
   hero_title: 'Win big prizes with Prizetown',
   hero_text: 'Browse live postcode prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.',
   footer_text: 'Prizetown runs postcode-based prize competitions with clear entry limits, responsible play guidance and transparent draw information.',
+  welcome_marquee_text: 'Welcome to Prizetown! | New competitions added regularly | Instant wins and final draw prizes | Enter responsibly and good luck',
   free_entry_global: `Free Postal Entry Route
 
 Where a competition offers free postal entry, postal entries must be submitted before the stated deadline and must include the required details clearly and legibly.
@@ -440,8 +441,15 @@ function App() {
     return <DrawBroadcastPage setPage={setPage} />;
   }
 
+  const welcomeMarqueeText = settings.welcome_marquee_text || defaultSettings.welcome_marquee_text;
+  const welcomeMarqueeItems = String(welcomeMarqueeText || '')
+    .split('|')
+    .map(s => s.trim())
+    .filter(Boolean);
+  const welcomeMarqueeLoop = welcomeMarqueeItems.length ? [...welcomeMarqueeItems, ...welcomeMarqueeItems, ...welcomeMarqueeItems] : [];
+
   return <div style={brandStyle(settings)}>
-    <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
+    <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track">{welcomeMarqueeLoop.map((item, index) => <span key={index}>{item}</span>)}</div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
       <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('how-it-works')}>How it works</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
@@ -2680,6 +2688,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           </div>
           <label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label>
           <label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label>
+          <label>Top scrolling ticker<textarea rows="3" value={settingsForm.welcome_marquee_text || ''} onChange={e => setSettingsForm({ ...settingsForm, welcome_marquee_text: e.target.value })} placeholder="Welcome to Prizetown! | New competitions added regularly | Enter responsibly" /></label>
+          <p className="muted">Separate ticker messages with a vertical bar: |</p>
           <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
           <button className="primary full">Save site settings</button>
         </form>}
