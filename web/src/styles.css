@@ -6264,3 +6264,10 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v182: Trusted draw time sync */
+.broadcast-footer .sync-warning {
+  font-weight: 800;
+  text-transform: uppercase;
+}

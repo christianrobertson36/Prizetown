@@ -1229,7 +1229,8 @@ function DrawBroadcastPage({ setPage }) {
   const [rotation, setRotation] = useState(0);
   const [lastSpinKey, setLastSpinKey] = useState('');
   
-  const introBroadcastAudioRef = useRef(null);
+    const [serverSync, setServerSync] = useState({ serverNowMs: 0, localReceivedMs: 0, timeZone: 'Europe/London', source: 'Prizetown server' });
+const introBroadcastAudioRef = useRef(null);
   const spinBroadcastAudioRef = useRef(null);
   const winnerBroadcastAudioRef = useRef(null);
   const lastBroadcastSoundKeyRef = useRef('');
@@ -1254,7 +1255,15 @@ const params = new URLSearchParams(window.location.search);
         const data = await api('/draw/broadcast-state');
         if (!active) return;
         setState(data);
-        const spinKey = data.spin_id || `${data.competition_id || ''}-${data.updated_at || ''}`;
+                if (data.server_now) {
+          setServerSync({
+            serverNowMs: new Date(data.server_now).getTime(),
+            localReceivedMs: Date.now(),
+            timeZone: data.server_time_zone || 'Europe/London',
+            source: data.time_source || 'Prizetown server'
+          });
+        }
+const spinKey = data.spin_id || `${data.competition_id || ''}-${data.updated_at || ''}`;
         if (data.mode === 'spinning' && spinKey !== lastSpinKey) {
           setLastSpinKey(spinKey);
           setRotation(Number(data.target_rotation || 0));
@@ -1329,16 +1338,20 @@ const params = new URLSearchParams(window.location.search);
   }, [state?.mode, state?.spin_id, state?.intro_sound_url, state?.spin_sound_url, state?.winner_sound_url]);
 
   const mode = winnerReady ? 'winner' : (state?.mode || 'idle');
-  const title = state?.competition_title || 'Waiting for competition';
+    const trustedNow = serverSync.serverNowMs ? new Date(serverSync.serverNowMs + Math.max(0, now.getTime() - serverSync.localReceivedMs)) : now;
+  const syncAgeSeconds = serverSync.localReceivedMs ? Math.max(0, Math.floor((now.getTime() - serverSync.localReceivedMs) / 1000)) : null;
+  const syncStale = syncAgeSeconds !== null && syncAgeSeconds > 15;
+  const syncStatusText = syncAgeSeconds === null ? 'Waiting for server sync' : syncStale ? `Sync delayed - last server sync ${syncAgeSeconds}s ago` : `Server synced ${syncAgeSeconds}s ago`;
+const title = state?.competition_title || 'Waiting for competition';
   const competitionNumber = state?.competition_number || '—';
   const eligible = state?.eligible_count || 0;
   const capacity = state?.ticket_capacity || 0;
   const drawDateText = state?.draw_date ? new Date(state.draw_date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : 'Draw date not set';
   const drawTimeText = state?.draw_date ? new Date(state.draw_date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Time not set';
-  const liveDateText = now.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-  const liveTimeText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const liveDateText = trustedNow.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', timeZone: serverSync.timeZone || 'Europe/London' });
+  const liveTimeText = trustedNow.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: serverSync.timeZone || 'Europe/London' });
   const drawAtMs = state?.draw_date ? new Date(state.draw_date).getTime() : 0;
-  const countdownMs = drawAtMs ? Math.max(0, drawAtMs - now.getTime()) : 0;
+  const countdownMs = drawAtMs ? Math.max(0, drawAtMs - trustedNow.getTime()) : 0;
   const countdownHours = Math.floor(countdownMs / 3600000);
   const countdownMinutes = Math.floor((countdownMs % 3600000) / 60000);
   const countdownSeconds = Math.floor((countdownMs % 60000) / 1000);
@@ -1414,7 +1427,8 @@ const params = new URLSearchParams(window.location.search);
       <footer className="broadcast-footer">
         <span>Official Prizetown live draw</span>
         <span><strong>Live:</strong> {liveTimeText}</span>
-        <span>{state?.updated_at ? `Last sync ${new Date(state.updated_at).toLocaleTimeString()}` : 'Waiting for sync'}</span>
+        <span><strong>Time source:</strong> {serverSync.source} · {serverSync.timeZone}</span>
+        <span className={syncStale ? 'sync-warning' : ''}>{syncStatusText}</span>
       </footer>
     </section>
   </main>;
@@ -3242,6 +3256,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Stream Helper to save YouTube links and copy OBS setup notes. Use Draw Proof after a draw to review the saved winner record and copy a public result summary.'],
             ['Draw Intro & Sounds', 'Use Final draw to upload intro, spin and winner sounds. The intro screen identifies the competition, postcode zone and draw mode before the spinner starts, which helps when running several automatic draws one after another.'],
             ['Draw Test Lab', 'Use Draws > Test Lab to generate fake sample tickets and run a safe test intro, spin and winner reveal on the broadcast screen. It can also queue multiple same-day fake competitions to test OBS, sounds and back-to-back draw performance. It does not create real orders, entries or winners.'],
+            ['Trusted Draw Time', 'The live draw broadcast uses Prizetown server time in the Europe/London timezone, not the viewer device clock. The footer shows the time source and sync age so viewers can see the clock is server-backed.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],

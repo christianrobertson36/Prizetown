@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v181' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v182' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v181' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v182' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v181',
+    version: 'v182',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -981,9 +981,24 @@ let drawBroadcastState = {
   updated_at: new Date().toISOString()
 };
 
+function trustedBroadcastTime() {
+  return {
+    server_now: new Date().toISOString(),
+    server_time_zone: 'Europe/London',
+    time_source: 'Prizetown server'
+  };
+}
+
+function broadcastStateWithTrustedTime() {
+  return {
+    ...drawBroadcastState,
+    ...trustedBroadcastTime()
+  };
+}
+
 app.get('/draw/broadcast-state', async (_req, res) => {
   await runDueAutoDraws();
-  res.json(drawBroadcastState);
+  res.json(broadcastStateWithTrustedTime());
 });
 
 app.post('/admin/draw/broadcast-state', auth('admin'), (req, res) => {
@@ -997,7 +1012,7 @@ app.post('/admin/draw/broadcast-state', auth('admin'), (req, res) => {
       show_arnold: body.show_arnold !== false,
       updated_at: new Date().toISOString()
     };
-    res.json(drawBroadcastState);
+    res.json(broadcastStateWithTrustedTime());
   } catch (err) {
     console.error('Broadcast state update failed', err);
     res.status(400).json({ error: err.message || 'Broadcast state update failed' });
@@ -1023,7 +1038,7 @@ app.post('/admin/draw/broadcast-reset', auth('admin'), (_req, res) => {
     show_arnold: true,
     updated_at: new Date().toISOString()
   };
-  res.json(drawBroadcastState);
+  res.json(broadcastStateWithTrustedTime());
 });
 
 
@@ -2027,7 +2042,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v181 draw test lab queue and broadcast sounds)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v182 trusted draw time sync)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
