@@ -2393,6 +2393,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     {
       title: 'Tools',
       items: [
+        ['help-guide', 'Help guide', ListChecks],
         ['system-check', 'System check', Shield],
         ['email-test', 'Email test', Shield],
         ['audit', 'Audit log', ListChecks]
