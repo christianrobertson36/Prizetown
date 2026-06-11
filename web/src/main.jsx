@@ -1472,7 +1472,7 @@ function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMes
       <button type="submit" className="primary">Save stream settings</button>
       <button type="button" className="secondary" onClick={() => copyText('YouTube description', description)}>Copy YouTube description</button>
       <button type="button" className="secondary" onClick={() => copyText('OBS checklist', checklist)}>Copy OBS checklist</button>
-      {youtubeUrl && <button type="button" className="secondary" onClick={() => { window.location.href = youtubeUrl; }}>Open YouTube live</button>}
+      {youtubeUrl && <button type="button" className="secondary" onClick={() => copyText('YouTube live URL', youtubeUrl)}>Copy YouTube live URL</button>}
     </div>
     <div className="stream-helper-cards">
       <article><strong>OBS Browser Source</strong><span>{obsUrl}</span></article>
@@ -2195,6 +2195,11 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
 
+  function openAdminTab(key) {
+    setActiveTab(key);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
 
   const liveCount = competitions.filter(c => c.status === 'active').length;
   const totalTickets = entries.length;
@@ -2237,10 +2242,10 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const instantClaimed = instantWins.filter(w => w.status === 'claimed').length;
 
   function updateField(key, value) { const next = { ...form, [key]: value }; if (key === 'title' && !editing) next.slug = slugify(value); setForm(next); }
-  async function save(e) { e.preventDefault(); try { await api(editing ? `/admin/competitions/${editing}` : '/admin/competitions', { method: editing ? 'PATCH' : 'POST', body: JSON.stringify(form) }); setMessage(editing ? 'Competition updated.' : 'Competition added.'); setForm(empty); setEditing(null); setActiveTab('competitions'); reload(); } catch (err) { setMessage(err.message); } }
+  async function save(e) { e.preventDefault(); try { await api(editing ? `/admin/competitions/${editing}` : '/admin/competitions', { method: editing ? 'PATCH' : 'POST', body: JSON.stringify(form) }); setMessage(editing ? 'Competition updated.' : 'Competition added.'); setForm(empty); setEditing(null); openAdminTab('competitions'); reload(); } catch (err) { setMessage(err.message); } }
   async function uploadFile(e) { const file = e.target.files?.[0]; if (!file) return; const body = new FormData(); body.append('file', file); try { const data = await api('/admin/upload', { method: 'POST', body }); setForm({ ...form, image_url: data.url }); } catch (err) { setMessage(err.message); } }
   async function remove(id) { if (!confirm('Delete this competition?')) return; await api(`/admin/competitions/${id}`, { method: 'DELETE' }); setMessage('Competition deleted.'); reload(); }
-  function edit(c) { setEditing(c.id); setForm({ ...c, draw_at: c.draw_at ? c.draw_at.slice(0, 16) : '', closes_at: c.closes_at ? c.closes_at.slice(0, 16) : '' }); setActiveTab('competition-form'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function edit(c) { setEditing(c.id); setForm({ ...c, draw_at: c.draw_at ? c.draw_at.slice(0, 16) : '', closes_at: c.closes_at ? c.closes_at.slice(0, 16) : '' }); openAdminTab('competition-form'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   async function saveSettings(e) { e.preventDefault(); try { const saved = await api('/admin/settings', { method: 'PATCH', body: JSON.stringify(settingsForm) }); setSettings({ ...defaultSettings, ...saved }); setMessage('Site settings saved.'); } catch (err) { setMessage(err.message); } }
 
   async function loadEmailStatus() {
@@ -2449,7 +2454,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     };
     setProfitForm(next);
     setProfitPlan(localProfitPlan(next));
-    setActiveTab('profit-planner');
+    openAdminTab('profit-planner');
   }
 
   async function savePostcodeZone(e) {
@@ -2612,7 +2617,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           {menuGroups.map(group => <details className="admin-menu-group" key={group.title} open>
             <summary>{group.title}</summary>
             <div className="admin-tabs">
-              {group.items.map(([key, label, Icon]) => <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => setActiveTab(key)}><Icon size={17} /> {label}</button>)}
+              {group.items.map(([key, label, Icon]) => <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => openAdminTab(key)}><Icon size={17} /> {label}</button>)}
             </div>
           </details>)}
         </div>
@@ -2638,7 +2643,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'overview' && <div className="panel"><h1>Dashboard overview</h1><div className="stat-grid"><div><strong>{competitions.length}</strong><span>Total competitions</span></div><div><strong>{liveCount}</strong><span>Live competitions</span></div><div><strong>{totalTickets}</strong><span>Tickets allocated</span></div><div><strong>{money(revenue)}</strong><span>Test order value</span></div><div><strong>{instantClaimed}/{instantWins.length}</strong><span>Instant wins claimed</span></div></div><div className="admin-split"><div><h2>Recent orders</h2>{orders.slice(0, 8).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email}  -  {money(o.total_pence)}  -  {o.entry_count} entries  -  {o.status}</p></div></div>)}</div><div><h2>Recent entries</h2>{entries.slice(0, 8).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email}  -  ticket #{e.ticket_number}  -  {e.payment_status}</p></div></div>)}</div></div></div>}
 
-        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Add starter competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status}  -  {c.entries_sold || 0}/{c.max_tickets} tickets  -  postcode: {assignmentLabel(c.id)}  -  instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0}  -  closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
+        {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); openAdminTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Add starter competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status}  -  {c.entries_sold || 0}/{c.max_tickets} tickets  -  postcode: {assignmentLabel(c.id)}  -  instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0}  -  closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
 
         {activeTab === 'competition-form' && <form className="panel" onSubmit={save}><div className="row"><h1>{editing ? 'Edit competition' : 'Add competition'}</h1>{editing && <button type="button" className="secondary" onClick={() => { setEditing(null); setForm(empty); }}>Cancel edit</button>}</div><label>Title<input value={form.title} onChange={e => updateField('title', e.target.value)} required /></label><label>Slug<input value={form.slug} onChange={e => updateField('slug', e.target.value)} required /></label><label>Description<textarea value={form.description} onChange={e => updateField('description', e.target.value)} /></label><div className="two"><label>Price pence<input type="number" value={form.ticket_price_pence} onChange={e => updateField('ticket_price_pence', Number(e.target.value))} /></label><label>Max tickets<input type="number" value={form.max_tickets} onChange={e => updateField('max_tickets', Number(e.target.value))} /></label></div><div className="two"><label>Max per user<input type="number" value={form.max_per_user} onChange={e => updateField('max_per_user', Number(e.target.value))} /></label><label>Status<select value={form.status} onChange={e => updateField('status', e.target.value)}><option>draft</option><option>active</option><option>closed</option></select></label></div><label>Postcode availability<select value={form.postcode_mode || 'all'} onChange={e => updateField('postcode_mode', e.target.value)}><option value="all">All postcodes</option><option value="selected">Selected postcode zones</option></select><small className="muted">Use Assign Postcodes for selecting the exact zones.</small></label>
             <div className="planner-inline">
