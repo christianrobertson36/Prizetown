@@ -5139,3 +5139,70 @@ body {
     width: 100%;
   }
 }
+
+
+/* v137 homepage cleanup */
+main {
+  gap: 1rem;
+}
+
+.community-proof-section,
+.live-activity-strip,
+.instant-winner-showcase,
+.pwa-install-strip,
+.footer-pre-cta {
+  margin-top: clamp(.85rem, 2vw, 1.25rem);
+  margin-bottom: clamp(.85rem, 2vw, 1.25rem);
+}
+
+.live-activity-strip,
+.pwa-install-strip,
+.footer-pre-cta {
+  border-radius: 1.35rem;
+}
+
+.section-head h2,
+.live-activity-head h2,
+.footer-pre-cta h2 {
+  line-height: 1;
+}
+
+.ticker.winners-ticker {
+  margin: .85rem 0;
+  opacity: .96;
+}
+
+.instant-winner-showcase {
+  padding: clamp(1rem, 2.4vw, 1.4rem);
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.045);
+}
+
+@media (max-width: 760px) {
+  .welcome-marquee {
+    font-size: .84rem;
+  }
+
+  .hero {
+    gap: .85rem;
+  }
+
+  .community-proof-section,
+  .live-activity-strip,
+  .instant-winner-showcase,
+  .pwa-install-strip,
+  .footer-pre-cta {
+    margin-top: .75rem;
+    margin-bottom: .75rem;
+  }
+
+  .footer-pre-cta {
+    align-items: stretch;
+  }
+
+  .footer-pre-cta button {
+    width: 100%;
+    justify-content: center;
+  }
+}
