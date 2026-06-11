@@ -1372,7 +1372,7 @@ function BrandingPanel({ settingsForm, setSettingsForm, saveSettings, setMessage
     <label>Homepage eyebrow<input value={settingsForm.hero_eyebrow || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_eyebrow: e.target.value })} /></label>
     <label>Homepage title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label>
     <label>Homepage text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label>
-    <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
+    <label>Footer text<textarea rows="4" value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
 
     <div className="two">
       <label>Footer credit<input value={settingsForm.brand_footer_credit || ''} onChange={e => setSettingsForm({ ...settingsForm, brand_footer_credit: e.target.value })} /></label>
@@ -2681,16 +2681,16 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </form>}
 
         {activeTab === 'settings' && <form className="panel settings-panel" onSubmit={saveSettings}>
-          <h1>Site settings</h1><p className="muted">For logo, colours and homepage branding use Admin → Branding.</p>
+          <h1>Site settings</h1><p className="muted">Edit public homepage wording, support email, footer text and the top scrolling ticker here. For logo and colours use Admin → Branding.</p>
           <div className="two">
             <label>Site name<input value={settingsForm.site_name || ''} onChange={e => setSettingsForm({ ...settingsForm, site_name: e.target.value })} /></label>
             <label>Support email<input type="email" value={settingsForm.support_email || ''} onChange={e => setSettingsForm({ ...settingsForm, support_email: e.target.value })} /></label>
           </div>
-          <label>Hero title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label>
-          <label>Hero text<textarea value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label>
+          <label>Homepage title<input value={settingsForm.hero_title || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_title: e.target.value })} /></label>
+          <label>Homepage intro text<textarea rows="4" value={settingsForm.hero_text || ''} onChange={e => setSettingsForm({ ...settingsForm, hero_text: e.target.value })} /></label>
           <label>Top scrolling ticker<textarea rows="3" value={settingsForm.welcome_marquee_text || ''} onChange={e => setSettingsForm({ ...settingsForm, welcome_marquee_text: e.target.value })} placeholder="Welcome to Prizetown! | New competitions added regularly | Enter responsibly" /></label>
           <p className="muted">Separate ticker messages with a vertical bar: |</p>
-          <label>Footer text<textarea value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
+          <label>Footer text<textarea rows="4" value={settingsForm.footer_text || ''} onChange={e => setSettingsForm({ ...settingsForm, footer_text: e.target.value })} /></label>
           <button className="primary full">Save site settings</button>
         </form>}
 
