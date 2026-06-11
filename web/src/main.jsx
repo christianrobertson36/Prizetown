@@ -1228,7 +1228,12 @@ function DrawBroadcastPage({ setPage }) {
   const [now, setNow] = useState(new Date());
   const [rotation, setRotation] = useState(0);
   const [lastSpinKey, setLastSpinKey] = useState('');
-  const params = new URLSearchParams(window.location.search);
+  
+  const introBroadcastAudioRef = useRef(null);
+  const spinBroadcastAudioRef = useRef(null);
+  const winnerBroadcastAudioRef = useRef(null);
+  const lastBroadcastSoundKeyRef = useRef('');
+const params = new URLSearchParams(window.location.search);
   const transparent = params.get('transparent') === '1';
   const compact = params.get('compact') !== '0';
   const safeObs = params.get('safe') !== '0';
@@ -1285,6 +1290,44 @@ function DrawBroadcastPage({ setPage }) {
   const revealAt = state?.reveal_at ? new Date(state.reveal_at).getTime() : 0;
   const winnerReady = Boolean(winner) && (state?.mode === 'winner' || (revealAt > 0 && Date.now() >= revealAt));
   const displayWinner = winnerReady ? winner : null;
+  useEffect(() => {
+    const currentMode = state?.mode || 'idle';
+    const soundKey = `${state?.spin_id || ''}:${currentMode}`;
+    if (!state || lastBroadcastSoundKeyRef.current === soundKey) return;
+    lastBroadcastSoundKeyRef.current = soundKey;
+
+    const introAudio = introBroadcastAudioRef.current;
+    const spinAudio = spinBroadcastAudioRef.current;
+    const winnerAudio = winnerBroadcastAudioRef.current;
+
+    function stopAudio(audio) {
+      if (!audio) return;
+      try { audio.pause(); audio.currentTime = 0; } catch {}
+    }
+
+    async function playAudio(audio, loop = false) {
+      if (!audio || !audio.src) return;
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.loop = loop;
+        await audio.play();
+      } catch (err) {
+        console.warn('Broadcast sound could not autoplay. In OBS, enable browser source audio/interact once if needed.', err);
+      }
+    }
+
+    if (currentMode === 'intro') {
+      stopAudio(spinAudio); stopAudio(winnerAudio); playAudio(introAudio, false);
+    } else if (currentMode === 'spinning') {
+      stopAudio(introAudio); stopAudio(winnerAudio); playAudio(spinAudio, true);
+    } else if (currentMode === 'winner') {
+      stopAudio(introAudio); stopAudio(spinAudio); playAudio(winnerAudio, false);
+    } else {
+      stopAudio(introAudio); stopAudio(spinAudio); stopAudio(winnerAudio);
+    }
+  }, [state?.mode, state?.spin_id, state?.intro_sound_url, state?.spin_sound_url, state?.winner_sound_url]);
+
   const mode = winnerReady ? 'winner' : (state?.mode || 'idle');
   const title = state?.competition_title || 'Waiting for competition';
   const competitionNumber = state?.competition_number || '—';
@@ -1324,6 +1367,9 @@ function DrawBroadcastPage({ setPage }) {
         </div>
       </header>
 
+      <audio ref={introBroadcastAudioRef} src={state?.intro_sound_url || undefined} preload="auto" />
+      <audio ref={spinBroadcastAudioRef} src={state?.spin_sound_url || undefined} preload="auto" />
+      <audio ref={winnerBroadcastAudioRef} src={state?.winner_sound_url || undefined} preload="auto" />
       <div className="broadcast-main">
         {state?.show_arnold !== false && <ArnoldBroadcastHost mode={mode} winner={displayWinner} />}
         <div className="broadcast-wheel-wrap reveal-machine-wrap">
@@ -2384,18 +2430,33 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
 
 
 
+
 function DrawTestLab({ setMessage }) {
   const [ticketCount, setTicketCount] = useState(250);
+  const [queueCount, setQueueCount] = useState(3);
+  const [pauseSeconds, setPauseSeconds] = useState(5);
+  const [sameDayDraws, setSameDayDraws] = useState(true);
   const [postcodeLabel, setPostcodeLabel] = useState('BB1 / Blackburn sample zone');
   const [competitionTitle, setCompetitionTitle] = useState('TEST LAB - Postcode Sample Draw');
   const [introSeconds, setIntroSeconds] = useState(5);
   const [spinSeconds, setSpinSeconds] = useState(14);
   const [running, setRunning] = useState(false);
   const [lastWinner, setLastWinner] = useState(null);
+  const [queueStatus, setQueueStatus] = useState('Idle');
+  const stopQueueRef = useRef(false);
 
   const sampleNames = ['Alex B','Sam R','Jamie K','Taylor M','Morgan W','Casey L','Jordan P','Riley S','Charlie H','Harper G','Bailey T','Avery M','Cameron D','Finley R','Rowan C','Quinn A'];
+  const sampleZones = ['BB1 / Blackburn sample zone','BB2 / Blackburn south sample zone','BB3 / Darwen sample zone','BB4 / Rossendale sample zone','Open competition sample'];
 
-  function makeTickets(count = ticketCount) {
+  function soundUrls() {
+    return {
+      intro_sound_url: localStorage.getItem('prizetownIntroSoundUrl') || localStorage.getItem('prizetown_intro_sound_url') || '',
+      spin_sound_url: localStorage.getItem('prizetownSpinSoundUrl') || localStorage.getItem('prizetown_spin_sound_url') || '',
+      winner_sound_url: localStorage.getItem('prizetownWinnerSoundUrl') || localStorage.getItem('prizetown_winner_sound_url') || ''
+    };
+  }
+
+  function makeTickets(count = ticketCount, zone = postcodeLabel) {
     const total = Math.max(1, Math.min(5000, Number(count) || 250));
     return Array.from({ length: total }, (_, index) => {
       const n = index + 1;
@@ -2403,7 +2464,7 @@ function DrawTestLab({ setMessage }) {
         ticket_number: n,
         customer_name: sampleNames[index % sampleNames.length],
         email: `test${n}@prizetown.local`,
-        postcode_zone: postcodeLabel,
+        postcode_zone: zone,
         payment_status: 'test'
       };
     });
@@ -2422,51 +2483,77 @@ function DrawTestLab({ setMessage }) {
     await api('/admin/draw/broadcast-state', { method: 'POST', body: JSON.stringify(payload) });
   }
 
+  async function waitMs(ms) {
+    const step = 250;
+    let waited = 0;
+    while (waited < ms) {
+      if (stopQueueRef.current) return;
+      await new Promise(resolve => setTimeout(resolve, Math.min(step, ms - waited)));
+      waited += step;
+    }
+  }
+
+  async function runOneTestDraw(drawIndex = 1, totalDraws = 1) {
+    const zone = totalDraws > 1 ? sampleZones[(drawIndex - 1) % sampleZones.length] : postcodeLabel;
+    const rows = makeTickets(ticketCount, zone);
+    const winner = pickWinner(rows);
+    const visualTickets = buildWheelTickets(rows, winner);
+    const targetRotation = wheelRotationForWinner(visualTickets, winner.ticket_number, 0);
+    const drawBaseTime = new Date();
+    if (!sameDayDraws) drawBaseTime.setDate(drawBaseTime.getDate() + drawIndex - 1);
+    const nowIso = drawBaseTime.toISOString();
+    const spinId = `test-lab-${Date.now()}-${drawIndex}-${winner.ticket_number}`;
+    const safeIntroSeconds = Math.max(2, Math.min(15, Number(introSeconds) || 5));
+    const safeSpinSeconds = Math.max(5, Math.min(25, Number(spinSeconds) || 14));
+    const winnerPayload = { ticket_number: winner.ticket_number, customer_name: winner.customer_name, email: winner.email };
+    const title = totalDraws > 1 ? `${competitionTitle || 'TEST LAB DRAW'} ${drawIndex} of ${totalDraws}` : (competitionTitle || 'TEST LAB DRAW');
+
+    const base = {
+      competition_id: `TEST-LAB-${drawIndex}`,
+      competition_title: title,
+      competition_number: `#TEST-LAB-${drawIndex}`,
+      draw_date: nowIso,
+      ticket_capacity: rows.length,
+      eligible_count: rows.length,
+      visual_tickets: visualTickets,
+      spin_id: spinId,
+      draw_method: 'test_lab_queue_preview_only_no_real_winner_saved',
+      draw_mode: totalDraws > 1 ? `TEST LAB QUEUE - draw ${drawIndex} of ${totalDraws}` : 'TEST LAB - not a real draw',
+      postcode_zone_label: zone,
+      show_arnold: false,
+      spinner_style: localStorage.getItem('prizetown_spinner_style') || 'classic',
+      queue_current: drawIndex,
+      queue_total: totalDraws,
+      queue_next_title: drawIndex < totalDraws ? `${competitionTitle || 'TEST LAB DRAW'} ${drawIndex + 1} of ${totalDraws}` : '',
+      ...soundUrls()
+    };
+
+    await publish({ ...base, mode: 'intro', winner: null, reveal_at: '', locked_ticket_number: '', target_rotation: 0 });
+    setQueueStatus(`Intro: draw ${drawIndex} of ${totalDraws}`);
+    setMessage(`Test Lab queue intro sent: draw ${drawIndex} of ${totalDraws}.`);
+    await waitMs(safeIntroSeconds * 1000);
+    if (stopQueueRef.current) return winner;
+
+    await publish({ ...base, mode: 'spinning', winner: winnerPayload, reveal_at: new Date(Date.now() + safeSpinSeconds * 1000).toISOString(), locked_ticket_number: winner.ticket_number, target_rotation: targetRotation });
+    setQueueStatus(`Spinning: draw ${drawIndex} of ${totalDraws}`);
+    await waitMs(safeSpinSeconds * 1000 + 700);
+    if (stopQueueRef.current) return winner;
+
+    await publish({ ...base, mode: 'winner', winner: winnerPayload, reveal_at: new Date().toISOString(), locked_ticket_number: winner.ticket_number, target_rotation: targetRotation });
+    setLastWinner(winner);
+    setQueueStatus(`Winner: draw ${drawIndex} of ${totalDraws} - ticket #${winner.ticket_number}`);
+    setMessage(`Test Lab draw ${drawIndex} complete: sample ticket #${winner.ticket_number} - ${winner.customer_name}. No real winner was saved.`);
+    return winner;
+  }
+
   async function runTestLab() {
     if (running) return;
     setRunning(true);
+    stopQueueRef.current = false;
     setLastWinner(null);
-
     try {
-      const rows = makeTickets();
-      const winner = pickWinner(rows);
-      const visualTickets = buildWheelTickets(rows, winner);
-      const targetRotation = wheelRotationForWinner(visualTickets, winner.ticket_number, 0);
-      const nowIso = new Date().toISOString();
-      const spinId = `test-lab-${Date.now()}-${winner.ticket_number}`;
-      const safeIntroSeconds = Math.max(2, Math.min(15, Number(introSeconds) || 5));
-      const safeSpinSeconds = Math.max(5, Math.min(25, Number(spinSeconds) || 14));
-      const winnerPayload = { ticket_number: winner.ticket_number, customer_name: winner.customer_name, email: winner.email };
-
       openBroadcast();
-
-      const base = {
-        competition_id: 'TEST-LAB',
-        competition_title: competitionTitle || 'TEST LAB DRAW',
-        competition_number: '#TEST-LAB',
-        draw_date: nowIso,
-        ticket_capacity: rows.length,
-        eligible_count: rows.length,
-        visual_tickets: visualTickets,
-        spin_id: spinId,
-        draw_method: 'test_lab_preview_only_no_real_winner_saved',
-        draw_mode: 'TEST LAB - not a real draw',
-        postcode_zone_label: postcodeLabel || 'Open test competition',
-        show_arnold: false,
-        spinner_style: localStorage.getItem('prizetown_spinner_style') || 'classic'
-      };
-
-      await publish({ ...base, mode: 'intro', winner: null, reveal_at: '', locked_ticket_number: '', target_rotation: 0 });
-      setMessage(`Test Lab intro sent for ${rows.length} sample tickets.`);
-      await new Promise(resolve => setTimeout(resolve, safeIntroSeconds * 1000));
-
-      await publish({ ...base, mode: 'spinning', winner: winnerPayload, reveal_at: new Date(Date.now() + safeSpinSeconds * 1000).toISOString(), locked_ticket_number: winner.ticket_number, target_rotation: targetRotation });
-      setMessage(`Test Lab spinning: winning test ticket will be #${winner.ticket_number}.`);
-      await new Promise(resolve => setTimeout(resolve, safeSpinSeconds * 1000 + 700));
-
-      await publish({ ...base, mode: 'winner', winner: winnerPayload, reveal_at: new Date().toISOString(), locked_ticket_number: winner.ticket_number, target_rotation: targetRotation });
-      setLastWinner(winner);
-      setMessage(`Test Lab complete: sample ticket #${winner.ticket_number} - ${winner.customer_name}. No real winner was saved.`);
+      await runOneTestDraw(1, 1);
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -2474,8 +2561,44 @@ function DrawTestLab({ setMessage }) {
     }
   }
 
+  async function runQueue() {
+    if (running) return;
+    setRunning(true);
+    stopQueueRef.current = false;
+    setLastWinner(null);
+
+    try {
+      openBroadcast();
+      const total = Math.max(1, Math.min(10, Number(queueCount) || 3));
+      const pauseMs = Math.max(0, Math.min(30, Number(pauseSeconds) || 5)) * 1000;
+
+      for (let i = 1; i <= total; i += 1) {
+        if (stopQueueRef.current) break;
+        await runOneTestDraw(i, total);
+        if (i < total && !stopQueueRef.current) {
+          setQueueStatus(`Pause before draw ${i + 1} of ${total}`);
+          await waitMs(pauseMs);
+        }
+      }
+
+      if (stopQueueRef.current) {
+        setMessage('Test Lab queue stopped after the current step.');
+        setQueueStatus('Queue stopped');
+      } else {
+        setMessage(`Test Lab queue finished. ${total} fake draws were previewed only.`);
+        setQueueStatus('Queue finished');
+      }
+    } catch (err) {
+      setMessage(err.message);
+      setQueueStatus('Queue stopped with error');
+    } finally {
+      setRunning(false);
+    }
+  }
+
   async function resetTestLab() {
     try {
+      stopQueueRef.current = true;
       await publish({
         mode: 'idle',
         competition_id: null,
@@ -2496,6 +2619,7 @@ function DrawTestLab({ setMessage }) {
         show_arnold: false
       });
       setLastWinner(null);
+      setQueueStatus('Reset');
       setMessage('Test Lab broadcast reset.');
     } catch (err) {
       setMessage(err.message);
@@ -2504,28 +2628,38 @@ function DrawTestLab({ setMessage }) {
 
   return <div className="panel draw-test-lab-panel">
     <h1>Draw Test Lab</h1>
-    <p className="muted">Safely test the live draw screen with fake tickets, fake users and postcode labels. This does not create orders, entries or real winners.</p>
-    <div className="test-lab-warning">TEST MODE ONLY — no real winner is saved and no customer/order data is created.</div>
+    <p className="muted">Safely test the live draw screen with fake tickets, fake users, postcode labels, sounds and queued draws. This does not create orders, entries or real winners.</p>
+    <div className="test-lab-warning">TEST MODE ONLY - no real winner is saved and no customer/order data is created.</div>
 
     <div className="admin-grid two">
-      <label>Test competition title<input value={competitionTitle} onChange={e => setCompetitionTitle(e.target.value)} /></label>
-      <label>Postcode / zone label<input value={postcodeLabel} onChange={e => setPostcodeLabel(e.target.value)} /></label>
+      <label>Base competition title<input value={competitionTitle} onChange={e => setCompetitionTitle(e.target.value)} /></label>
+      <label>Single draw postcode / zone<input value={postcodeLabel} onChange={e => setPostcodeLabel(e.target.value)} /></label>
       <label>Sample tickets<select value={ticketCount} onChange={e => setTicketCount(Number(e.target.value))}><option value={50}>50 tickets</option><option value={250}>250 tickets</option><option value={1000}>1,000 tickets</option><option value={2500}>2,500 tickets</option><option value={5000}>5,000 tickets</option></select></label>
       <label>Intro seconds<input type="number" min="2" max="15" value={introSeconds} onChange={e => setIntroSeconds(e.target.value)} /></label>
       <label>Spin seconds<input type="number" min="5" max="25" value={spinSeconds} onChange={e => setSpinSeconds(e.target.value)} /></label>
+      <label>Queue draws<select value={queueCount} onChange={e => setQueueCount(Number(e.target.value))}><option value={1}>1 draw</option><option value={3}>3 draws</option><option value={5}>5 draws</option><option value={10}>10 draws</option></select></label>
+      <label>Pause between queued draws<input type="number" min="0" max="30" value={pauseSeconds} onChange={e => setPauseSeconds(e.target.value)} /></label>
+      <label className="checkbox-row"><input type="checkbox" checked={sameDayDraws} onChange={e => setSameDayDraws(e.target.checked)} /> Put queued draws on the same day</label>
     </div>
 
     <div className="test-lab-actions">
-      <button type="button" className="primary" onClick={runTestLab} disabled={running}>{running ? 'Running test...' : 'Run full test draw'}</button>
+      <button type="button" className="primary" onClick={runTestLab} disabled={running}>{running ? 'Running...' : 'Run one test draw'}</button>
+      <button type="button" className="primary" onClick={runQueue} disabled={running}>{running ? 'Queue running...' : 'Run queued test draws'}</button>
+      <button type="button" className="secondary" onClick={() => { stopQueueRef.current = true; setQueueStatus('Stop requested after current step'); }}>Stop queue</button>
       <button type="button" className="secondary" onClick={openBroadcast}>Open broadcast screen</button>
       <button type="button" className="secondary" onClick={resetTestLab}>Reset test broadcast</button>
     </div>
 
     <div className="test-lab-summary">
-      <article><strong>{ticketCount}</strong><span>sample tickets</span></article>
-      <article><strong>{postcodeLabel || 'Open'}</strong><span>postcode / zone</span></article>
+      <article><strong>{ticketCount}</strong><span>sample tickets per draw</span></article>
+      <article><strong>{queueCount}</strong><span>queued draws</span></article>
+      <article><strong>{queueStatus}</strong><span>queue status</span></article>
+      <article><strong>{sameDayDraws ? 'Same day' : 'Sequential days'}</strong><span>draw dates</span></article>
       <article><strong>{lastWinner ? '#' + lastWinner.ticket_number : 'None yet'}</strong><span>last test winner</span></article>
+      <article><strong>{soundUrls().spin_sound_url ? 'Set' : 'Not set'}</strong><span>broadcast spin sound</span></article>
     </div>
+
+    <p className="muted">Broadcast sounds use the intro, spin and winner sounds uploaded in Final draw. In OBS, make sure the browser source has audio enabled.</p>
   </div>;
 }
 
@@ -3107,7 +3241,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
             ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Stream Helper to save YouTube links and copy OBS setup notes. Use Draw Proof after a draw to review the saved winner record and copy a public result summary.'],
             ['Draw Intro & Sounds', 'Use Final draw to upload intro, spin and winner sounds. The intro screen identifies the competition, postcode zone and draw mode before the spinner starts, which helps when running several automatic draws one after another.'],
-            ['Draw Test Lab', 'Use Draws > Test Lab to generate fake sample tickets and run a safe test intro, spin and winner reveal on the broadcast screen. It does not create real orders, entries or winners.'],
+            ['Draw Test Lab', 'Use Draws > Test Lab to generate fake sample tickets and run a safe test intro, spin and winner reveal on the broadcast screen. It can also queue multiple same-day fake competitions to test OBS, sounds and back-to-back draw performance. It does not create real orders, entries or winners.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],

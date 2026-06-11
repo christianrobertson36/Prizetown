@@ -6242,3 +6242,25 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     width: 100%;
   }
 }
+
+/* v181: Draw Test Lab queue */
+.draw-test-lab-panel .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 2.7rem;
+}
+
+.draw-test-lab-panel .checkbox-row input {
+  width: auto;
+}
+
+.draw-test-lab-panel .test-lab-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 860px) {
+  .draw-test-lab-panel .test-lab-summary {
+    grid-template-columns: 1fr;
+  }
+}
