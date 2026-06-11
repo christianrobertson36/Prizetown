@@ -5618,3 +5618,33 @@ main {
   font-size: clamp(0.75rem, 1vw, 0.95rem) !important;
   line-height: 1.25 !important;
 }
+
+/* v165: Exact final draw preview text sizing */
+.broadcast-page .trusted-wheel-result .reveal-kicker,
+.trusted-wheel-result .reveal-kicker {
+  font-size: clamp(0.7rem, 1vw, 1rem) !important;
+  line-height: 1 !important;
+  margin: 0 0 0.15rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+.broadcast-page .trusted-wheel-result h2,
+.trusted-wheel-result h2 {
+  font-size: clamp(1.1rem, 2vw, 2rem) !important;
+  line-height: 1.05 !important;
+  margin: 0 0 0.2rem !important;
+}
+
+.broadcast-page .trusted-wheel-result h3,
+.trusted-wheel-result h3 {
+  font-size: clamp(0.85rem, 1.25vw, 1.15rem) !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
+.broadcast-page .trusted-wheel-note,
+.trusted-wheel-note {
+  font-size: clamp(0.65rem, 0.9vw, 0.85rem) !important;
+  line-height: 1.2 !important;
+  margin-top: 0.35rem !important;
+}
