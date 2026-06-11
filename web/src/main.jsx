@@ -1251,6 +1251,13 @@ function DrawBroadcastPage({ setPage }) {
   const drawTimeText = state?.draw_date ? new Date(state.draw_date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Time not set';
   const liveDateText = now.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
   const liveTimeText = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const drawAtMs = state?.draw_date ? new Date(state.draw_date).getTime() : 0;
+  const countdownMs = drawAtMs ? Math.max(0, drawAtMs - now.getTime()) : 0;
+  const countdownHours = Math.floor(countdownMs / 3600000);
+  const countdownMinutes = Math.floor((countdownMs % 3600000) / 60000);
+  const countdownSeconds = Math.floor((countdownMs % 60000) / 1000);
+  const countdownText = drawAtMs ? `${String(countdownHours).padStart(2, '0')}:${String(countdownMinutes).padStart(2, '0')}:${String(countdownSeconds).padStart(2, '0')}` : 'Waiting for schedule';
+  const holdingTitle = mode === 'spinning' ? 'Draw spinning now' : mode === 'ready' ? 'Entries locked' : 'Draw starting soon';
 
   return <main className={`broadcast-page ${transparent ? 'transparent' : ''} ${compact ? 'compact' : ''} ${safeObs ? 'safe-obs' : ''}`}>
     <section className="broadcast-stage">
@@ -1298,7 +1305,7 @@ function DrawBroadcastPage({ setPage }) {
             <p className="winning-ticket">Ticket #{displayWinner.ticket_number}</p>
             <p className="winner-name">{displayWinner.customer_name || displayWinner.name || 'Customer'}</p>
             <p className="muted">Final draw winner confirmed</p>
-          </div> : <div className="broadcast-waiting">
+          </div> : <div className="broadcast-waiting broadcast-holding-screen">
             <h2>Awaiting spin</h2>
             <p>Draw date and live clock are shown on this broadcast screen for OBS. The draw animation is visual only; the confirmed winner appears here after the locked draw completes.</p>
           </div>}
@@ -2624,7 +2631,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Competition Setup', 'Use Competitions to view existing competitions. Use Add competition or Edit competition to set title, image, price, ticket limits, question, answer, rules, free-entry wording, draw date, status and postcode mode.'],
             ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
-            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. It shows draw readiness, OBS links and due auto draw controls. Use Final draw for the wheel and official winner reveal.'],
+            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. The broadcast screen now includes a holding/countdown view before the official wheel and winner reveal.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],

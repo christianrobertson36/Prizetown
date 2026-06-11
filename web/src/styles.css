@@ -5516,3 +5516,32 @@ main {
 .draw-status-pill.ready { background: rgba(34,197,94,.18); color: #bbf7d0; }
 .draw-status-pill.done { background: rgba(250,204,21,.18); color: #fef3c7; }
 @media (max-width: 720px) { .draw-control-card { align-items: flex-start; flex-direction: column; } }
+
+
+/* v156 broadcast countdown holding screen */
+.broadcast-holding-screen { text-align: center; }
+.broadcast-countdown {
+  margin: .65rem 0;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: .08em;
+  color: #facc15;
+  text-shadow: 0 0 24px rgba(250,204,21,.3);
+}
+.broadcast-holding-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .45rem;
+  margin-top: .8rem;
+}
+.broadcast-holding-tags span {
+  border-radius: 999px;
+  padding: .4rem .65rem;
+  border: 1px solid rgba(250,204,21,.24);
+  background: rgba(250,204,21,.1);
+  color: #fef3c7;
+  font-weight: 850;
+  font-size: .82rem;
+}
