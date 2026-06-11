@@ -6187,3 +6187,58 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     font-size: 1.55rem;
   }
 }
+
+/* v180: Draw Test Lab */
+.draw-test-lab-panel .test-lab-warning {
+  margin: 1rem 0;
+  padding: .85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(250,204,21,.35);
+  background: rgba(250,204,21,.12);
+  color: #fde68a;
+  font-weight: 950;
+  text-align: center;
+  letter-spacing: .04em;
+}
+
+.test-lab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin: 1rem 0;
+}
+
+.test-lab-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.test-lab-summary article {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(15,23,42,.62);
+  border: 1px solid rgba(250,204,21,.14);
+}
+
+.test-lab-summary strong {
+  display: block;
+  font-size: 1.35rem;
+  color: #facc15;
+}
+
+.test-lab-summary span {
+  color: rgba(255,255,255,.72);
+  font-size: .9rem;
+}
+
+@media (max-width: 760px) {
+  .test-lab-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .test-lab-actions button {
+    width: 100%;
+  }
+}

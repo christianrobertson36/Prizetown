@@ -2383,6 +2383,153 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
 }
 
 
+
+function DrawTestLab({ setMessage }) {
+  const [ticketCount, setTicketCount] = useState(250);
+  const [postcodeLabel, setPostcodeLabel] = useState('BB1 / Blackburn sample zone');
+  const [competitionTitle, setCompetitionTitle] = useState('TEST LAB - Postcode Sample Draw');
+  const [introSeconds, setIntroSeconds] = useState(5);
+  const [spinSeconds, setSpinSeconds] = useState(14);
+  const [running, setRunning] = useState(false);
+  const [lastWinner, setLastWinner] = useState(null);
+
+  const sampleNames = ['Alex B','Sam R','Jamie K','Taylor M','Morgan W','Casey L','Jordan P','Riley S','Charlie H','Harper G','Bailey T','Avery M','Cameron D','Finley R','Rowan C','Quinn A'];
+
+  function makeTickets(count = ticketCount) {
+    const total = Math.max(1, Math.min(5000, Number(count) || 250));
+    return Array.from({ length: total }, (_, index) => {
+      const n = index + 1;
+      return {
+        ticket_number: n,
+        customer_name: sampleNames[index % sampleNames.length],
+        email: `test${n}@prizetown.local`,
+        postcode_zone: postcodeLabel,
+        payment_status: 'test'
+      };
+    });
+  }
+
+  function pickWinner(rows) {
+    return rows[Math.floor(Math.random() * rows.length)] || rows[0];
+  }
+
+  function openBroadcast() {
+    const win = window.open('/draw-broadcast?testLab=1', 'prizetown_test_lab_broadcast', 'width=1280,height=900,menubar=no,toolbar=no,location=no,status=no');
+    try { win?.focus?.(); } catch {}
+  }
+
+  async function publish(payload) {
+    await api('/admin/draw/broadcast-state', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async function runTestLab() {
+    if (running) return;
+    setRunning(true);
+    setLastWinner(null);
+
+    try {
+      const rows = makeTickets();
+      const winner = pickWinner(rows);
+      const visualTickets = buildWheelTickets(rows, winner);
+      const targetRotation = wheelRotationForWinner(visualTickets, winner.ticket_number, 0);
+      const nowIso = new Date().toISOString();
+      const spinId = `test-lab-${Date.now()}-${winner.ticket_number}`;
+      const safeIntroSeconds = Math.max(2, Math.min(15, Number(introSeconds) || 5));
+      const safeSpinSeconds = Math.max(5, Math.min(25, Number(spinSeconds) || 14));
+      const winnerPayload = { ticket_number: winner.ticket_number, customer_name: winner.customer_name, email: winner.email };
+
+      openBroadcast();
+
+      const base = {
+        competition_id: 'TEST-LAB',
+        competition_title: competitionTitle || 'TEST LAB DRAW',
+        competition_number: '#TEST-LAB',
+        draw_date: nowIso,
+        ticket_capacity: rows.length,
+        eligible_count: rows.length,
+        visual_tickets: visualTickets,
+        spin_id: spinId,
+        draw_method: 'test_lab_preview_only_no_real_winner_saved',
+        draw_mode: 'TEST LAB - not a real draw',
+        postcode_zone_label: postcodeLabel || 'Open test competition',
+        show_arnold: false,
+        spinner_style: localStorage.getItem('prizetown_spinner_style') || 'classic'
+      };
+
+      await publish({ ...base, mode: 'intro', winner: null, reveal_at: '', locked_ticket_number: '', target_rotation: 0 });
+      setMessage(`Test Lab intro sent for ${rows.length} sample tickets.`);
+      await new Promise(resolve => setTimeout(resolve, safeIntroSeconds * 1000));
+
+      await publish({ ...base, mode: 'spinning', winner: winnerPayload, reveal_at: new Date(Date.now() + safeSpinSeconds * 1000).toISOString(), locked_ticket_number: winner.ticket_number, target_rotation: targetRotation });
+      setMessage(`Test Lab spinning: winning test ticket will be #${winner.ticket_number}.`);
+      await new Promise(resolve => setTimeout(resolve, safeSpinSeconds * 1000 + 700));
+
+      await publish({ ...base, mode: 'winner', winner: winnerPayload, reveal_at: new Date().toISOString(), locked_ticket_number: winner.ticket_number, target_rotation: targetRotation });
+      setLastWinner(winner);
+      setMessage(`Test Lab complete: sample ticket #${winner.ticket_number} - ${winner.customer_name}. No real winner was saved.`);
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function resetTestLab() {
+    try {
+      await publish({
+        mode: 'idle',
+        competition_id: null,
+        competition_title: 'Waiting for competition',
+        competition_number: '',
+        draw_date: '',
+        ticket_capacity: 0,
+        eligible_count: 0,
+        visual_tickets: [],
+        winner: null,
+        reveal_at: '',
+        spin_id: '',
+        locked_ticket_number: '',
+        target_rotation: 0,
+        draw_method: 'test_lab_reset',
+        draw_mode: '',
+        postcode_zone_label: '',
+        show_arnold: false
+      });
+      setLastWinner(null);
+      setMessage('Test Lab broadcast reset.');
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  return <div className="panel draw-test-lab-panel">
+    <h1>Draw Test Lab</h1>
+    <p className="muted">Safely test the live draw screen with fake tickets, fake users and postcode labels. This does not create orders, entries or real winners.</p>
+    <div className="test-lab-warning">TEST MODE ONLY — no real winner is saved and no customer/order data is created.</div>
+
+    <div className="admin-grid two">
+      <label>Test competition title<input value={competitionTitle} onChange={e => setCompetitionTitle(e.target.value)} /></label>
+      <label>Postcode / zone label<input value={postcodeLabel} onChange={e => setPostcodeLabel(e.target.value)} /></label>
+      <label>Sample tickets<select value={ticketCount} onChange={e => setTicketCount(Number(e.target.value))}><option value={50}>50 tickets</option><option value={250}>250 tickets</option><option value={1000}>1,000 tickets</option><option value={2500}>2,500 tickets</option><option value={5000}>5,000 tickets</option></select></label>
+      <label>Intro seconds<input type="number" min="2" max="15" value={introSeconds} onChange={e => setIntroSeconds(e.target.value)} /></label>
+      <label>Spin seconds<input type="number" min="5" max="25" value={spinSeconds} onChange={e => setSpinSeconds(e.target.value)} /></label>
+    </div>
+
+    <div className="test-lab-actions">
+      <button type="button" className="primary" onClick={runTestLab} disabled={running}>{running ? 'Running test...' : 'Run full test draw'}</button>
+      <button type="button" className="secondary" onClick={openBroadcast}>Open broadcast screen</button>
+      <button type="button" className="secondary" onClick={resetTestLab}>Reset test broadcast</button>
+    </div>
+
+    <div className="test-lab-summary">
+      <article><strong>{ticketCount}</strong><span>sample tickets</span></article>
+      <article><strong>{postcodeLabel || 'Open'}</strong><span>postcode / zone</span></article>
+      <article><strong>{lastWinner ? '#' + lastWinner.ticket_number : 'None yet'}</strong><span>last test winner</span></article>
+    </div>
+  </div>;
+}
+
+
 function Admin({ settings, setSettings, competitions, entries, orders, auditLogs, instantWins, postcodeZones = [], postcodeAssignments = [], reload, setMessage, setPage }) {
   const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all', prize_cost_pence: 0, marketing_budget_pence: 0, other_buffer_pence: 0, payment_fee_percent: 4, vat_enabled: false, auto_draw_enabled: false };
   const [form, setForm] = useState(empty);
@@ -2796,6 +2943,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         moduleLiveDraw && ['draw-proof', 'Draw Proof', ListChecks],
         moduleLiveDraw && ['stream-helper', 'Stream Helper', ListChecks],
         moduleLiveDraw && ['mobile-preview', 'Mobile Preview', ListChecks],
+        moduleLiveDraw && ['draw-test-lab', 'Test Lab', ListChecks],
         moduleLiveDraw && ['draws', 'Final draw', ListChecks],
         moduleInstantWins && ['instant-wins', 'Instant wins', Zap]
       ].filter(Boolean)
@@ -2901,6 +3049,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'draw-proof' && <DrawProofPanel drawResults={drawResults} setMessage={setMessage} />}
         {activeTab === 'stream-helper' && <StreamHelperPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} setMessage={setMessage} />}
 
+        {activeTab === 'draw-test-lab' && <DrawTestLab setMessage={setMessage} />}
+
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
             <h1>Scheduled Auto Draws</h1><p className="muted"><strong>This is separate from quick test spins.</strong> Test ticket loads below do not trigger scheduled or official draw records.</p>
@@ -2957,6 +3107,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
             ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Stream Helper to save YouTube links and copy OBS setup notes. Use Draw Proof after a draw to review the saved winner record and copy a public result summary.'],
             ['Draw Intro & Sounds', 'Use Final draw to upload intro, spin and winner sounds. The intro screen identifies the competition, postcode zone and draw mode before the spinner starts, which helps when running several automatic draws one after another.'],
+            ['Draw Test Lab', 'Use Draws > Test Lab to generate fake sample tickets and run a safe test intro, spin and winner reveal on the broadcast screen. It does not create real orders, entries or winners.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
