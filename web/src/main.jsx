@@ -2514,6 +2514,12 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'help-guide' && <div className="panel list-panel help-guide-panel">
           <h1>Admin Help Guide</h1>
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added.</p>
+          <div className="list-row entry-row">
+            <div>
+              <strong>Admin Quick Start</strong>
+              <p>Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.</p>
+            </div>
+          </div>
           {[
             ['Overview', 'Quick snapshot of competitions, orders, entries, revenue and launch readiness reminders.'],
             ['Test tools', 'Creates safe demo/sample data so you can test the site without real customers.'],
