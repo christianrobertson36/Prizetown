@@ -1472,7 +1472,7 @@ function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMes
       <button type="submit" className="primary">Save stream settings</button>
       <button type="button" className="secondary" onClick={() => copyText('YouTube description', description)}>Copy YouTube description</button>
       <button type="button" className="secondary" onClick={() => copyText('OBS checklist', checklist)}>Copy OBS checklist</button>
-      {youtubeUrl && <a className="button secondary" href={youtubeUrl} target="_blank" rel="noreferrer">Open YouTube live</a>}
+      {youtubeUrl && <button type="button" className="secondary" onClick={() => window.open(youtubeUrl, '_blank', 'noopener,noreferrer')}>Open YouTube live</button>}
     </div>
     <div className="stream-helper-cards">
       <article><strong>OBS Browser Source</strong><span>{obsUrl}</span></article>
