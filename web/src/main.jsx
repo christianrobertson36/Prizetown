@@ -794,6 +794,18 @@ return <main>
       </div>}
     </section>
 
+    <section className="pwa-install-strip">
+      <div>
+        <p className="eyebrow"><Sparkles size={16} /> Save Prizetown</p>
+        <h2>Add Prizetown to your home screen.</h2>
+        <p>Open Prizetown like an app, keep your basket handy and jump back to live competitions, entry lists and winners.</p>
+      </div>
+      <div className="pwa-install-steps">
+        <span>iPhone: Share → Add to Home Screen</span>
+        <span>Android/Chrome: Menu → Install app</span>
+      </div>
+    </section>
+
     <section className="footer-pre-cta">
       <div>
         <p className="eyebrow"><Trophy size={16} /> Ready for the next winner?</p>
@@ -2820,6 +2832,12 @@ function Winners({ winners, instantWinners }) {
 
 window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 
 
 
