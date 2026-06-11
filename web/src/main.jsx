@@ -2607,7 +2607,86 @@ function LegalPage({ title, text, settings, setPage }) {
   </main>;
 }
 
-function Winners({ winners, instantWinners }) { return <main><section className="grid-section"><h1>Winners</h1><h2>Latest instant winners</h2>{instantWinners.length === 0 && <p className="muted">No instant winners yet.</p>}<div className="cards">{instantWinners.map(w => <article className="card" key={w.id}><div className="placeholder"><Zap /></div><div className="card-body"><h3>{w.winner_name || 'Customer'}</h3><p>Won {w.prize_title}</p><p className="muted">{w.competition_title}  -  Ticket #{w.winning_ticket_number}</p></div></article>)}</div><h2>Final draw winners</h2>{winners.length === 0 && <p className="muted">No final draw winners announced yet.</p>}<div className="cards">{winners.map(w => <article className="card" key={w.id}>{w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="placeholder"><Trophy /></div>}<div className="card-body"><h3>{w.winner_name}</h3><p>{w.prize_title}</p><p className="muted">{w.competition_title}</p></div></article>)}</div></section></main>; }
+function Winners({ winners, instantWinners }) {
+  const finalWinners = safeArray(winners);
+  const instantRows = safeArray(instantWinners);
+  const totalWinners = finalWinners.length + instantRows.length;
+  const latestFinal = finalWinners[0];
+  const latestInstant = instantRows[0];
+
+  return <main className="winners-page">
+    <section className="winners-hero panel">
+      <p className="eyebrow"><Trophy size={16} /> Winners & results</p>
+      <h1>Real tickets. Real draws. Clear results.</h1>
+      <p>Every winner shown here comes from a recorded ticket number, instant-win claim or final draw result. This page is built to give customers confidence before they enter.</p>
+      <div className="winner-proof-grid">
+        <article><strong>{totalWinners}</strong><span>Total winner records</span></article>
+        <article><strong>{instantRows.length}</strong><span>Instant wins claimed</span></article>
+        <article><strong>{finalWinners.length}</strong><span>Final draw winners</span></article>
+        <article><strong>{latestFinal?.competition_title || latestInstant?.competition_title || 'Coming soon'}</strong><span>Latest result</span></article>
+      </div>
+    </section>
+
+    <section className="winners-section">
+      <div className="section-head">
+        <div>
+          <p className="eyebrow"><Zap size={16} /> Instant wins</p>
+          <h2>Latest instant winners</h2>
+        </div>
+        <span className="muted">Instant wins are triggered by matching configured winning ticket numbers.</span>
+      </div>
+      {instantRows.length === 0 && <div className="panel empty-winners"><h3>No instant winners yet</h3><p>Instant-win prizes will appear here as soon as they are claimed.</p></div>}
+      <div className="winner-card-grid">
+        {instantRows.map(w => <article className="winner-result-card instant" key={w.id}>
+          <div className="winner-result-icon"><Zap size={26} /></div>
+          <div>
+            <p className="winner-kicker">Instant win</p>
+            <h3>{w.winner_name || 'Customer'}</h3>
+            <p>Won <strong>{w.prize_title || 'Instant prize'}</strong></p>
+            <div className="winner-meta">
+              <span>{w.competition_title || 'Competition'}</span>
+              <span>Ticket #{w.winning_ticket_number || '-'}</span>
+            </div>
+          </div>
+        </article>)}
+      </div>
+    </section>
+
+    <section className="winners-section">
+      <div className="section-head">
+        <div>
+          <p className="eyebrow"><Trophy size={16} /> Final draws</p>
+          <h2>Final draw winners</h2>
+        </div>
+        <span className="muted">Final draw winners are saved after the official draw is completed.</span>
+      </div>
+      {finalWinners.length === 0 && <div className="panel empty-winners"><h3>No final draw winners announced yet</h3><p>When a competition closes and the final draw is run, the result will be shown here.</p></div>}
+      <div className="winner-card-grid">
+        {finalWinners.map(w => <article className="winner-result-card final" key={w.id}>
+          {w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="winner-result-icon"><Trophy size={26} /></div>}
+          <div>
+            <p className="winner-kicker">Final draw winner</p>
+            <h3>{w.winner_name || 'Winner'}</h3>
+            <p>{w.prize_title || 'Prize winner'}</p>
+            <div className="winner-meta">
+              <span>{w.competition_title || 'Competition'}</span>
+              {w.ticket_number && <span>Ticket #{w.ticket_number}</span>}
+            </div>
+          </div>
+        </article>)}
+      </div>
+    </section>
+
+    <section className="winner-trust-panel panel">
+      <h2>How Prizetown publishes results</h2>
+      <div className="winner-trust-grid">
+        <article><strong>Ticket number shown</strong><span>Winning ticket numbers are displayed where available.</span></article>
+        <article><strong>Draw record saved</strong><span>Final draw results are stored for transparency.</span></article>
+        <article><strong>Winner privacy respected</strong><span>Names may be shown as full name, first name or customer label depending on settings and verification.</span></article>
+      </div>
+    </section>
+  </main>;
+}
 
 window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
