@@ -5425,3 +5425,18 @@ main {
     width: auto;
   }
 }
+
+
+/* v145 admin help guide */
+.help-guide-panel .entry-row strong {
+  color: #fde68a;
+}
+
+.help-guide-panel .entry-row p {
+  margin-top: .25rem;
+  line-height: 1.45;
+}
+
+.help-guide-panel .muted {
+  max-width: 780px;
+}

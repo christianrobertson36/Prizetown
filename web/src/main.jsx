@@ -2510,6 +2510,33 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           ['Winner publishing', true, 'Winner records and public winner pages are available after final draws.']
         ].map(([title, ok, help]) => <div className="list-row entry-row" key={title}><div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div></div>)}</div>}
 
+        {activeTab === 'help-guide' && <div className="panel list-panel help-guide-panel">
+          <h1>Admin Help Guide</h1>
+          <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added.</p>
+          {[
+            ['Overview', 'Quick snapshot of competitions, orders, entries, revenue and launch readiness reminders.'],
+            ['Test tools', 'Creates safe demo/sample data so you can test the site without real customers.'],
+            ['Launch checklist', 'Pre-launch checklist for competitions, legal text, branding, ticker text and module setup.'],
+            ['Automation status', 'Shows what automated tasks are ready, such as draw readiness, free-entry setup and email automation.'],
+            ['Customers', 'Read-only customer overview and export/search tools. Useful for support and admin checks.'],
+            ['Competitions', 'View, manage and edit prize competitions. Use Add/Edit competition for the detailed form.'],
+            ['Orders & entries', 'Shows customer orders, allocated entries and ticket information. Useful for checking purchases and draw eligibility.'],
+            ['Free entries', 'Manual helper for postal/free-entry requests. Valid free entries should be added fairly and treated like paid entries.'],
+            ['Final draw', 'Runs final draw tools and opens the OBS broadcast screen for live draws.'],
+            ['Instant wins', 'Manage instant-win prizes and winning ticket numbers.'],
+            ['Postcode Zones', 'Create and manage postcode areas for local competitions.'],
+            ['Assign Postcodes', 'Assign competitions to postcode zones when postcode mode is enabled.'],
+            ['Profit Planner', 'Estimate ticket revenue, prize cost, fees, marketing budget and expected margin.'],
+            ['Branding', 'Edit logo, colours, site name and visual branding.'],
+            ['Modules', 'Turn major features on or off, such as postcode competitions, instant wins, live draw, Arnold and legal popups.'],
+            ['Legal Text', 'Edit terms, privacy, free-entry wording, refunds, cookie notice, responsible play and popup wording. Have this checked before real launch.'],
+            ['Site settings', 'Edit homepage wording, support email, footer text and the top scrolling ticker.'],
+            ['System check', 'Runs a smart diagnostic for common setup issues.'],
+            ['Email test', 'Checks transactional email status and sends a test email through Resend.'],
+            ['Audit log', 'Shows important admin actions and system events.']
+          ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
+        </div>}
+
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
         {activeTab === 'email-test' && <div className="panel settings-panel">
