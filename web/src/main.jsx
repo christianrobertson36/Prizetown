@@ -2520,6 +2520,12 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               <p>Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.</p>
             </div>
           </div>
+          <div className="list-row entry-row">
+            <div>
+              <strong>Common Admin Jobs</strong>
+              <p>Create a competition: Competitions → Add competition. Check sales: Orders & entries. Add postal/free entries: Free entries. Change homepage text: Site settings. Change logo/colours: Branding. Check launch safety: Launch checklist and System check.</p>
+            </div>
+          </div>
           {[
             ['Overview', 'Quick snapshot of competitions, orders, entries, revenue and launch readiness reminders.'],
             ['Test tools', 'Creates safe demo/sample data so you can test the site without real customers.'],
