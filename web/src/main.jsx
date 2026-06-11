@@ -335,7 +335,7 @@ function brandStyle(settings = {}) {
   };
 }
 
-function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/entry-lists')) return 'entry-lists'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
+function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/how-it-works')) return 'how-it-works'; if (p.includes('/entry-lists')) return 'entry-lists'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
 class AppErrorBoundary extends React.Component {
@@ -443,7 +443,7 @@ function App() {
   return <div style={brandStyle(settings)}>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
-      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
+      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('how-it-works')}>How it works</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
       {user?.role === 'admin' && <button onClick={() => { setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
@@ -454,6 +454,7 @@ function App() {
     {featureEnabled(settings, 'module_cookie_legal_enabled') && !legalAccepted && <LegalDisclaimer settings={settings} setPage={setPage} onAccept={acceptLegalDisclaimer} />}
     {page === 'home' && <Home settings={settings} resetCookieChoice={resetCookieChoice} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} settings={settings} />}
+    {page === 'how-it-works' && <HowItWorks setPage={setPage} settings={settings} />}
     {page === 'entry-lists' && <EntryLists competitions={competitions} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'terms' && <LegalPage title="Terms and Conditions" text={settings.terms_text || defaultSettings.terms_text} settings={settings} setPage={setPage} />}
@@ -863,6 +864,7 @@ return <main>
         <h3>Transparency</h3>
         <p>Competition details, ticket limits, closing dates and draw information are shown clearly before entry.</p>
         <nav className="footer-links" aria-label="Footer legal links">
+          <button type="button" onClick={() => setPage('how-it-works')}>How it works</button>
           <button type="button" onClick={() => setPage('terms')}>Terms</button>
           <button type="button" onClick={() => setPage('privacy')}>Privacy</button>
           <button type="button" onClick={() => setPage('free-entry')}>Free entry</button>
@@ -2717,6 +2719,58 @@ function LegalPage({ title, text, settings, setPage }) {
       <div className="legal-contact">
         <strong>Contact</strong>
         <p>Questions? Email {settings.support_email || defaultSettings.support_email}.</p>
+      </div>
+    </section>
+  </main>;
+}
+
+function HowItWorks({ setPage, settings }) {
+  const faqs = [
+    ['How do I enter?', 'Choose a live competition, answer the entry question where shown, add tickets to your basket and complete checkout. Ticket numbers are allocated after a valid entry is accepted.'],
+    ['Can I check my ticket numbers?', 'Yes. Use My entries for your own tickets, and Public Entry Lists to see allocated ticket numbers for competitions before the draw.'],
+    ['How do instant wins work?', 'Some competitions can include instant-win prizes. If your allocated ticket matches a configured instant-win ticket number, the prize is marked as claimed.'],
+    ['Is there a free entry route?', 'Where offered, the free postal entry route is shown on the Free Entry page and competition details. Valid free entries are treated fairly and entered into the same draw.'],
+    ['How are winners shown?', 'Final draw winners and instant-win claims are shown on the Winners page so customers can check results after draws are completed.'],
+    ['Is Prizetown for responsible play?', settings?.responsible_play_text || '18+ only. Please enter responsibly. Do not spend more than you can afford.']
+  ];
+
+  return <main className="how-page">
+    <section className="how-hero panel">
+      <p className="eyebrow"><ListChecks size={16} /> How it works</p>
+      <h1>Clear steps from entry to winner reveal.</h1>
+      <p>Prizetown is built to make competitions easy to understand: choose a prize, get ticket numbers, check entry lists and follow winners after instant wins or final draws.</p>
+      <div className="how-actions">
+        <button type="button" className="primary" onClick={() => setPage('home')}>View competitions</button>
+        <button type="button" className="secondary" onClick={() => setPage('entry-lists')}>Check entry lists</button>
+        <button type="button" className="secondary" onClick={() => setPage('winners')}>View winners</button>
+      </div>
+    </section>
+
+    <section className="how-steps-grid">
+      {[
+        ['1', 'Choose a competition', 'Browse live prizes, ticket price, closing date, limits and entry question before entering.'],
+        ['2', 'Answer and checkout', 'Answer the question where required, confirm you are 18+ and complete your entry.'],
+        ['3', 'Receive ticket numbers', 'Your allocated tickets appear in your account and can be checked before the draw.'],
+        ['4', 'Watch results', 'Instant wins and final draw winners are saved and shown publicly for transparency.']
+      ].map(([number, title, copy]) => <article className="how-step-card panel" key={number}>
+        <strong>{number}</strong>
+        <h2>{title}</h2>
+        <p>{copy}</p>
+      </article>)}
+    </section>
+
+    <section className="how-faq panel">
+      <div className="section-head">
+        <div>
+          <p className="eyebrow"><Shield size={16} /> FAQ</p>
+          <h2>Questions customers may ask before entering</h2>
+        </div>
+      </div>
+      <div className="how-faq-list">
+        {faqs.map(([q, a]) => <details key={q} open>
+          <summary>{q}</summary>
+          <p>{a}</p>
+        </details>)}
       </div>
     </section>
   </main>;

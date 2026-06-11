@@ -5041,3 +5041,101 @@ body {
     grid-column: 1 / -1;
   }
 }
+
+
+/* v136 how it works */
+.how-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.how-hero {
+  padding: clamp(1.2rem, 3vw, 2rem);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(250,204,21,.18), transparent 20rem),
+    linear-gradient(135deg, rgba(255,255,255,.08), rgba(0,0,0,.2));
+}
+
+.how-hero h1 {
+  margin: .25rem 0 .6rem;
+  color: #fef3c7;
+  font-size: clamp(2rem, 6vw, 4.6rem);
+  line-height: .92;
+}
+
+.how-hero p {
+  max-width: 58rem;
+  color: #d9dbea;
+  font-weight: 750;
+}
+
+.how-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-top: 1rem;
+}
+
+.how-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .8rem;
+}
+
+.how-step-card strong {
+  display: inline-flex;
+  width: 2.4rem;
+  height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fde047, #f97316);
+  color: #08101f;
+  font-weight: 1000;
+}
+
+.how-step-card h2 {
+  margin: .75rem 0 .35rem;
+  color: #fef3c7;
+}
+
+.how-step-card p,
+.how-faq p {
+  color: #d9dbea;
+  font-weight: 720;
+}
+
+.how-faq-list {
+  display: grid;
+  gap: .7rem;
+}
+
+.how-faq details {
+  margin: 0;
+  padding: .9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.how-faq summary {
+  cursor: pointer;
+  color: #fde047;
+  font-weight: 900;
+}
+
+@media (max-width: 980px) {
+  .how-steps-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .how-steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .how-actions button {
+    width: 100%;
+  }
+}
