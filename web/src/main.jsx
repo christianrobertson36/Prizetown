@@ -335,7 +335,7 @@ function brandStyle(settings = {}) {
   };
 }
 
-function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
+function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/entry-lists')) return 'entry-lists'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
 class AppErrorBoundary extends React.Component {
@@ -443,7 +443,7 @@ function App() {
   return <div style={brandStyle(settings)}>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track"><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span><span>Welcome to {settings.site_name || 'Prizetown'}!</span><span>New competitions added regularly</span><span>Instant wins and final draw prizes</span><span>Enter responsibly and good luck</span></div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
-      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
+      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
       {user?.role === 'admin' && <button onClick={() => { setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
@@ -454,6 +454,7 @@ function App() {
     {featureEnabled(settings, 'module_cookie_legal_enabled') && !legalAccepted && <LegalDisclaimer settings={settings} setPage={setPage} onAccept={acceptLegalDisclaimer} />}
     {page === 'home' && <Home settings={settings} resetCookieChoice={resetCookieChoice} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} settings={settings} />}
+    {page === 'entry-lists' && <EntryLists competitions={competitions} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'terms' && <LegalPage title="Terms and Conditions" text={settings.terms_text || defaultSettings.terms_text} settings={settings} setPage={setPage} />}
     {page === 'privacy' && <LegalPage title="Privacy Notice" text={settings.privacy_text || defaultSettings.privacy_text} settings={settings} setPage={setPage} />}
@@ -2602,6 +2603,92 @@ function LegalPage({ title, text, settings, setPage }) {
       <div className="legal-contact">
         <strong>Contact</strong>
         <p>Questions? Email {settings.support_email || defaultSettings.support_email}.</p>
+      </div>
+    </section>
+  </main>;
+}
+
+function EntryLists({ competitions }) {
+  const liveCompetitions = safeArray(competitions).filter(c => ['active', 'sold_out', 'closed'].includes(String(c.status || '').toLowerCase()));
+  const [competitionId, setCompetitionId] = useState(liveCompetitions[0]?.id || '');
+  const [entries, setEntries] = useState([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const selectedCompetition = liveCompetitions.find(c => String(c.id) === String(competitionId));
+
+  async function loadEntryList(id = competitionId) {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const rows = await api(`/competitions/${id}/entries`);
+      setEntries(safeArray(rows));
+    } catch {
+      setEntries([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (competitionId) loadEntryList(competitionId);
+  }, [competitionId]);
+
+  const filteredEntries = safeArray(entries).filter(e => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return String(e.ticket_number || '').includes(q) || String(e.customer_name || '').toLowerCase().includes(q);
+  });
+
+  return <main className="entry-lists-page">
+    <section className="entry-lists-hero panel">
+      <p className="eyebrow"><Ticket size={16} /> Public entry lists</p>
+      <h1>Check allocated ticket numbers before the draw.</h1>
+      <p>Entry lists help customers see that tickets have been allocated and that final draws are made from eligible paid and valid free entries.</p>
+      <div className="entry-list-controls">
+        <label>Competition
+          <select value={competitionId} onChange={e => setCompetitionId(e.target.value)}>
+            {liveCompetitions.length === 0 && <option value="">No competitions yet</option>}
+            {liveCompetitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+        </label>
+        <label>Search ticket/name
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Example: 25 or Chris" />
+        </label>
+        <button type="button" className="secondary" onClick={() => loadEntryList()}>Refresh list</button>
+      </div>
+    </section>
+
+    <section className="panel entry-list-summary">
+      <div>
+        <p className="eyebrow"><Trophy size={16} /> Draw transparency</p>
+        <h2>{selectedCompetition?.title || 'Choose a competition'}</h2>
+        <p className="muted">{loading ? 'Loading entries...' : `${entries.length} allocated ticket(s) found. Showing ${filteredEntries.length}.`}</p>
+      </div>
+      {selectedCompetition && <div className="entry-list-stats">
+        <article><strong>{selectedCompetition.entries_sold || entries.length}</strong><span>Tickets allocated</span></article>
+        <article><strong>{selectedCompetition.max_tickets || '-'}</strong><span>Max tickets</span></article>
+        <article><strong>{fmtDate(selectedCompetition.draw_at)}</strong><span>Draw date</span></article>
+      </div>}
+    </section>
+
+    <section className="panel">
+      {filteredEntries.length === 0 ? <div className="empty-entry-list">
+        <h3>No entries to show yet</h3>
+        <p>Ticket numbers will appear here after valid checkout or approved free postal entries.</p>
+      </div> : <div className="public-entry-grid">
+        {filteredEntries.slice(0, 1000).map(e => <article className="public-entry-card" key={e.ticket_number}>
+          <strong>#{e.ticket_number}</strong>
+          <span>{e.customer_name || 'Customer'}</span>
+        </article>)}
+      </div>}
+    </section>
+
+    <section className="entry-list-trust panel">
+      <h2>Why entry lists matter</h2>
+      <div className="winner-trust-grid">
+        <article><strong>Visible ticket numbers</strong><span>Customers can check allocated tickets before the draw.</span></article>
+        <article><strong>Eligible entries only</strong><span>Lists use paid, test-paid, free and approved manual free-entry records.</span></article>
+        <article><strong>Draw-ready record</strong><span>The same ticket numbers feed the draw and winner reveal workflow.</span></article>
       </div>
     </section>
   </main>;

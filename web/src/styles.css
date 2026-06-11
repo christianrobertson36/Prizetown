@@ -4633,3 +4633,133 @@ body {
     height: 3.75rem;
   }
 }
+
+
+/* v131 public entry lists */
+.entry-lists-page {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.entry-lists-hero {
+  background:
+    radial-gradient(circle at 15% 18%, rgba(34,197,94,.18), transparent 28%),
+    linear-gradient(135deg, rgba(15,23,42,.96), rgba(30,41,59,.9));
+  border-color: rgba(34,197,94,.2);
+}
+
+.entry-lists-hero h1 {
+  max-width: 860px;
+  margin: .25rem 0 .75rem;
+  font-size: clamp(2rem, 6vw, 4.4rem);
+  line-height: .9;
+}
+
+.entry-lists-hero > p {
+  max-width: 780px;
+  color: #d9dbea;
+  font-weight: 750;
+}
+
+.entry-list-controls {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: .75rem;
+  align-items: end;
+  margin-top: 1rem;
+}
+
+.entry-list-summary {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.entry-list-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.entry-list-stats article {
+  padding: .85rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.entry-list-stats strong {
+  display: block;
+  color: #fde047;
+  font-size: clamp(1.1rem, 3vw, 1.7rem);
+}
+
+.entry-list-stats span {
+  color: #c8cada;
+  display: block;
+  font-weight: 800;
+  margin-top: .2rem;
+}
+
+.public-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: .55rem;
+  max-height: 34rem;
+  overflow: auto;
+  padding-right: .25rem;
+}
+
+.public-entry-card {
+  padding: .65rem;
+  border-radius: .85rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  text-align: center;
+}
+
+.public-entry-card strong {
+  display: block;
+  color: #fde047;
+  font-size: 1.15rem;
+}
+
+.public-entry-card span {
+  display: block;
+  color: #d9dbea;
+  font-size: .78rem;
+  font-weight: 800;
+  margin-top: .15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-entry-list {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px dashed rgba(255,255,255,.18);
+  border-radius: 1rem;
+}
+
+.entry-list-trust h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 820px) {
+  .entry-list-controls,
+  .entry-list-summary,
+  .entry-list-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-list-controls button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .public-entry-grid {
+    grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+  }
+}
