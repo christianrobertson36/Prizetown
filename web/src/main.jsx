@@ -693,7 +693,7 @@ return <main>
           <div className="launch-trust-strip" aria-label="Launch trust badges">
             <button type="button" onClick={() => setPage('how-it-works')}>How it works</button>
             <button type="button" onClick={() => setPage('entry-lists')}>Public entry lists</button>
-            <button type="button" onClick={() => setPage('winners')}>Winners & results</button>
+            <button type="button" onClick={() => setPage('winners')}>Winners & results</button><a className="live-draw-hero-button" href="/draw-broadcast">Watch live draws</a>
             <button type="button" onClick={() => setPage('free-entry')}>Free entry route</button>
             <span>18+ responsible entry</span>
           </div>
@@ -747,7 +747,7 @@ return <main>
           <div className="demo-wheel-actions">
             <button type="button" className="secondary" onClick={refreshDemoNames}>Update demo names</button>
             <button type="button" className="primary" onClick={spinDemoWheel} disabled={demoMode === 'spinning'}>{demoMode === 'spinning' ? 'Spinning...' : 'Try the wheel'}</button>
-            <a className="button secondary" href="/draw-broadcast">Watch live draws</a>
+            
           </div>
           <div className="demo-wheel-actions demo-style-actions">
             <button type="button" className={demoSpinnerStyle === 'classic' ? 'primary' : 'secondary'} onClick={() => { setDemoSpinnerStyle('classic'); localStorage.setItem('prizetown_demo_spinner_style', 'classic'); }}>Classic style</button>
@@ -1357,6 +1357,7 @@ function DrawBroadcastPage({ setPage }) {
 
       <footer className="broadcast-footer">
         <span>Official Prizetown live draw</span>
+        <span><strong>Live:</strong> {liveTimeText}</span>
         <span>{state?.updated_at ? `Last sync ${new Date(state.updated_at).toLocaleTimeString()}` : 'Waiting for sync'}</span>
       </footer>
     </section>

@@ -5987,3 +5987,105 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     text-align: center !important;
   }
 }
+
+/* v178: Mobile nav, live draw button and mobile footer polish */
+.live-draw-hero-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  border: 1px solid rgba(250,204,21,.75);
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827 !important;
+  font-weight: 950;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: .7rem 1rem;
+  box-shadow: 0 .8rem 2rem rgba(250,204,21,.22);
+}
+
+.live-draw-hero-button::before {
+  content: "LIVE";
+  font-size: .7rem;
+  letter-spacing: .08em;
+  background: #111827;
+  color: #facc15;
+  border-radius: 999px;
+  padding: .18rem .4rem;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: .55rem !important;
+    padding: .7rem !important;
+  }
+
+  .topbar .brand,
+  .topbar .logo-brand {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .topbar nav {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .45rem !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .topbar nav button {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    padding: .62rem .5rem !important;
+    font-size: .82rem !important;
+    white-space: normal !important;
+    line-height: 1.05 !important;
+  }
+
+  .launch-trust-strip {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: .5rem !important;
+  }
+
+  .launch-trust-strip button,
+  .launch-trust-strip span,
+  .launch-trust-strip .live-draw-hero-button {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 720px) {
+  body.broadcast-body .broadcast-footer {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: min(100%, 360px) !important;
+    max-width: 360px !important;
+    margin: .35rem auto 0 !important;
+    padding: .6rem .7rem !important;
+    gap: .25rem !important;
+    border-radius: .9rem !important;
+    background: rgba(0,0,0,.55) !important;
+    border: 1px solid rgba(250,204,21,.18) !important;
+    text-align: center !important;
+    color: rgba(255,255,255,.92) !important;
+  }
+
+  body.broadcast-body .broadcast-footer span {
+    display: block !important;
+    font-size: .72rem !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+  }
+
+  body.broadcast-body .broadcast-footer strong {
+    color: #facc15 !important;
+  }
+}
