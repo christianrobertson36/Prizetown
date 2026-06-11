@@ -139,11 +139,13 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
             const isWinningSegment = winner && Number(winner.ticket_number || 0) >= Number(seg.from || seg.ticket_number || 0) && Number(winner.ticket_number || 0) <= Number(seg.to || seg.ticket_number || 0);
             if (useTicketSquares) {
               const totalSquares = Math.max(1, segments.length);
-              const angle = (i / totalSquares) * Math.PI * 2 - Math.PI / 2;
-              const radius = 188;
+              const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+              const t = totalSquares <= 1 ? 0 : i / (totalSquares - 1);
+              const radius = Math.sqrt(t) * 205;
+              const angle = i * goldenAngle;
               const x = 250 + Math.cos(angle) * radius;
               const y = 250 + Math.sin(angle) * radius;
-              const size = totalSquares > 800 ? 3 : totalSquares > 400 ? 4 : totalSquares > 200 ? 5 : 7;
+              const size = totalSquares > 1200 ? 3 : totalSquares > 700 ? 4 : totalSquares > 300 ? 5 : 7;
               return <rect
                 key={'ticket-square-' + (seg.label || seg.ticket_number || i) + '-' + i}
                 className={isWinningSegment ? 'ticket-square winning-segment' : 'ticket-square'}
