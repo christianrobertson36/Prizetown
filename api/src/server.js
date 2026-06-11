@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v157' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v158' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v157' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v158' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v157',
+    version: 'v158',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -681,6 +681,7 @@ const allowedSettings = [
   'social_tiktok_url',
   'social_x_url',
   'social_youtube_url',
+  'youtube_live_url',
   'welcome_marquee_text',
   'free_entry_global',
   'terms_text',
@@ -2026,7 +2027,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v157 draw proof panel)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v158 stream helper)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

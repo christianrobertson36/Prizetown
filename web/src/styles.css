@@ -5560,3 +5560,19 @@ main {
 .draw-proof-grid b { display: block; color: #facc15; font-size: .78rem; margin-bottom: .2rem; }
 .draw-proof-notes { margin-top: .75rem; padding: .75rem; border-left: 3px solid #facc15; background: rgba(250,204,21,.08); border-radius: .6rem; }
 @media (max-width: 820px) { .draw-proof-card { flex-direction: column; } .draw-proof-grid { grid-template-columns: 1fr 1fr; } }
+
+
+/* v158 stream helper */
+.stream-helper-panel { display: grid; gap: 1rem; }
+.stream-helper-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+.stream-helper-cards { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: .75rem; }
+.stream-helper-cards article {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(250,204,21,.18);
+  background: rgba(255,255,255,.04);
+  overflow-wrap: anywhere;
+}
+.stream-helper-cards strong { display: block; color: #facc15; margin-bottom: .35rem; }
+.stream-helper-cards span { color: #e5e7eb; font-size: .9rem; }
+@media (max-width: 850px) { .stream-helper-cards { grid-template-columns: 1fr; } }

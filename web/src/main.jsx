@@ -196,6 +196,7 @@ const defaultSettings = {
   social_tiktok_url: '',
   social_x_url: '',
   social_youtube_url: '',
+  youtube_live_url: '',
   welcome_marquee_text: 'Welcome to Prizetown! | New competitions added regularly | Instant wins and final draw prizes | Enter responsibly and good luck',
   free_entry_global: `Free Postal Entry Route
 
@@ -1428,6 +1429,58 @@ function SocialIntegrationsPanel({ settingsForm, setSettingsForm, saveSettings }
   </form>;
 }
 
+function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMessage }) {
+  const youtubeUrl = settingsForm.youtube_live_url || settingsForm.social_youtube_url || '';
+  const channelUrl = settingsForm.social_youtube_url || '';
+  const obsUrl = window.location.origin + '/draw-broadcast';
+  const obsTransparentUrl = window.location.origin + '/draw-broadcast?transparent=1';
+
+  function copyText(label, text) {
+    navigator.clipboard?.writeText(text);
+    setMessage(label + ' copied.');
+  }
+
+  const description = [
+    settingsForm.site_name || 'Prizetown',
+    'Official live prize draw.',
+    '',
+    'Watch the draw live and check winner results on the website.',
+    channelUrl ? 'YouTube channel: ' + channelUrl : '',
+    '',
+    'Please play responsibly. Full terms, free entry route and winner information are available on the Prizetown website.'
+  ].filter(Boolean).join(String.fromCharCode(10));
+
+  const checklist = [
+    'Prizetown OBS setup checklist',
+    '1. Add Browser Source: ' + obsUrl,
+    '2. Set width 1920 and height 1080.',
+    '3. Enable refresh browser when scene becomes active.',
+    '4. Keep Prizetown admin open separately via Tailscale/admin.',
+    '5. Use Draw Control Room before going live.',
+    '6. Use Final Draw for the official wheel and winner reveal.',
+    'Transparent overlay URL: ' + obsTransparentUrl
+  ].join(String.fromCharCode(10));
+
+  return <form className="panel stream-helper-panel" onSubmit={saveSettings}>
+    <h1>YouTube / OBS Stream Helper</h1>
+    <p className="muted">Save your YouTube links and copy ready-made stream text/checklists for live prize draws.</p>
+    <div className="form-grid">
+      <label>YouTube live URL<input value={settingsForm.youtube_live_url || ''} onChange={e => setSettingsForm({ ...settingsForm, youtube_live_url: e.target.value })} placeholder="https://youtube.com/live/..." /></label>
+      <label>YouTube channel URL<input value={settingsForm.social_youtube_url || ''} onChange={e => setSettingsForm({ ...settingsForm, social_youtube_url: e.target.value })} placeholder="https://youtube.com/@prizetown" /></label>
+    </div>
+    <div className="stream-helper-actions">
+      <button type="submit" className="primary">Save stream settings</button>
+      <button type="button" className="secondary" onClick={() => copyText('YouTube description', description)}>Copy YouTube description</button>
+      <button type="button" className="secondary" onClick={() => copyText('OBS checklist', checklist)}>Copy OBS checklist</button>
+      {youtubeUrl && <a className="button secondary" href={youtubeUrl} target="_blank" rel="noreferrer">Open YouTube live</a>}
+    </div>
+    <div className="stream-helper-cards">
+      <article><strong>OBS Browser Source</strong><span>{obsUrl}</span></article>
+      <article><strong>Transparent Overlay</strong><span>{obsTransparentUrl}</span></article>
+      <article><strong>YouTube Live</strong><span>{youtubeUrl || 'Not set yet'}</span></article>
+    </div>
+  </form>;
+}
 function ModulesPanel({ settingsForm, setSettingsForm, saveSettings }) {
   const modules = [
     ['module_postcodes_enabled', 'Postcode competitions', 'Show postcode signup, postcode zones, and competition postcode assignment tools. Turn off for a simple national competition site.'],
@@ -2517,6 +2570,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       items: [
         moduleLiveDraw && ['draw-control', 'Draw Control Room', ListChecks],
         moduleLiveDraw && ['draw-proof', 'Draw Proof', ListChecks],
+        moduleLiveDraw && ['stream-helper', 'Stream Helper', ListChecks],
         moduleLiveDraw && ['draws', 'Final draw', ListChecks],
         moduleInstantWins && ['instant-wins', 'Instant wins', Zap]
       ].filter(Boolean)
@@ -2620,6 +2674,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'draw-control' && <DrawControlRoom competitions={competitions} setPage={setPage} setMessage={setMessage} reload={reload} />}
         {activeTab === 'draw-proof' && <DrawProofPanel drawResults={drawResults} setMessage={setMessage} />}
+        {activeTab === 'stream-helper' && <StreamHelperPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} setMessage={setMessage} />}
 
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
@@ -2675,7 +2730,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Competition Setup', 'Use Competitions to view existing competitions. Use Add competition or Edit competition to set title, image, price, ticket limits, question, answer, rules, free-entry wording, draw date, status and postcode mode.'],
             ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
-            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Draw Proof after a draw to review the saved winner record and copy a public result summary. The broadcast screen includes a holding/countdown view before the official wheel and winner reveal.'],
+            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. Use Stream Helper to save YouTube links and copy OBS setup notes. Use Draw Proof after a draw to review the saved winner record and copy a public result summary.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
