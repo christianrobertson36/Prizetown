@@ -5576,3 +5576,45 @@ main {
 .stream-helper-cards strong { display: block; color: #facc15; margin-bottom: .35rem; }
 .stream-helper-cards span { color: #e5e7eb; font-size: .9rem; }
 @media (max-width: 850px) { .stream-helper-cards { grid-template-columns: 1fr; } }
+
+/* v164: Smaller final draw ready text so Arnold can stay visible without covering the draw */
+.draw-broadcast h1,
+.draw-broadcast h2,
+.draw-broadcast .broadcast-title,
+.draw-broadcast .broadcast-heading,
+.draw-broadcast .draw-title,
+.draw-broadcast .draw-status,
+.draw-broadcast .broadcast-status,
+.draw-broadcast .draw-preview-status,
+.draw-broadcast .ready-status,
+.broadcast-screen h1,
+.broadcast-screen h2,
+.broadcast-screen .broadcast-title,
+.broadcast-screen .broadcast-heading,
+.broadcast-screen .draw-title,
+.broadcast-screen .draw-status,
+.broadcast-screen .broadcast-status,
+.broadcast-screen .draw-preview-status,
+.broadcast-screen .ready-status {
+  font-size: clamp(1rem, 2vw, 2.2rem) !important;
+  line-height: 1.1 !important;
+  margin-top: 0.2rem !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.draw-broadcast p,
+.broadcast-screen p,
+.draw-broadcast .muted,
+.broadcast-screen .muted {
+  font-size: clamp(0.8rem, 1.2vw, 1rem) !important;
+  line-height: 1.25 !important;
+}
+
+.arnold-speech,
+.arnold-bubble,
+.arnold-text,
+.broadcast-arnold-text {
+  max-width: 360px !important;
+  font-size: clamp(0.75rem, 1vw, 0.95rem) !important;
+  line-height: 1.25 !important;
+}
