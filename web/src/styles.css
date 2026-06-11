@@ -5694,3 +5694,24 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
   stroke-width: 2.5;
   filter: drop-shadow(0 0 .45rem rgba(255,255,255,.95));
 }
+
+/* v170: Neutral centre ticket number reveal */
+.trusted-wheel-centre-number-bg {
+  fill: rgba(2, 6, 23, .94) !important;
+  stroke: rgba(255,255,255,.72) !important;
+  stroke-width: 5px !important;
+}
+
+.trusted-wheel-centre-number {
+  font-size: 3rem;
+  font-weight: 950;
+  fill: #ffffff;
+  letter-spacing: -0.04em;
+  paint-order: stroke;
+  stroke: rgba(0,0,0,.72);
+  stroke-width: 5px;
+}
+
+.trusted-wheel-draw.is-spinning .trusted-wheel-centre-number {
+  filter: drop-shadow(0 0 .45rem rgba(255,255,255,.7));
+}

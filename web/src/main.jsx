@@ -120,6 +120,24 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
   const colours = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'];
   const showLabels = segments.length <= 100;
   const useTicketSquares = spinnerStyle === 'ticket-squares';
+  const ticketNumbers = segments.map(seg => Number(seg.ticket_number || seg.from || 0)).filter(Boolean);
+  const [shuffleNumber, setShuffleNumber] = useState(ticketNumbers[0] || 1);
+
+  useEffect(() => {
+    if (isWinner && winner?.ticket_number) {
+      setShuffleNumber(Number(winner.ticket_number));
+      return;
+    }
+    if (!isSpinning) {
+      setShuffleNumber(ticketNumbers[0] || 1);
+      return;
+    }
+    const timer = setInterval(() => {
+      const picked = ticketNumbers[Math.floor(Math.random() * ticketNumbers.length)] || Math.ceil(Math.random() * 999);
+      setShuffleNumber(picked);
+    }, 75);
+    return () => clearInterval(timer);
+  }, [isSpinning, isWinner, winner?.ticket_number, tickets.length]);
 
   return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
     <div className="trusted-wheel-wrap">
@@ -170,10 +188,9 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
             </g>;
           })}
         </g>
-        <circle cx="250" cy="250" r="108" className="trusted-wheel-centre" />
-        <circle cx="250" cy="250" r="66" className="trusted-wheel-logo-ring" />
-        <image href="/wheel-of-luck-logo.svg" x="190" y="190" width="120" height="120" preserveAspectRatio="xMidYMid meet" clipPath="url(#trustedWheelLogoClip)" className="trusted-wheel-centre-logo" />
-        <text x="250" y="336" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
+        <circle cx="250" cy="250" r="112" className="trusted-wheel-centre trusted-wheel-centre-number-bg" />
+        <text x="250" y="255" textAnchor="middle" className="trusted-wheel-centre-number">#{shuffleNumber}</text>
+        <text x="250" y="303" textAnchor="middle" className="trusted-wheel-centre-sub">{isWinner ? 'WINNER CONFIRMED' : isSpinning ? 'DRAWING LIVE' : 'READY TO DRAW'}</text>
       </svg>
     </div>
     <div className="trusted-wheel-result">
