@@ -555,12 +555,8 @@ function ArnoldBroadcastHost({ mode = 'idle', winner }) {
         ? 'Tickets are loaded. We are ready to draw.'
         : 'Waiting for the live draw to begin.';
 
-  return <div className={`arnold-broadcast-host ${mode}`}>
+  return <div className={`arnold-broadcast-host ${mode} no-caption`}>
     <img src="/arnold-blackndeckka.jpg" alt="Arnold Blackndeckka" />
-    <div className="arnold-broadcast-bubble">
-      <strong>Arnold says</strong>
-      <span>{caption}</span>
-    </div>
   </div>;
 }
 
@@ -2167,7 +2163,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     {arnoldModuleEnabled && showArnold && <div className="draw-arnold-row">
       <ArnoldHost
         stage={spinning ? 'spinning' : winner ? 'winner' : entryList.length > 0 ? 'ready' : 'idle'}
-        caption={spinning ? 'Arnold says: the wheel is spinning now!' : winner ? `Arnold says: winning ticket #${winner.ticket_number} — ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
+        caption={spinning ? 'The wheel is spinning now!' : winner ? `Winning ticket #${winner.ticket_number} — ${winner.customer_name || winner.name || 'Customer'}!` : entryList.length > 0 ? `${entryList.length} tickets loaded. Arnold is ready to host the draw.` : 'Choose a competition and load tickets to start the final draw.'}
       />
     </div>}
     <div className="draw-room-head">

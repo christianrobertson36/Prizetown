@@ -5995,3 +5995,84 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     grid-template-columns: 1fr;
   }
 }
+
+/* v176: Remove Arnold broadcast text and centre mobile spinner */
+.arnold-broadcast-host.no-caption .arnold-broadcast-bubble {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  body.broadcast-body .broadcast-main {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: .85rem !important;
+  }
+
+  body.broadcast-body .broadcast-wheel-wrap,
+  body.broadcast-body .reveal-machine-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+  }
+
+  body.broadcast-body .trusted-wheel-draw {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body.broadcast-body .trusted-wheel-wrap {
+    display: block !important;
+    width: min(86vw, 360px) !important;
+    max-width: 360px !important;
+    margin: 0 auto !important;
+  }
+
+  body.broadcast-body .trusted-wheel-svg {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 auto !important;
+  }
+
+  body.broadcast-body .broadcast-datetime-strip {
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto .5rem !important;
+    text-align: center !important;
+  }
+
+  body.broadcast-body .broadcast-info {
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+  }
+
+  body.broadcast-body .arnold-broadcast-host {
+    width: 100% !important;
+    max-width: 120px !important;
+    margin: 0 auto .25rem !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  body.broadcast-body .arnold-broadcast-host img {
+    max-width: 95px !important;
+    height: auto !important;
+  }
+}
