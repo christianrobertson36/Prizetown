@@ -2491,6 +2491,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           ['Global legal/free entry text', !!(settingsForm.terms_text || '').trim() && !!(settingsForm.free_entry_global || '').trim(), 'Legal pages and global free-entry text should be filled in.'],
           ['Postal entry address', !!(settingsForm.postal_entry_address || '').trim() && !(settingsForm.postal_entry_address || '').includes('Add postal entry address'), 'Add a real postal entry address before launch.'],
           ['Branding', !!(settingsForm.site_name || '').trim() && !!(settingsForm.hero_title || '').trim(), 'Check site name, homepage title, logo and colours.'],
+          ['Homepage content', !!(settingsForm.hero_title || '').trim() && !!(settingsForm.hero_text || '').trim(), 'Homepage title and intro text should be filled in before launch.'],
+          ['Top scrolling ticker', !!(settingsForm.welcome_marquee_text || '').trim(), 'Set the editable top ticker text in Site settings.'],
+          ['Launch readiness warning', true, 'Admin Overview shows the prototype/payment/security/legal reminder.'],
           ['Postcode module checked', true, modulePostcodes ? 'Postcode competitions are enabled.' : 'Postcode module is off; site behaves more like a national competition site.'],
           ['Instant wins checked', true, moduleInstantWins ? 'Instant wins are enabled.' : 'Instant wins are off.'],
           ['Live draw checked', true, moduleLiveDraw ? 'Live draw / OBS is enabled.' : 'Live draw / OBS is off.']
