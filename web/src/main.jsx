@@ -660,6 +660,20 @@ return <main>
       </div>
     </section>
 
+    <section className="start-here-strip" aria-label="Start here">
+      <div>
+        <p className="eyebrow"><Sparkles size={16} /> Start here</p>
+        <h2>New to Prizetown?</h2>
+        <p>Pick a live competition, check how entries work, then follow public entry lists and winner results.</p>
+      </div>
+      <div className="start-here-actions">
+        <button type="button" className="primary" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Browse competitions</button>
+        <button type="button" className="secondary" onClick={() => setPage('how-it-works')}>How it works</button>
+        <button type="button" className="secondary" onClick={() => setPage('entry-lists')}>Entry lists</button>
+        <button type="button" className="secondary" onClick={() => setPage('winners')}>Winners</button>
+      </div>
+    </section>
+
     {arnoldEnabled && <section className="homepage-arnold panel">
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
     </section>}
