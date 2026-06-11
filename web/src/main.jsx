@@ -167,7 +167,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
       </> : <>
         <p className="reveal-kicker">Ready</p>
         <h2>{label}</h2>
-        <h3>{segments.length} wheel segments ready</h3>
+        <h3>Draw preview ready</h3>
       </>}
     </div>
     <p className="trusted-wheel-note">The wheel display is generated from eligible entries. Large draws use grouped ticket ranges, with the exact winning ticket shown in the reveal.</p>
