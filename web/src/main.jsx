@@ -1535,6 +1535,66 @@ function SystemCheckPanel({ setMessage }) {
   </section>;
 }
 
+function DrawControlRoom({ competitions = [], setPage, setMessage, reload }) {
+  const now = Date.now();
+  const rows = safeArray(competitions).filter(c => c.draw_at || c.auto_draw_enabled || c.status === 'closed').sort((a, b) => new Date(a.draw_at || 0) - new Date(b.draw_at || 0));
+  const dueRows = rows.filter(c => {
+    const drawDue = c.draw_at && new Date(c.draw_at).getTime() <= now;
+    const soldOut = Number(c.entries_sold || 0) >= Number(c.max_tickets || 0);
+    const closed = c.status === 'closed';
+    return c.auto_draw_enabled === true && drawDue && (soldOut || closed) && !c.winner_entry_id;
+  });
+
+  async function runDueDraws() {
+    try {
+      const r = await api('/admin/draw/run-due-auto', { method: 'POST' });
+      setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`);
+      if (reload) await reload();
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
+
+  function copyUrl(path) {
+    const url = window.location.origin + path;
+    navigator.clipboard?.writeText(url);
+    setMessage('OBS URL copied: ' + url);
+  }
+
+  return <div className="panel draw-control-room">
+    <h1>Draw Control Room</h1>
+    <p className="muted">Use this before going live on OBS/YouTube. It shows draw readiness, quick OBS links and safe controls for scheduled auto draws.</p>
+    <div className="draw-control-actions">
+      <button type="button" className="primary" onClick={() => setPage('draw-broadcast')}>Open broadcast screen</button>
+      <button type="button" className="secondary" onClick={() => window.open('/draw-broadcast', 'prizetown_draw_broadcast')}>Open OBS window</button>
+      <button type="button" className="secondary" onClick={() => copyUrl('/draw-broadcast')}>Copy OBS URL</button>
+      <button type="button" className="secondary" onClick={() => copyUrl('/draw-broadcast?transparent=1')}>Copy transparent overlay URL</button>
+      <button type="button" className="primary" onClick={runDueDraws}>Run due auto draws now</button>
+    </div>
+    <div className="draw-control-summary">
+      <article><strong>{rows.length}</strong><span>Draw-related competitions</span></article>
+      <article><strong>{dueRows.length}</strong><span>Due auto draws</span></article>
+      <article><strong>{rows.filter(c => c.winner_entry_id).length}</strong><span>Winner recorded</span></article>
+    </div>
+    <div className="draw-control-list">
+      {rows.length === 0 ? <p className="muted">No draw competitions found yet.</p> : rows.map(c => {
+        const drawDue = c.draw_at && new Date(c.draw_at).getTime() <= now;
+        const soldOut = Number(c.entries_sold || 0) >= Number(c.max_tickets || 0);
+        const closed = c.status === 'closed';
+        const ready = drawDue && (soldOut || closed) && !c.winner_entry_id;
+        const status = c.winner_entry_id ? 'Winner recorded' : ready ? 'Ready for draw' : drawDue ? 'Draw time reached' : 'Waiting';
+        return <article className="draw-control-card" key={c.id}>
+          <div>
+            <h3>{c.title}</h3>
+            <p className="muted">Draw: {fmtDate(c.draw_at)} · Status: {c.status || 'draft'} · Sold: {c.entries_sold || 0}/{c.max_tickets || 0}</p>
+          </div>
+          <span className={`draw-status-pill ${ready ? 'ready' : c.winner_entry_id ? 'done' : 'waiting'}`}>{status}</span>
+        </article>;
+      })}
+    </div>
+  </div>;
+}
+
 function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   const [competitionId, setCompetitionId] = useState('');
   const [entries, setEntries] = useState([]);
@@ -2406,6 +2466,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     {
       title: 'Draws',
       items: [
+        moduleLiveDraw && ['draw-control', 'Draw Control Room', ListChecks],
         moduleLiveDraw && ['draws', 'Final draw', ListChecks],
         moduleInstantWins && ['instant-wins', 'Instant wins', Zap]
       ].filter(Boolean)
@@ -2507,6 +2568,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'instant-wins' && <div className="admin-split"><form className="panel" onSubmit={saveInstantWin}><h1>Add instant win prize</h1><label>Competition<select value={iwForm.competition_id} onChange={e => setIwForm({ ...iwForm, competition_id: e.target.value })} required><option value="">Choose competition</option>{competitions.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label><div className="two"><label>Prize title<input value={iwForm.prize_title} onChange={e => setIwForm({ ...iwForm, prize_title: e.target.value })} placeholder="£100 Instant Win" required /></label><label>Prize value pence<input type="number" value={iwForm.prize_value_pence} onChange={e => setIwForm({ ...iwForm, prize_value_pence: Number(e.target.value) })} /></label></div><label>Winning ticket number<input type="number" value={iwForm.winning_ticket_number} onChange={e => setIwForm({ ...iwForm, winning_ticket_number: e.target.value })} required /></label><button className="primary full"><Zap size={16} /> Add instant win</button></form><div className="panel list-panel"><h1>Instant wins</h1>{instantWins.length === 0 && <p className="muted">No instant wins added yet.</p>}{instantWins.map(w => <div className="list-row entry-row" key={w.id}><div><strong>{w.prize_title}</strong><p>{w.competition_title}  -  ticket #{w.winning_ticket_number}  -  {w.status}</p></div>{w.status !== 'claimed' && <button className="danger" onClick={() => deleteInstant(w.id)}><Trash2 size={16} /></button>}</div>)}</div></div>}
 
+        {activeTab === 'draw-control' && <DrawControlRoom competitions={competitions} setPage={setPage} setMessage={setMessage} reload={reload} />}
+
         {activeTab === 'draws' && <div className="final-draw-only">
           <div className="panel auto-draw-note">
             <h1>Scheduled Auto Draws</h1><p className="muted"><strong>This is separate from quick test spins.</strong> Test ticket loads below do not trigger scheduled or official draw records.</p>
@@ -2561,7 +2624,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Competition Setup', 'Use Competitions to view existing competitions. Use Add competition or Edit competition to set title, image, price, ticket limits, question, answer, rules, free-entry wording, draw date, status and postcode mode.'],
             ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
-            ['Draws / OBS', 'Use Final draw for draw tools and the OBS broadcast screen. OBS should only display the draw screen; Prizetown controls the draw result. Check Automation status if an auto draw has not run.'],
+            ['Draws / OBS', 'Use Draw Control Room before going live on OBS/YouTube. It shows draw readiness, OBS links and due auto draw controls. Use Final draw for the wheel and official winner reveal.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
