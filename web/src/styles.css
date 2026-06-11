@@ -5648,3 +5648,36 @@ main {
   line-height: 1.2 !important;
   margin-top: 0.35rem !important;
 }
+
+/* v166: Force smaller text on actual /draw-broadcast page */
+body.broadcast-body .broadcast-page .broadcast-wheel-wrap .trusted-wheel-result .reveal-kicker {
+  font-size: 0.85rem !important;
+  line-height: 1 !important;
+  margin: 0 0 0.1rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+body.broadcast-body .broadcast-page .broadcast-wheel-wrap .trusted-wheel-result h2 {
+  font-size: 1.45rem !important;
+  line-height: 1 !important;
+  margin: 0 0 0.15rem !important;
+  letter-spacing: 0.02em !important;
+}
+
+body.broadcast-body .broadcast-page .broadcast-wheel-wrap .trusted-wheel-result h3 {
+  font-size: 0.95rem !important;
+  line-height: 1.05 !important;
+  margin: 0 !important;
+}
+
+body.broadcast-body .broadcast-page .broadcast-wheel-wrap .trusted-wheel-note {
+  font-size: 0.72rem !important;
+  line-height: 1.15 !important;
+  margin-top: 0.25rem !important;
+  max-width: 90% !important;
+}
+
+body.broadcast-body .broadcast-page .trusted-wheel-result {
+  gap: 0.15rem !important;
+  padding: 0.25rem 0.5rem !important;
+}
