@@ -5715,3 +5715,94 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
 .trusted-wheel-draw.is-spinning .trusted-wheel-centre-number {
   filter: drop-shadow(0 0 .45rem rgba(255,255,255,.7));
 }
+
+/* v172: Mobile live draw broadcast layout fix */
+@media (max-width: 720px) {
+  body.broadcast-body {
+    overflow-x: hidden;
+  }
+
+  body.broadcast-body .broadcast-page {
+    width: 100%;
+    max-width: 100vw;
+    min-height: 100vh;
+    padding: 1rem .75rem 1.5rem;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  body.broadcast-body .broadcast-card,
+  body.broadcast-body .broadcast-panel,
+  body.broadcast-body .broadcast-draw-card,
+  body.broadcast-body .draw-broadcast-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.broadcast-body .trusted-wheel-draw {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  body.broadcast-body .trusted-wheel-wrap {
+    width: min(92vw, 420px);
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.broadcast-body .trusted-wheel-svg {
+    width: 100%;
+    height: auto;
+    max-height: 58vh;
+  }
+
+  body.broadcast-body .trusted-wheel-result {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  body.broadcast-body .broadcast-page h1,
+  body.broadcast-body .broadcast-page h2,
+  body.broadcast-body .broadcast-page h3 {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  body.broadcast-body .trusted-wheel-centre-number {
+    font-size: 2.15rem;
+    stroke-width: 4px;
+  }
+
+  body.broadcast-body .trusted-wheel-centre-sub {
+    font-size: .62rem;
+    letter-spacing: .08em;
+  }
+
+  body.broadcast-body .reveal-kicker {
+    font-size: .72rem;
+    letter-spacing: .08em;
+  }
+}
+
+@media (max-width: 420px) {
+  body.broadcast-body .broadcast-page {
+    padding: .75rem .55rem 1.25rem;
+  }
+
+  body.broadcast-body .trusted-wheel-wrap {
+    width: min(96vw, 360px);
+  }
+
+  body.broadcast-body .trusted-wheel-svg {
+    max-height: 52vh;
+  }
+
+  body.broadcast-body .trusted-wheel-centre-number {
+    font-size: 1.85rem;
+  }
+}
