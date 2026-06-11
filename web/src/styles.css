@@ -5336,3 +5336,46 @@ main {
 .marquee-track {
   animation-name: prizetownMarqueeSmooth;
 }
+
+
+/* v142 admin launch warning */
+.launch-warning-card {
+  border-color: rgba(250, 204, 21, .28);
+  background:
+    linear-gradient(135deg, rgba(250,204,21,.12), rgba(249,115,22,.08)),
+    rgba(15,23,42,.72);
+  box-shadow: 0 1.4rem 3.2rem rgba(0,0,0,.24);
+}
+
+.launch-warning-card h1 {
+  margin: .35rem 0 .45rem;
+}
+
+.launch-warning-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.launch-warning-grid span {
+  border: 1px solid rgba(250,204,21,.22);
+  background: rgba(250,204,21,.08);
+  color: #fde68a;
+  border-radius: .9rem;
+  padding: .7rem .8rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .launch-warning-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .launch-warning-grid {
+    grid-template-columns: 1fr;
+  }
+}

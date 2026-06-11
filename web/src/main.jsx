@@ -2418,6 +2418,20 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       <section className="admin-content">
         {activeTab === 'test-tools' && <div className="panel list-panel"><h1>Test tools</h1><p className="muted">Use these while building and testing Prizetown. Starter competitions use the built-in demo poster images and can be removed later.</p><div className="admin-split"><div className="panel"><h2>Sample competitions</h2><p className="muted">Adds Cash Blast, Tech Bundle, Luxury Night Away and Family Fun Hamper sample competitions.</p><button type="button" className="primary full" onClick={seedDemo}>Add starter sample competitions</button><button type="button" className="danger full" onClick={removeStarterCompetitions}>Remove starter sample competitions</button></div><div className="panel"><h2>What this tests</h2><p>Poster strip, competition detail pages, basket, checkout, ticket allocation and draw preview.</p><p className="muted">After adding samples, open the homepage and check the scrolling poster strip.</p></div></div></div>}
 
+        {activeTab === 'overview' && <section className="panel launch-warning-card">
+          <div>
+            <p className="eyebrow">Launch readiness</p>
+            <h1>Prototype mode: do final checks before real payments</h1>
+            <p className="muted">Prizetown is looking strong for testing, but before a public real-money launch you still need payment hardening, security hardening, legal checks and production secrets changed.</p>
+          </div>
+          <div className="launch-warning-grid">
+            <span>Change admin password</span>
+            <span>Set strong JWT secret</span>
+            <span>Verify payment webhooks</span>
+            <span>Legal wording checked</span>
+          </div>
+        </section>}
+
         {activeTab === 'overview' && <div className="panel"><h1>Dashboard overview</h1><div className="stat-grid"><div><strong>{competitions.length}</strong><span>Total competitions</span></div><div><strong>{liveCount}</strong><span>Live competitions</span></div><div><strong>{totalTickets}</strong><span>Tickets allocated</span></div><div><strong>{money(revenue)}</strong><span>Test order value</span></div><div><strong>{instantClaimed}/{instantWins.length}</strong><span>Instant wins claimed</span></div></div><div className="admin-split"><div><h2>Recent orders</h2>{orders.slice(0, 8).map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{o.customer_email}  -  {money(o.total_pence)}  -  {o.entry_count} entries  -  {o.status}</p></div></div>)}</div><div><h2>Recent entries</h2>{entries.slice(0, 8).map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>{e.customer_email}  -  ticket #{e.ticket_number}  -  {e.payment_status}</p></div></div>)}</div></div></div>}
 
         {activeTab === 'competitions' && <div className="panel list-panel"><div className="row"><h1>Competitions</h1><button className="primary" onClick={() => { setEditing(null); setForm(empty); setActiveTab('competition-form'); }}><Plus size={16} /> Add competition</button></div>{competitions.length === 0 && <p className="muted">No competitions yet. Use Add starter competitions or add your first competition.</p>}{competitions.map(c => <div className="list-row competition-admin-row" key={c.id}><div><strong>{c.title}</strong><p>{c.status}  -  {c.entries_sold || 0}/{c.max_tickets} tickets  -  postcode: {assignmentLabel(c.id)}  -  instant {c.instant_win_claimed || 0}/{c.instant_win_total || 0}  -  closes {fmtDate(c.closes_at)}</p></div><button onClick={() => edit(c)}><Pencil size={16} /> Edit</button><button className="danger" onClick={() => remove(c.id)}><Trash2 size={16} /> Delete</button></div>)}</div>}
