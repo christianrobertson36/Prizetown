@@ -197,6 +197,7 @@ const defaultSettings = {
   social_x_url: '',
   social_youtube_url: '',
   youtube_live_url: '',
+  spinner_style: 'classic',
   welcome_marquee_text: 'Welcome to Prizetown! | New competitions added regularly | Instant wins and final draw prizes | Enter responsibly and good luck',
   free_entry_global: `Free Postal Entry Route
 
@@ -1720,6 +1721,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
     return saved === null ? true : saved !== 'false';
   });
   const [spinSpeed, setSpinSpeed] = useState(() => localStorage.getItem('prizetown_draw_spin_speed') || 'standard');
+  const [spinnerStyle, setSpinnerStyle] = useState(() => localStorage.getItem('prizetown_spinner_style') || settings.spinner_style || 'classic');
   const spinAudioRef = useRef(null);
 
   const competitionList = safeArray(competitions);
@@ -1756,7 +1758,13 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   function setSpeedPreset(next) {
     setSpinSpeed(next);
     localStorage.setItem('prizetown_draw_spin_speed', next);
-    setMessage(`Spin speed set to ${next}.`);
+    setMessage('Spin speed set to ' + next + '.');
+  }
+
+  function setSpinnerStylePreset(next) {
+    setSpinnerStyle(next);
+    localStorage.setItem('prizetown_spinner_style', next);
+    setMessage(next === 'ticket-squares' ? 'Spinner style set to ticket squares. Renderer patch comes next.' : 'Spinner style set to classic.');
   }
 
   function createTestEntries(count = 100) {
@@ -1817,6 +1825,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
         email: picked?.email || picked?.customer_email || ''
       } : null,
       show_arnold: arnoldModuleEnabled && showArnold,
+      spinner_style: spinnerStyle,
       ...extra
     };
   }
@@ -2131,6 +2140,14 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
           <button type="button" className={spinSpeed === 'showcase' ? 'primary' : 'secondary'} onClick={() => setSpeedPreset('showcase')}>Showcase</button>
         </div>
       </div>
+      <div className="draw-speed-controls">
+        <span className="control-label">Spinner style</span>
+        <div className="segmented-buttons">
+          <button type="button" className={spinnerStyle === 'classic' ? 'primary' : 'secondary'} onClick={() => setSpinnerStylePreset('classic')}>Classic</button>
+          <button type="button" className={spinnerStyle === 'ticket-squares' ? 'primary' : 'secondary'} onClick={() => setSpinnerStylePreset('ticket-squares')}>Ticket squares</button>
+        </div>
+      </div>
+
       <div className="draw-speed-controls">
         <span className="control-label">Quick test ticket loads</span>
         <div className="segmented-buttons">
@@ -2758,6 +2775,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Security Reminder', 'Before real payments, change default admin credentials, use a strong JWT secret, protect admin access, verify payment webhooks, keep database backups and test restore.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
+            ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
             ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
         </div>}
