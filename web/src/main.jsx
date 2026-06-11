@@ -540,6 +540,10 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
     ['Instant wins claimed', safeArray(instantWinners).length || 0],
     ['Next draw', nextDrawCompetition ? fmtDate(nextDrawCompetition.draw_at) : 'Coming soon']
   ];
+  const instantWinnerHighlights = safeArray(instantWinners).slice(0, 6);
+  const instantWinnerTickerRows = instantWinnerHighlights.length
+    ? [...instantWinnerHighlights, ...instantWinnerHighlights]
+    : [];
 
   const demoBaseTickets = useMemo(() => [
     { ticket_number: 1, customer_name: 'Alex' },
@@ -750,6 +754,45 @@ return <main>
 
     <section className="ticker winners-ticker"><strong>Latest instant winners</strong>{instantWinners.length === 0 ? <span>No instant winners yet — instant-win prizes will appear here as they are claimed.</span> : instantWinners.slice(0, 10).map(w => <span key={w.id}>{w.winner_name || 'Customer'} won {w.prize_title} on {w.competition_title}</span>)}</section>
 
+
+    <section className="instant-winner-showcase">
+      <div className="section-head">
+        <div>
+          <p className="eyebrow"><Zap size={16} /> Instant winner feed</p>
+          <h2>Recent instant-win moments</h2>
+        </div>
+        <button type="button" className="secondary" onClick={() => setPage('winners')}>View all winners</button>
+      </div>
+
+      {instantWinnerTickerRows.length > 0 ? <div className="instant-winner-marquee" aria-label="Recent instant winners">
+        <div className="instant-winner-track">
+          {instantWinnerTickerRows.map((w, idx) => <span key={`${w.id || idx}-ticker-${idx}`}>
+            <strong>{w.customer_name || w.winner_name || 'Customer'}</strong>
+            won {w.prize_title || 'an instant prize'}
+            <em>Ticket #{w.ticket_number || w.winning_ticket_number || '-'}</em>
+          </span>)}
+        </div>
+      </div> : <div className="panel empty-winners">
+        <h3>No instant winners yet</h3>
+        <p>Instant-win prizes will appear here as soon as matching ticket numbers are claimed.</p>
+      </div>}
+
+      {instantWinnerHighlights.length > 0 && <div className="instant-winner-card-grid">
+        {instantWinnerHighlights.map(w => <article className="instant-winner-card" key={w.id}>
+          {w.prize_image_url ? <img src={imageUrl(w.prize_image_url)} alt="" /> : <div className="instant-winner-icon"><Zap size={24} /></div>}
+          <div>
+            <p className="winner-kicker">Instant win claimed</p>
+            <h3>{w.customer_name || w.winner_name || 'Customer'}</h3>
+            <p>Won <strong>{w.prize_title || 'Instant prize'}</strong></p>
+            <div className="winner-meta">
+              <span>{w.competition_title || 'Competition'}</span>
+              <span>Ticket #{w.ticket_number || w.winning_ticket_number || '-'}</span>
+              {w.claimed_at && <span>{fmtDate(w.claimed_at)}</span>}
+            </div>
+          </div>
+        </article>)}
+      </div>}
+    </section>
 
     <section className="footer-pre-cta">
       <div>

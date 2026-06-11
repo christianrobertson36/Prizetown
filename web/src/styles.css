@@ -4763,3 +4763,118 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
   }
 }
+
+
+/* v132 instant winner feed */
+.instant-winner-showcase {
+  display: grid;
+  gap: .9rem;
+  margin: 1rem 0;
+}
+
+.instant-winner-marquee {
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(250,204,21,.18);
+  background: rgba(15,23,42,.72);
+  box-shadow: 0 1rem 2.4rem rgba(0,0,0,.2);
+}
+
+.instant-winner-track {
+  display: flex;
+  width: max-content;
+  gap: .65rem;
+  padding: .7rem;
+  animation: instantWinnerScroll 34s linear infinite;
+}
+
+.instant-winner-marquee:hover .instant-winner-track {
+  animation-play-state: paused;
+}
+
+.instant-winner-track span {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  white-space: nowrap;
+  padding: .65rem .85rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #d9dbea;
+  font-weight: 850;
+}
+
+.instant-winner-track strong {
+  color: #fde047;
+}
+
+.instant-winner-track em {
+  font-style: normal;
+  color: #86efac;
+}
+
+@keyframes instantWinnerScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.instant-winner-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: .8rem;
+}
+
+.instant-winner-card {
+  display: grid;
+  grid-template-columns: 4.25rem 1fr;
+  gap: .85rem;
+  align-items: center;
+  padding: .95rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, rgba(250,204,21,.08), rgba(255,255,255,.045));
+  border: 1px solid rgba(250,204,21,.16);
+  box-shadow: 0 1rem 2.5rem rgba(0,0,0,.2);
+}
+
+.instant-winner-card img,
+.instant-winner-icon {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 1rem;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(250,204,21,.22), rgba(249,115,22,.16));
+  color: #fde047;
+}
+
+.instant-winner-card h3,
+.instant-winner-card p {
+  margin: .12rem 0;
+}
+
+@media (max-width: 700px) {
+  .instant-winner-showcase .section-head {
+    align-items: stretch;
+  }
+
+  .instant-winner-showcase .section-head button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .instant-winner-track {
+    animation-duration: 46s;
+  }
+
+  .instant-winner-card {
+    grid-template-columns: 3.75rem 1fr;
+  }
+
+  .instant-winner-card img,
+  .instant-winner-icon {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+}
