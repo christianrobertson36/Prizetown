@@ -5474,3 +5474,31 @@ main {
     height: 230px;
   }
 }
+
+
+/* v154 social integrations */
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .8rem;
+}
+
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: .45rem .75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(250,204,21,.28);
+  background: rgba(250,204,21,.1);
+  color: #fef3c7;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.social-links a:hover {
+  background: rgba(250,204,21,.18);
+  color: #fff7d6;
+}

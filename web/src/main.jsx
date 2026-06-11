@@ -191,6 +191,11 @@ const defaultSettings = {
   hero_title: 'Win big prizes with Prizetown',
   hero_text: 'Browse live postcode prize competitions, add tickets to your basket, answer the entry question and receive your ticket numbers securely.',
   footer_text: 'Prizetown runs postcode-based prize competitions with clear entry limits, responsible play guidance and transparent draw information.',
+  social_facebook_url: '',
+  social_instagram_url: '',
+  social_tiktok_url: '',
+  social_x_url: '',
+  social_youtube_url: '',
   welcome_marquee_text: 'Welcome to Prizetown! | New competitions added regularly | Instant wins and final draw prizes | Enter responsibly and good luck',
   free_entry_global: `Free Postal Entry Route
 
@@ -881,6 +886,7 @@ return <main>
         <img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} />
         <p>{settings.footer_text}</p>
         <p className="footer-credit">{settings.brand_footer_credit || 'Website by Neotech Designs'}  -  <a href={settings.brand_footer_link_url || 'https://ctec-shop.co.uk'} target="_blank" rel="noreferrer">{settings.brand_footer_link_label || 'ctec-shop.co.uk'}</a></p>
+        <SocialLinks settings={settings} />
       </div>
       <div className="footer-column">
         <h3>Free entry</h3>
@@ -997,6 +1003,22 @@ function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
   }
 
   return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button type="button" onClick={() => shareCompetition('native')}>Share</button><button type="button" onClick={() => shareCompetition('facebook')}>Facebook</button><button type="button" onClick={() => shareCompetition('instagram')}>Instagram</button><button type="button" onClick={() => shareCompetition('tiktok')}>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong>  -  {c.entries_sold || 0}/{c.max_tickets}  -  {remaining} tickets remaining  -  max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<div className="quick-picks"><button type="button" onClick={() => setQuantity(1)}>1 ticket</button><button type="button" onClick={() => setQuantity(5)}>5 tickets</button><button type="button" onClick={() => setQuantity(10)}>10 tickets</button><button type="button" onClick={() => setQuantity(25)}>25 tickets</button></div><p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => setPage('cart')}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'}  -  ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
+}
+
+function SocialLinks({ settings = {} }) {
+  const links = [
+    ['Facebook', settings.social_facebook_url],
+    ['Instagram', settings.social_instagram_url],
+    ['TikTok', settings.social_tiktok_url],
+    ['X', settings.social_x_url],
+    ['YouTube', settings.social_youtube_url]
+  ].filter(([, url]) => String(url || '').trim());
+
+  if (links.length === 0) return null;
+
+  return <div className="social-links" aria-label="Social links">
+    {links.map(([label, url]) => <a key={label} href={url} target="_blank" rel="noreferrer">{label}</a>)}
+  </div>;
 }
 
 function Login({ setUser, setPage, setMessage, settings = {} }) {
@@ -1381,6 +1403,21 @@ function BrandingPanel({ settingsForm, setSettingsForm, saveSettings, setMessage
     <label>Footer link URL<input value={settingsForm.brand_footer_link_url || ''} onChange={e => setSettingsForm({ ...settingsForm, brand_footer_link_url: e.target.value })} /></label>
 
     <button className="primary full">Save branding</button>
+  </form>;
+}
+
+function SocialIntegrationsPanel({ settingsForm, setSettingsForm, saveSettings }) {
+  return <form className="panel settings-panel social-integrations-panel" onSubmit={saveSettings}>
+    <h1>Social Integrations</h1>
+    <p className="muted">Add your public social profile links. Links only show in the website footer when a URL is filled in.</p>
+    <div className="admin-grid two">
+      <label>Facebook URL<input value={settingsForm.social_facebook_url || ''} onChange={e => setSettingsForm({ ...settingsForm, social_facebook_url: e.target.value })} placeholder="https://facebook.com/yourpage" /></label>
+      <label>Instagram URL<input value={settingsForm.social_instagram_url || ''} onChange={e => setSettingsForm({ ...settingsForm, social_instagram_url: e.target.value })} placeholder="https://instagram.com/yourpage" /></label>
+      <label>TikTok URL<input value={settingsForm.social_tiktok_url || ''} onChange={e => setSettingsForm({ ...settingsForm, social_tiktok_url: e.target.value })} placeholder="https://tiktok.com/@yourpage" /></label>
+      <label>X / Twitter URL<input value={settingsForm.social_x_url || ''} onChange={e => setSettingsForm({ ...settingsForm, social_x_url: e.target.value })} placeholder="https://x.com/yourpage" /></label>
+      <label>YouTube URL<input value={settingsForm.social_youtube_url || ''} onChange={e => setSettingsForm({ ...settingsForm, social_youtube_url: e.target.value })} placeholder="https://youtube.com/@yourpage" /></label>
+    </div>
+    <button className="primary full">Save social links</button>
   </form>;
 }
 
@@ -2394,6 +2431,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       title: 'Tools',
       items: [
         ['help-guide', 'Help guide', ListChecks],
+        ['social-integrations', 'Social Integrations', ListChecks],
         ['system-check', 'System check', Shield],
         ['email-test', 'Email test', Shield],
         ['audit', 'Audit log', ListChecks]
@@ -2532,6 +2570,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Modules', 'Use Modules to switch major features on/off, including postcode competitions, instant wins, live draw/OBS, Arnold, demo wheel, profit planner and legal popups.'],
             ['Legal Text', 'Use Legal Text to edit terms, privacy notice, free-entry route, refunds, cookies, responsible play and popup wording. This is starter text only and should be checked before real-money launch.'],
             ['Site Settings', 'Use Site settings for homepage title, intro text, support email, footer text and the top scrolling ticker. Separate ticker messages with a vertical bar: |'],
+            ['Social Integrations', 'Use Social Integrations to add Facebook, Instagram, TikTok, X/Twitter and YouTube profile links. Filled-in links appear as buttons in the public website footer.'],
             ['System Check', 'Use System check to spot common setup problems. It is a helper, not a replacement for manual legal, payment and security checks.'],
             ['Email Test', 'Use Email test to confirm Resend transactional emails are configured and working. If emails fail, check the Resend API key and sender domain setup.'],
             ['Audit Log', 'Use Audit log to review important admin/system actions. Useful for checking what changed and when.'],
@@ -2543,6 +2582,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </div>}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
+
+        {activeTab === 'social-integrations' && <SocialIntegrationsPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
 
         {activeTab === 'email-test' && <div className="panel settings-panel">
           <h1>Email Status / Test</h1>
