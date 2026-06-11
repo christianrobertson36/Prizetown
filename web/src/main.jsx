@@ -2513,40 +2513,30 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'help-guide' && <div className="panel list-panel help-guide-panel">
           <h1>Admin Help Guide</h1>
-          <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added.</p>
-          <div className="list-row entry-row">
-            <div>
-              <strong>Admin Quick Start</strong>
-              <p>Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.</p>
-            </div>
-          </div>
-          <div className="list-row entry-row">
-            <div>
-              <strong>Common Admin Jobs</strong>
-              <p>Create a competition: Competitions → Add competition. Check sales: Orders & entries. Add postal/free entries: Free entries. Change homepage text: Site settings. Change logo/colours: Branding. Check launch safety: Launch checklist and System check.</p>
-            </div>
-          </div>
+          <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
+
           {[
-            ['Overview', 'Quick snapshot of competitions, orders, entries, revenue and launch readiness reminders.'],
-            ['Test tools', 'Creates safe demo/sample data so you can test the site without real customers.'],
-            ['Launch checklist', 'Pre-launch checklist for competitions, legal text, branding, ticker text and module setup.'],
-            ['Automation status', 'Shows what automated tasks are ready, such as draw readiness, free-entry setup and email automation.'],
-            ['Customers', 'Read-only customer overview and export/search tools. Useful for support and admin checks.'],
-            ['Competitions', 'View, manage and edit prize competitions. Use Add/Edit competition for the detailed form.'],
-            ['Orders & entries', 'Shows customer orders, allocated entries and ticket information. Useful for checking purchases and draw eligibility.'],
-            ['Free entries', 'Manual helper for postal/free-entry requests. Valid free entries should be added fairly and treated like paid entries.'],
-            ['Final draw', 'Runs final draw tools and opens the OBS broadcast screen for live draws.'],
-            ['Instant wins', 'Manage instant-win prizes and winning ticket numbers.'],
-            ['Postcode Zones', 'Create and manage postcode areas for local competitions.'],
-            ['Assign Postcodes', 'Assign competitions to postcode zones when postcode mode is enabled.'],
-            ['Profit Planner', 'Estimate ticket revenue, prize cost, fees, marketing budget and expected margin.'],
-            ['Branding', 'Edit logo, colours, site name and visual branding.'],
-            ['Modules', 'Turn major features on or off, such as postcode competitions, instant wins, live draw, Arnold and legal popups.'],
-            ['Legal Text', 'Edit terms, privacy, free-entry wording, refunds, cookie notice, responsible play and popup wording. Have this checked before real launch.'],
-            ['Site settings', 'Edit homepage wording, support email, footer text and the top scrolling ticker.'],
-            ['System check', 'Runs a smart diagnostic for common setup issues.'],
-            ['Email test', 'Checks transactional email status and sends a test email through Resend.'],
-            ['Audit log', 'Shows important admin actions and system events.']
+            ['Admin Quick Start', 'Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.'],
+            ['Common Admin Jobs', 'Create a competition: Competitions → Add competition. Check sales: Orders & entries. Add postal/free entries: Free entries. Change homepage text: Site settings. Change logo/colours: Branding. Check launch safety: Launch checklist and System check.'],
+            ['Common Troubleshooting', 'Text not changing: save in Site settings, then refresh the homepage. Email issue: use Email test. Draw issue: check Final draw and Automation status. Admin access issue: use the Tailscale admin URL, not public /admin.'],
+            ['Launch Checks', 'Before sending real customers to the site, check Launch checklist, System check, Legal Text, payment setup, email setup, competition rules, free-entry wording, draw dates and branding.'],
+            ['Competition Setup', 'Use Competitions to view existing competitions. Use Add competition or Edit competition to set title, image, price, ticket limits, question, answer, rules, free-entry wording, draw date, status and postcode mode.'],
+            ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
+            ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
+            ['Draws / OBS', 'Use Final draw for draw tools and the OBS broadcast screen. OBS should only display the draw screen; Prizetown controls the draw result. Check Automation status if an auto draw has not run.'],
+            ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
+            ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
+            ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
+            ['Profit Planner', 'Use Profit Planner to estimate ticket revenue, prize cost, fees, marketing budget, VAT impact and likely margin before launching a competition.'],
+            ['Branding', 'Use Branding to change logo, favicon, colours, site name and homepage visual style. Save branding after applying presets or uploads.'],
+            ['Modules', 'Use Modules to switch major features on/off, including postcode competitions, instant wins, live draw/OBS, Arnold, demo wheel, profit planner and legal popups.'],
+            ['Legal Text', 'Use Legal Text to edit terms, privacy notice, free-entry route, refunds, cookies, responsible play and popup wording. This is starter text only and should be checked before real-money launch.'],
+            ['Site Settings', 'Use Site settings for homepage title, intro text, support email, footer text and the top scrolling ticker. Separate ticker messages with a vertical bar: |'],
+            ['System Check', 'Use System check to spot common setup problems. It is a helper, not a replacement for manual legal, payment and security checks.'],
+            ['Email Test', 'Use Email test to confirm Resend transactional emails are configured and working. If emails fail, check the Resend API key and sender domain setup.'],
+            ['Audit Log', 'Use Audit log to review important admin/system actions. Useful for checking what changed and when.'],
+            ['Security Reminder', 'Before real payments, change default admin credentials, use a strong JWT secret, protect admin access, verify payment webhooks, keep database backups and test restore.'],
+            ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
         </div>}
 
