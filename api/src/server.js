@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v176' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v177' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v176' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v177' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v176',
+    version: 'v177',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -2027,7 +2027,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v176 mobile spinner centre and Arnold text cleanup)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v177 clean mobile live draw layout)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
