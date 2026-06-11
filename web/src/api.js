@@ -18,7 +18,24 @@ export function getApiUrl() {
 export function imageUrl(path) {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  return `${API_URL}${path}`;
+
+  // Built-in public web assets should stay on the website domain.
+  if (
+    path.startsWith('/demo-posters/') ||
+    path.startsWith('/prizetown-logo') ||
+    path.startsWith('/favicon') ||
+    path.startsWith('/arnold-')
+  ) {
+    return path;
+  }
+
+  // Uploaded files are served by the API.
+  if (path.startsWith('/uploads/')) return `${API_URL}${path}`;
+
+  // Default: keep normal site/public paths local.
+  if (path.startsWith('/')) return path;
+
+  return path;
 }
 
 export async function api(path, options = {}) {
