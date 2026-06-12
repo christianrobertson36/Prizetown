@@ -3567,6 +3567,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Admin Quick Navigation', 'Admin pages now show a compact quick navigation helper so operators can jump to the most-used admin areas faster.'],
             ['Public Trust Blocks', 'The public homepage now includes clearer how-it-works, draw transparency, free-entry and winner proof guidance to improve customer trust.'],
             ['Live Activity Polish', 'The public Live Activity area now removes the extra competitions link and makes the next draw date/time easier to read.'],
+            ['Automation Control Centre', 'Admin now has a safe automation overview panel with quick links, status tiles and refreshable system signals.'],
+            ['Automation Safety Warnings', 'Automation now highlights common launch risks such as payment hardening, email setup and backup checks without running risky actions automatically.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5742,7 +5744,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v265';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v266';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6065,6 +6067,274 @@ setTimeout(polishLiveActivityV265, 250);
 setTimeout(polishLiveActivityV265, 900);
 window.addEventListener('hashchange', polishLiveActivityV265);
 window.addEventListener('popstate', polishLiveActivityV265);
+
+if (!document.getElementById('prizetown-automation-centre-v266-style')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-automation-centre-v266-style';
+  style.textContent = `
+    .automation-centre-v266 {
+      width: min(1120px, calc(100% - 24px));
+      margin: 12px auto 18px;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 16px 40px rgba(0,0,0,.20);
+    }
+
+    .automation-centre-v266 header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .automation-centre-v266 h2 {
+      margin: 0 0 5px;
+      font-size: clamp(1.25rem, 2vw, 1.65rem);
+    }
+
+    .automation-centre-v266 p {
+      margin: 0;
+      opacity: .88;
+      line-height: 1.45;
+    }
+
+    .automation-grid-v266 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .automation-tile-v266 {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.14);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .automation-tile-v266 strong {
+      display: block;
+      font-size: .9rem;
+      opacity: .78;
+      margin-bottom: 5px;
+    }
+
+    .automation-tile-v266 span {
+      display: block;
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .automation-warning-list-v266 {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .automation-warning-v266 {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 198, 75, .12);
+      border: 1px solid rgba(255, 198, 75, .32);
+    }
+
+    .automation-ok-v266 {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(75, 255, 169, .10);
+      border: 1px solid rgba(75, 255, 169, .25);
+    }
+
+    .automation-actions-v266 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .automation-actions-v266 button {
+      min-height: 38px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    @media (max-width: 850px) {
+      .automation-grid-v266 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .automation-grid-v266 {
+        grid-template-columns: 1fr;
+      }
+      .automation-actions-v266 button {
+        flex: 1 1 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const automationCentreV266State = {
+  lastData: null,
+  loading: false
+};
+
+const isAdminPageV266 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+const findAdminTargetV266 = () => {
+  return document.querySelector('main.admin, .admin-page, .admin-shell, main, #root');
+};
+
+const getAdminTokenV266 = () => {
+  return localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+};
+
+const clickAdminThingV266 = (labels) => {
+  const items = Array.from(document.querySelectorAll('button, a'));
+  const found = items.find((item) => {
+    const text = (item.textContent || '').trim().toLowerCase();
+    return labels.some((label) => text.includes(label.toLowerCase()));
+  });
+  if (found) {
+    found.click();
+    return true;
+  }
+  return false;
+};
+
+const deriveAutomationWarningsV266 = (data) => {
+  const warnings = [];
+  const checks = Array.isArray(data?.checks) ? data.checks : [];
+  const lowerChecks = checks.map((check) => ({
+    title: String(check.title || check.name || '').toLowerCase(),
+    status: String(check.status || check.level || '').toLowerCase(),
+    message: String(check.message || check.detail || '').toLowerCase()
+  }));
+
+  const hasWarning = (needle) => lowerChecks.some((check) =>
+    check.title.includes(needle) || check.message.includes(needle)
+  );
+
+  if (data && data.ok === false) warnings.push('System Check currently reports blockers. Review Launch Centre before public launch.');
+  if (hasWarning('payment')) warnings.push('Payment/webhook hardening still needs attention before real-money launch.');
+  if (hasWarning('email') || hasWarning('resend')) warnings.push('Transactional email may not be fully configured yet.');
+  if (hasWarning('backup') || hasWarning('drive')) warnings.push('Backup/Google Drive readiness should be checked before major changes.');
+  warnings.push('Auto-running risky jobs is intentionally disabled here. Use manual buttons until timeline/logging is added.');
+
+  return [...new Set(warnings)];
+};
+
+const renderAutomationCentreV266 = () => {
+  let panel = document.getElementById('prizetown-automation-centre-v266');
+
+  if (!isAdminPageV266()) {
+    if (panel) panel.remove();
+    return;
+  }
+
+  const target = findAdminTargetV266();
+  if (!target) return;
+
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-automation-centre-v266';
+    panel.className = 'automation-centre-v266';
+    if (target.id === 'root' && target.parentNode) {
+      target.parentNode.insertBefore(panel, target);
+    } else {
+      target.insertBefore(panel, target.firstChild);
+    }
+  }
+
+  const data = automationCentreV266State.lastData;
+  const totals = data?.totals || {};
+  const checks = Array.isArray(data?.checks) ? data.checks : [];
+  const warnings = data ? deriveAutomationWarningsV266(data) : ['Press refresh to load live admin system signals.'];
+
+  panel.innerHTML = `
+    <header>
+      <div>
+        <h2>Automation Control Centre</h2>
+        <p>Safe overview only. This panel shows launch/automation signals and quick links without changing live data.</p>
+      </div>
+      <div class="automation-actions-v266">
+        <button type="button" data-action="refresh">Refresh status</button>
+        <button type="button" data-action="due-draws">Run due auto draws now</button>
+      </div>
+    </header>
+
+    <div class="automation-grid-v266">
+      <div class="automation-tile-v266"><strong>System status</strong><span>${data ? (data.ok ? 'OK' : 'Needs review') : 'Not loaded'}</span></div>
+      <div class="automation-tile-v266"><strong>Competitions</strong><span>${totals.competitions ?? '-'}</span></div>
+      <div class="automation-tile-v266"><strong>Orders</strong><span>${totals.orders ?? '-'}</span></div>
+      <div class="automation-tile-v266"><strong>Checks</strong><span>${checks.length || '-'}</span></div>
+    </div>
+
+    <div class="automation-warning-list-v266">
+      ${warnings.length ? warnings.map((warning) => `<div class="automation-warning-v266">${warning}</div>`).join('') : '<div class="automation-ok-v266">No automation warnings found from the current system check.</div>'}
+    </div>
+
+    <div class="automation-actions-v266">
+      <button type="button" data-action="draw-room">Open Draw Control Room</button>
+      <button type="button" data-action="backup">Open Backup Readiness</button>
+      <button type="button" data-action="launch">Open Launch Centre</button>
+      <button type="button" data-action="system">Open System Check</button>
+      <button type="button" data-action="top">↑ Top</button>
+    </div>
+  `;
+
+  panel.querySelector('[data-action="refresh"]')?.addEventListener('click', fetchAutomationCentreV266);
+  panel.querySelector('[data-action="due-draws"]')?.addEventListener('click', () => {
+    const ok = clickAdminThingV266(['run due auto draws now', 'run due auto draws']);
+    if (!ok) alert('Could not find the existing Run due auto draws button on this admin view.');
+  });
+  panel.querySelector('[data-action="draw-room"]')?.addEventListener('click', () => clickAdminThingV266(['draw control room', 'draws']));
+  panel.querySelector('[data-action="backup"]')?.addEventListener('click', () => clickAdminThingV266(['backup readiness', 'google drive live status', 'backup']));
+  panel.querySelector('[data-action="launch"]')?.addEventListener('click', () => clickAdminThingV266(['launch centre', 'launch']));
+  panel.querySelector('[data-action="system"]')?.addEventListener('click', () => clickAdminThingV266(['system check', 'system']));
+  panel.querySelector('[data-action="top"]')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+};
+
+const fetchAutomationCentreV266 = async () => {
+  if (automationCentreV266State.loading) return;
+  automationCentreV266State.loading = true;
+  renderAutomationCentreV266();
+
+  try {
+    const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+    const token = getAdminTokenV266();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await fetch(`${apiBase}/admin/system-check`, { headers });
+    const data = await response.json().catch(() => null);
+    automationCentreV266State.lastData = data || { ok: false, checks: [{ title: 'System Check', status: 'warning', message: 'Could not read system check response.' }] };
+  } catch (err) {
+    automationCentreV266State.lastData = {
+      ok: false,
+      checks: [{ title: 'System Check', status: 'warning', message: err.message || 'Could not load automation signals.' }]
+    };
+  } finally {
+    automationCentreV266State.loading = false;
+    renderAutomationCentreV266();
+  }
+};
+
+const mountAutomationCentreV266 = () => {
+  renderAutomationCentreV266();
+  if (isAdminPageV266() && !automationCentreV266State.lastData) fetchAutomationCentreV266();
+};
+
+mountAutomationCentreV266();
+setTimeout(mountAutomationCentreV266, 350);
+setTimeout(mountAutomationCentreV266, 1000);
+window.addEventListener('hashchange', mountAutomationCentreV266);
+window.addEventListener('popstate', mountAutomationCentreV266);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
