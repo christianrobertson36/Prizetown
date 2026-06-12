@@ -3549,6 +3549,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Verification Matrix', 'Backup Readiness now includes a quick matrix showing backup evidence, readiness, size and retention status.'],
             ['Google Drive Restore Drill Evidence', 'Backup Readiness now includes a button to upload a restore drill evidence template to Drive.'],
             ['Google Drive Operator Handover', 'Backup Readiness now includes a button to upload a handover report for another admin/operator.'],
+            ['Backup Schedule Plan', 'Backup Readiness now includes a non-destructive schedule plan for daily, weekly and monthly backup routines.'],
+            ['Database Dump Guide', 'Backup Readiness now includes a button to upload pg_dump command guidance to Google Drive.'],
+            ['Uploads Backup Plan', 'Backup Readiness now includes a button to upload a local uploads backup plan and file count report.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3952,6 +3955,12 @@ function GoogleDriveStatusButton() {
   const [restoreDrillResult, setRestoreDrillResult] = useState(null);
   const [handoverLoading, setHandoverLoading] = useState(false);
   const [handoverResult, setHandoverResult] = useState(null);
+  const [schedulePlanLoading, setSchedulePlanLoading] = useState(false);
+  const [schedulePlanResult, setSchedulePlanResult] = useState(null);
+  const [dumpGuideLoading, setDumpGuideLoading] = useState(false);
+  const [dumpGuideResult, setDumpGuideResult] = useState(null);
+  const [uploadsPlanLoading, setUploadsPlanLoading] = useState(false);
+  const [uploadsPlanResult, setUploadsPlanResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4353,6 +4362,63 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkSchedulePlan() {
+    setSchedulePlanLoading(true);
+    setError('');
+    setSchedulePlanResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-schedule-plan`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Schedule plan failed (${res.status})`);
+      setSchedulePlanResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load backup schedule plan.');
+    } finally {
+      setSchedulePlanLoading(false);
+    }
+  }
+
+  async function uploadDatabaseDumpGuide() {
+    setDumpGuideLoading(true);
+    setError('');
+    setDumpGuideResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/database-dump-guide`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Database dump guide upload failed (${res.status})`);
+      setDumpGuideResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload database dump guide.');
+    } finally {
+      setDumpGuideLoading(false);
+    }
+  }
+
+  async function uploadUploadsBackupPlan() {
+    setUploadsPlanLoading(true);
+    setError('');
+    setUploadsPlanResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/uploads-backup-plan`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Uploads backup plan upload failed (${res.status})`);
+      setUploadsPlanResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload uploads backup plan.');
+    } finally {
+      setUploadsPlanLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4378,6 +4444,9 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkVerificationMatrix} disabled={verificationMatrixLoading}>{verificationMatrixLoading ? 'Checking matrix...' : 'Check verification matrix'}</button>
       <button type="button" onClick={uploadRestoreDrillEvidence} disabled={restoreDrillLoading}>{restoreDrillLoading ? 'Uploading drill...' : 'Upload restore drill evidence'}</button>
       <button type="button" onClick={uploadOperatorHandover} disabled={handoverLoading}>{handoverLoading ? 'Uploading handover...' : 'Upload operator handover'}</button>
+      <button type="button" onClick={checkSchedulePlan} disabled={schedulePlanLoading}>{schedulePlanLoading ? 'Planning schedule...' : 'Check backup schedule plan'}</button>
+      <button type="button" onClick={uploadDatabaseDumpGuide} disabled={dumpGuideLoading}>{dumpGuideLoading ? 'Uploading guide...' : 'Upload DB dump guide'}</button>
+      <button type="button" onClick={uploadUploadsBackupPlan} disabled={uploadsPlanLoading}>{uploadsPlanLoading ? 'Uploading uploads plan...' : 'Upload uploads backup plan'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4505,6 +4574,24 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{handoverResult.file?.name || 'Created handover report'}</p></article>
       <article><strong>Score</strong><p>{handoverResult.readiness?.score ?? 0}/100</p></article>
       <article><strong>Next</strong><p>Share this with the admin/operator who may need to restore or maintain the app.</p></article>
+    </div>}
+    {schedulePlanResult && <div className="backup-notes-grid">
+      <article><strong>Schedule plan</strong><p>{schedulePlanResult.plan?.mode || 'Loaded'}</p></article>
+      <article><strong>Score</strong><p>{schedulePlanResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Cadences</strong><p>{schedulePlanResult.plan?.recommended_schedule?.length ?? 0}</p></article>
+      <article><strong>Warnings</strong><p>{(schedulePlanResult.plan?.warnings || []).join(' ') || 'None'}</p></article>
+    </div>}
+    {dumpGuideResult && <div className="backup-notes-grid">
+      <article><strong>DB dump guide</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{dumpGuideResult.file?.name || 'Created guide'}</p></article>
+      <article><strong>Action</strong><p>Use on TrueNAS/db container context</p></article>
+      <article><strong>Note</strong><p>Guide only, does not run pg_dump</p></article>
+    </div>}
+    {uploadsPlanResult && <div className="backup-notes-grid">
+      <article><strong>Uploads plan</strong><p>Uploaded successfully</p></article>
+      <article><strong>Files counted</strong><p>{uploadsPlanResult.upload_file_count ?? 0}</p></article>
+      <article><strong>Total bytes</strong><p>{uploadsPlanResult.total_upload_bytes ?? 0}</p></article>
+      <article><strong>Batch size</strong><p>{uploadsPlanResult.suggested_batch_size ?? 10}</p></article>
     </div>}
   </div>;
 }
@@ -5381,7 +5468,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v258';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v259';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
