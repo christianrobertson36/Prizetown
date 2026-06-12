@@ -3216,25 +3216,13 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'branding' && <BrandingPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} setMessage={setMessage} />}
 
         {activeTab === 'modules' && <ModulesPanel settingsForm={settingsForm} setSettingsForm={setSettingsForm} saveSettings={saveSettings} />}
-
-        {activeTab === 'launch-checklist' && <div className="panel list-panel"><h1>Launch checklist</h1><p className="muted">Use this before sending real customers to the site.</p>{[
-          ['Active competitions', competitions.filter(c => c.status === 'active').length > 0, 'At least one competition should be active.'],
-          ['Competition draw dates', competitions.filter(c => c.status === 'active').every(c => !!c.draw_at), 'Every active competition should have a draw date.'],
-          ['Free entry wording', competitions.filter(c => c.status === 'active').every(c => !!(c.free_entry_text || '').trim()), 'Every active competition should explain the free-entry route.'],
-          ['Competition rules', competitions.filter(c => c.status === 'active').every(c => !!(c.rules_text || '').trim()), 'Every active competition should have visible rules.'],
-          ['Support email', !!(settingsForm.support_email || '').trim(), 'Set a customer support email.'],
-          ['Global legal/free entry text', !!(settingsForm.terms_text || '').trim() && !!(settingsForm.free_entry_global || '').trim(), 'Legal pages and global free-entry text should be filled in.'],
-          ['Payment readiness', false, 'Before real payments, connect a provider safely, verify webhooks, handle pending/paid/failed/refunded/chargeback statuses and only allocate paid tickets after confirmed payment.'],
-          ['Security readiness', false, 'Before public launch, change default credentials/secrets, protect admin access, add rate limits, harden uploads and confirm backups/restore.'],
-          ['Postal entry address', !!(settingsForm.postal_entry_address || '').trim() && !(settingsForm.postal_entry_address || '').includes('Add postal entry address'), 'Add a real postal entry address before launch.'],
-          ['Branding', !!(settingsForm.site_name || '').trim() && !!(settingsForm.hero_title || '').trim(), 'Check site name, homepage title, logo and colours.'],
-          ['Homepage content', !!(settingsForm.hero_title || '').trim() && !!(settingsForm.hero_text || '').trim(), 'Homepage title and intro text should be filled in before launch.'],
-          ['Top scrolling ticker', !!(settingsForm.welcome_marquee_text || '').trim(), 'Set the editable top ticker text in Site settings.'],
-          ['Launch readiness warning', true, 'Admin Overview shows the prototype/payment/security/legal reminder.'],
-          ['Postcode module checked', true, modulePostcodes ? 'Postcode competitions are enabled.' : 'Postcode module is off; site behaves more like a national competition site.'],
-          ['Instant wins checked', true, moduleInstantWins ? 'Instant wins are enabled.' : 'Instant wins are off.'],
-          ['Live draw checked', true, moduleLiveDraw ? 'Live draw / OBS is enabled.' : 'Live draw / OBS is off.']
-        ].map(([title, ok, help]) => <div className="list-row entry-row" key={title}><div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div></div>)}</div>}
+        {activeTab === 'launch-checklist' && <LaunchChecklistPanel
+          competitions={competitions}
+          settingsForm={settingsForm}
+          modulePostcodes={modulePostcodes}
+          moduleInstantWins={moduleInstantWins}
+          moduleLiveDraw={moduleLiveDraw}
+        />}
 
         {activeTab === 'automation-status' && <div className="panel list-panel"><h1>Automation status</h1><p className="muted">Display-only for now. This shows what Prizetown can already handle automatically and what still needs admin setup.</p>{[
           ['Active competitions', competitions.filter(c => c.status === 'active').length > 0, competitions.filter(c => c.status === 'active').length + ' active competition(s).'],
@@ -3259,6 +3247,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Common Admin Jobs', 'Create a competition: Competitions → Add competition. Check sales: Orders & entries. Add postal/free entries: Free entries. Change homepage text: Site settings. Change logo/colours: Branding. Check launch safety: Launch checklist and System check.'],
             ['Common Troubleshooting', 'Text not changing: save in Site settings, then refresh the homepage. Email issue: use Email test. Draw issue: check Final draw and Automation status. Admin access issue: use the Tailscale admin URL, not public /admin.'],
             ['Launch Checks', 'Before sending real customers to the site, check Launch checklist, System check, Legal Text, payment setup, email setup, competition rules, free-entry wording, draw dates and branding.'],
+            ['Launch Checklist Groups', 'The Launch checklist is grouped into Legal, Payments, Security, Draw trust, Email/support and Content/branding so admins can review launch readiness in a clearer order.'],
             ['Competition Setup', 'Use Competitions to view existing competitions. Use Add competition or Edit competition to set title, image, price, ticket limits, question, answer, rules, free-entry wording, draw date, status and postcode mode.'],
             ['Orders & Entries', 'Use Orders & entries to check customer purchases, ticket numbers and draw eligibility. This is the main place to investigate customer order questions.'],
             ['Free Entries', 'Use Free entries to manually add valid postal/free-entry requests. Free entries should be handled fairly and treated like paid entries for draw eligibility.'],
@@ -3547,6 +3536,96 @@ function LegalDisclaimer({ settings, setPage, onAccept }) {
 }
 
 
+
+
+function LaunchChecklistPanel({ competitions, settingsForm, modulePostcodes, moduleInstantWins, moduleLiveDraw }) {
+  const activeCompetitions = competitions.filter(c => c.status === 'active');
+
+  const groups = [
+    {
+      title: 'Legal / compliance',
+      intro: 'Check legal wording, free-entry wording and postal-entry details before public launch.',
+      items: [
+        ['Competition rules', activeCompetitions.every(c => !!(c.rules_text || '').trim()), 'Every active competition should have visible rules.'],
+        ['Free entry wording', activeCompetitions.every(c => !!(c.free_entry_text || '').trim()), 'Every active competition should explain the free-entry route.'],
+        ['Global legal/free entry text', !!(settingsForm.terms_text || '').trim() && !!(settingsForm.free_entry_global || '').trim(), 'Legal pages and global free-entry text should be filled in.'],
+        ['Postal entry address', !!(settingsForm.postal_entry_address || '').trim() && !(settingsForm.postal_entry_address || '').includes('Add postal entry address'), 'Add a real postal entry address before launch.']
+      ]
+    },
+    {
+      title: 'Payments',
+      intro: 'Do not take real payments until provider/webhook handling is fully hardened.',
+      items: [
+        ['Payment readiness', false, 'Connect a provider safely, verify webhooks, handle pending/paid/failed/refunded/chargeback statuses and only allocate paid tickets after confirmed payment.'],
+        ['Payment launch mode', false, 'Current checkout should be treated as paid_test until real payment hardening is complete.']
+      ]
+    },
+    {
+      title: 'Security',
+      intro: 'Security hardening should be finished before real users or real-money competitions.',
+      items: [
+        ['Security readiness', false, 'Change default credentials/secrets, protect admin access, add rate limits, harden uploads and confirm backups/restore.'],
+        ['System check reviewed', true, 'Run Tools → System check and review warnings before launch.']
+      ]
+    },
+    {
+      title: 'Draw trust',
+      intro: 'Confirm competitions, draw dates and public proof tools are ready.',
+      items: [
+        ['Active competitions', activeCompetitions.length > 0, 'At least one competition should be active.'],
+        ['Competition draw dates', activeCompetitions.every(c => !!c.draw_at), 'Every active competition should have a draw date.'],
+        ['Live draw checked', true, moduleLiveDraw ? 'Live draw / OBS is enabled.' : 'Live draw / OBS is off.'],
+        ['Instant wins checked', true, moduleInstantWins ? 'Instant wins are enabled.' : 'Instant wins are off.']
+      ]
+    },
+    {
+      title: 'Email / support',
+      intro: 'Customers need a support route and transactional emails need testing.',
+      items: [
+        ['Support email', !!(settingsForm.support_email || '').trim(), 'Set a customer support email.'],
+        ['Email test', true, 'Use Tools → Email test to confirm transactional emails before launch.']
+      ]
+    },
+    {
+      title: 'Content / branding',
+      intro: 'Check the public homepage and feature modules before sharing the site.',
+      items: [
+        ['Branding', !!(settingsForm.site_name || '').trim() && !!(settingsForm.hero_title || '').trim(), 'Check site name, homepage title, logo and colours.'],
+        ['Homepage content', !!(settingsForm.hero_title || '').trim() && !!(settingsForm.hero_text || '').trim(), 'Homepage title and intro text should be filled in before launch.'],
+        ['Top scrolling ticker', !!(settingsForm.welcome_marquee_text || '').trim(), 'Set the editable top ticker text in Site settings.'],
+        ['Postcode module checked', true, modulePostcodes ? 'Postcode competitions are enabled.' : 'Postcode module is off; site behaves more like a national competition site.'],
+        ['Launch readiness warning', true, 'Admin Overview shows the prototype/payment/security/legal reminder.']
+      ]
+    }
+  ];
+
+  const flatItems = groups.flatMap(group => group.items);
+  const okCount = flatItems.filter(([, ok]) => ok).length;
+  const warnCount = flatItems.length - okCount;
+
+  return <div className="panel list-panel launch-checklist-panel">
+    <div className="draw-room-head">
+      <div>
+        <h1>Launch checklist</h1>
+        <p className="muted">Use this before sending real customers to the site. Review each group in order.</p>
+      </div>
+      <div className="launch-checklist-score">
+        <strong>{okCount}/{flatItems.length}</strong>
+        <span>{warnCount} warning(s)</span>
+      </div>
+    </div>
+
+    <div className="launch-checklist-groups">
+      {groups.map(group => <section className="launch-checklist-group" key={group.title}>
+        <h2>{group.title}</h2>
+        <p className="muted">{group.intro}</p>
+        {group.items.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
+          <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
+        </div>)}
+      </section>)}
+    </div>
+  </div>;
+}
 
 function SecurityReadinessPanel() {
   const checks = [
@@ -3942,7 +4021,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v187';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v188';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
