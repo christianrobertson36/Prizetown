@@ -3282,6 +3282,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Readiness', 'Use Support Readiness before launch to check support email, refund/help process, winner contact process, free-entry support and complaint/escalation notes.'],
             ['Customer Support Notes', 'Support Readiness now includes simple notes for checking orders, entries, ticket numbers, winner proof, free-entry questions and refunds before replying to customers.'],
             ['Winner Contact Checklist', 'Support Readiness now includes winner-contact guidance for checking draw proof, ticket number, contact details, prize fulfilment notes and safe public/private data handling.'],
+            ['Support Message Templates', 'Support Readiness now includes simple starter reply templates for order questions, free-entry questions, winner contact, refund queries and escalations.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3752,6 +3753,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support message templates</h2>
+      <p className="muted">Starter wording only. Check records first, then edit before sending.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Order question</strong><p>Thanks for your message. I am checking your order and ticket records now. I will confirm the order status and ticket numbers once I have verified them.</p></article>
+        <article><strong>Ticket number question</strong><p>I will check your allocated ticket numbers against the order record and entry list before confirming anything back to you.</p></article>
+        <article><strong>Free-entry question</strong><p>Free postal entries are handled according to the competition rules and deadlines. I will check the free-entry record and confirm the current status.</p></article>
+        <article><strong>Winner contact</strong><p>Congratulations. I am contacting you about a Prizetown winner record. Before confirming prize fulfilment, I need to verify the draw record and your contact details.</p></article>
+        <article><strong>Refund query</strong><p>Thanks for raising this. I need to check the payment/order record, competition status and refund wording before confirming whether any refund or other remedy applies.</p></article>
+        <article><strong>Escalation</strong><p>I am going to pause and escalate this for review so we can check the records properly before giving you a final answer.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4152,7 +4166,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v196';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v197';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
