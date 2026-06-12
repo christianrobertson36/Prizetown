@@ -3525,6 +3525,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Launch Gate', 'Backup Readiness now includes a final launch gate checklist for backup confidence before real traffic or payments.'],
             ['Backup Do and Do Not', 'Backup Readiness now includes simple safe rules for what to do and avoid before updates or restores.'],
             ['Backup Export Reminder', 'Backup Readiness now reminds admins what to copy into an outside record before major updates or launch work.'],
+            ['After Restore Checks', 'Backup Readiness now includes a compact checklist of screens and data to verify after any restore or rollback.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4032,6 +4033,18 @@ function BackupReadinessPanel() {
         <article><strong>Uploads backup</strong><p>Uploads path, copy/snapshot location and last checked time.</p></article>
         <article><strong>App config</strong><p>TrueNAS YAML/compose, env notes, domain/DNS notes and any rollback instructions.</p></article>
         <article><strong>Final sign-off</strong><p>Write who approved the update and what screens were checked after deploy.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>After restore checks</h2>
+      <p className="muted">Use this immediately after a restore, rollback or emergency tag change.</p>
+      <div className="backup-notes-grid">
+        <article><strong>API and admin</strong><p>Health returns the expected version and admin login works.</p></article>
+        <article><strong>Public pages</strong><p>Homepage, competition pages, winners and support pages open correctly.</p></article>
+        <article><strong>Core data</strong><p>Competitions, orders, entries, winners, customers and audit logs still look correct.</p></article>
+        <article><strong>Uploads/images</strong><p>Prize images, Arnold images, logos and uploaded files still load.</p></article>
+        <article><strong>Final record</strong><p>Write down restore time, restored version, checks passed and any follow-up fixes needed.</p></article>
       </div>
     </div>
 
@@ -4719,7 +4732,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v244';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v245';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
