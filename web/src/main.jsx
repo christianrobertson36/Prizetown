@@ -3260,6 +3260,10 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <article><strong>During launch</strong><p>Keep Orders, Winners and Draw Control Room close so customer activity and draw readiness are easy to monitor.</p></article>
             <article><strong>After issues</strong><p>Use Support Readiness and Audit log when checking customer queries, refunds, complaints or admin changes.</p></article>
           </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Daily admin flow</h2>
+            <p className="muted">A simple order for opening Prizetown each day: check app health, review orders, review support, confirm draw readiness, then check winners/audit if anything changed.</p>
+          </div>
         </div>}
 
         {activeTab === 'tools-overview' && <div className="panel list-panel">
@@ -3346,6 +3350,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Tools Shortcut Helper', 'Tools overview now includes a short helper line above the shortcut buttons so admins know these are the most-used launch and safety tools.'],
             ['Tools Shortcut Order', 'Tools overview shortcut buttons are now numbered so admins can follow the recommended pre-launch check order.'],
             ['Admin Launch Centre', 'Tools now includes a Launch centre tab with fast links to launch checks, system checks, safety readiness, support, draws, orders and winners.'],
+            ['Launch Centre Daily Flow', 'Launch centre now includes a compact daily admin flow so admins know what to check first when opening Prizetown.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4409,7 +4414,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v216';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v217';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
