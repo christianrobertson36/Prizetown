@@ -3512,6 +3512,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Public Recovery Checklist', 'Error pages now includes a post-maintenance public recovery checklist for homepage, checkout, entries, winners, support and audit checks.'],
             ['Public Recovery Quick Links', 'Error pages now includes quick links to the public homepage, My entries, Winners and Support for post-maintenance checks.'],
             ['Customer Message Checklist', 'Error pages now includes a customer-facing message checklist for clear, calm maintenance/offline wording.'],
+            ['Backup Recovery Flow', 'Backup Readiness now includes a before, rollback and after-recovery flow for safer updates and restores.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3888,6 +3889,16 @@ function BackupReadinessPanel() {
       <div>
         <h1>Backup Readiness</h1>
         <p className="muted">Use this to plan safe Prizetown backups. This panel is a checklist only and does not create backups yet.</p>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Backup recovery flow</h2>
+      <p className="muted">Use this simple order before risky updates, rollbacks or restore checks.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Before changes</strong><p>Confirm the latest known good app version, database backup location and upload folder path before risky updates.</p></article>
+        <article><strong>If something breaks</strong><p>Rollback to the last stable fixed image tags first, then check API health and System check before making more changes.</p></article>
+        <article><strong>After recovery</strong><p>Check public homepage, checkout, Orders, Winners, Support and Audit log so the site is safe for visitors again.</p></article>
       </div>
     </div>
 
@@ -4575,7 +4586,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v231';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v232';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
