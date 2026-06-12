@@ -3277,6 +3277,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Export Notes', 'Backup Readiness now includes manual export notes for PostgreSQL dumps, uploads, compose/YAML, image tags and Google Drive/off-site copies. These are planning notes only until backup automation is added.'],
             ['Backup System Checks', 'System Check now includes backup warnings for TrueNAS snapshots, PostgreSQL dumps, uploads, Google Drive/off-site copy and restore testing.'],
             ['Backup Launch Guidance', 'Before real payments, keep a local TrueNAS backup plus a Google Drive/off-site copy, save compose/YAML and image tags, and complete a restore test.'],
+            ['Restore Test Checklist', 'Backup Readiness now includes a simple restore-test checklist so backups are not trusted until login, orders, entries, winners and uploads are checked on a safe temporary restore.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3680,6 +3681,20 @@ function BackupReadinessPanel() {
       </div>
     </div>
 
+
+    <div className="backup-manual-notes">
+      <h2>Restore test checklist</h2>
+      <p className="muted">Use a safe temporary restore. Do not overwrite the live app or live database.</p>
+      <div className="backup-notes-grid">
+        <article><strong>1. Create safe test area</strong><p>Use a temporary database/app location so the live Prizetown data is not touched.</p></article>
+        <article><strong>2. Restore database dump</strong><p>Import the PostgreSQL dump and confirm competitions, orders, entries, winners and settings appear.</p></article>
+        <article><strong>3. Restore uploads</strong><p>Copy the uploads backup and confirm prize images and uploaded files load correctly.</p></article>
+        <article><strong>4. Check admin login</strong><p>Confirm admin login works and key admin screens open without errors.</p></article>
+        <article><strong>5. Check public pages</strong><p>Confirm competitions, winners/proof pages and draw pages still load from the restored data.</p></article>
+        <article><strong>6. Record test date</strong><p>Write down the restore test date, backup source and result before trusting backups for real payments.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4080,7 +4095,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v192';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v193';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
