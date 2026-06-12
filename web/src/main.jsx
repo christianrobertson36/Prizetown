@@ -3291,6 +3291,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Escalation Checklist', 'Support Readiness now includes clear escalation triggers for refunds, chargebacks, winner disputes, identity checks, legal complaints and data/privacy issues.'],
             ['Support Daily Review', 'Support Readiness now includes a daily review checklist for checking new orders, support messages, failed payments, free entries, winner follow-ups and audit notes.'],
             ['Support Issue Log Guidance', 'Support Readiness now includes simple guidance for recording customer issues, follow-ups, escalations and outcomes during launch.'],
+            ['Support Response Safety', 'Support Readiness now includes response safety reminders so admins avoid sharing private data, promising outcomes too early or replying before records are checked.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3878,6 +3879,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support response safety</h2>
+      <p className="muted">Use these reminders before sending customer replies, public comments or winner messages.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Check records first</strong><p>Do not answer order, ticket, draw, winner or refund questions until the matching records have been checked.</p></article>
+        <article><strong>No private data</strong><p>Do not share email, phone, address, payment details, private notes or identity documents in public replies.</p></article>
+        <article><strong>No early promises</strong><p>Do not promise refunds, prizes, eligibility, compensation or draw outcomes until verified and approved.</p></article>
+        <article><strong>Use plain wording</strong><p>Reply clearly and politely. Avoid legal-sounding claims unless they match the published terms/support policy.</p></article>
+        <article><strong>Pause risky replies</strong><p>Escalate complaints, chargebacks, identity/privacy requests, legal threats and winner disputes before replying.</p></article>
+        <article><strong>Record the reply</strong><p>Log what was checked, what was sent, who owns follow-up and the final outcome.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4278,7 +4292,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v205';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v206';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
