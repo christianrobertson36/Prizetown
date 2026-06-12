@@ -3576,6 +3576,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Automation Wording Polish', 'Automation buttons now use clearer wording: real draw controls keep the Run due auto draws label, while the overview uses safer shortcut wording.'],
             ['Automation Panel Size', 'Automation Control Centre is displayed as a compact admin helper so it does not dominate the top of the dashboard.'],
             ['Floating Automation Panel Disabled', 'The experimental injected Automation Control Centre panel is disabled so it cannot appear above the public header. Automation controls remain available in their normal admin sections.'],
+            ['Payment Readiness Centre', 'Admin now has a payment launch-readiness panel showing why live payments should wait until provider keys, webhooks, idempotency and paid-order checks are complete.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5751,7 +5752,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v271';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v272';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6746,6 +6747,225 @@ setTimeout(removeFloatingAutomationV271, 500);
 setTimeout(removeFloatingAutomationV271, 1500);
 window.addEventListener('hashchange', removeFloatingAutomationV271);
 window.addEventListener('popstate', removeFloatingAutomationV271);
+
+if (!document.getElementById('prizetown-payment-readiness-v272')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-payment-readiness-v272';
+  style.textContent = `
+    .payment-readiness-v272 {
+      width: min(980px, calc(100% - 24px));
+      margin: 14px auto 18px;
+      padding: 16px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255,226,89,.15), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,226,89,.35);
+      box-shadow: 0 18px 45px rgba(0,0,0,.16);
+    }
+
+    .payment-readiness-v272 header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .payment-readiness-v272 h2 {
+      margin: 0 0 4px;
+      font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+    }
+
+    .payment-readiness-v272 p {
+      margin: 0;
+      opacity: .88;
+      line-height: 1.45;
+    }
+
+    .payment-status-pill-v272 {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: .82rem;
+      background: rgba(255,90,90,.17);
+      border: 1px solid rgba(255,120,120,.45);
+      white-space: nowrap;
+    }
+
+    .payment-readiness-grid-v272 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+      margin: 12px 0;
+    }
+
+    .payment-readiness-grid-v272 article {
+      padding: 11px 12px;
+      border-radius: 15px;
+      background: rgba(0,0,0,.16);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .payment-readiness-grid-v272 strong {
+      display: block;
+      font-size: .8rem;
+      opacity: .75;
+      margin-bottom: 5px;
+    }
+
+    .payment-readiness-grid-v272 span {
+      display: block;
+      font-weight: 900;
+      font-size: .98rem;
+      line-height: 1.2;
+    }
+
+    .payment-checks-v272 {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .payment-checks-v272 div {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 10px 11px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      line-height: 1.35;
+    }
+
+    .payment-checks-v272 b {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .payment-actions-v272 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .payment-actions-v272 button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+    }
+
+    .payment-actions-v272 button.secondary {
+      background: rgba(255,255,255,.12);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    @media (max-width: 820px) {
+      .payment-readiness-grid-v272 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .payment-readiness-v272 header {
+        display: grid;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .payment-readiness-grid-v272 {
+        grid-template-columns: 1fr;
+      }
+
+      .payment-actions-v272 button {
+        flex: 1 1 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const isAdminPaymentPageV272 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+const mountPaymentReadinessV272 = () => {
+  if (!isAdminPaymentPageV272()) {
+    document.getElementById('prizetown-payment-readiness-panel-v272')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-payment-readiness-panel-v272');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-payment-readiness-panel-v272';
+    panel.className = 'payment-readiness-v272';
+    target.insertBefore(panel, target.firstChild);
+  }
+
+  panel.innerHTML = `
+    <header>
+      <div>
+        <h2>Payment readiness centre</h2>
+        <p>Safe launch reminder: paid entries should stay in test mode until provider keys, webhooks, idempotency and paid-order checks are confirmed.</p>
+      </div>
+      <span class="payment-status-pill-v272">Not ready for live payments</span>
+    </header>
+
+    <div class="payment-readiness-grid-v272">
+      <article><strong>Provider keys</strong><span>Needs confirmation</span></article>
+      <article><strong>Webhooks</strong><span>Not verified</span></article>
+      <article><strong>Paid ticket allocation</strong><span>Needs backend proof</span></article>
+      <article><strong>Refund/failed states</strong><span>Needs review</span></article>
+    </div>
+
+    <div class="payment-checks-v272">
+      <div><span>⚠️</span><span><b>Do not rely on frontend-only payment state.</b> Tickets should only be marked paid/allocated after a trusted backend confirmation.</span></div>
+      <div><span>⚠️</span><span><b>Webhook verification is required before public paid launch.</b> The provider webhook secret should be checked server-side and duplicate events must not create duplicate entries.</span></div>
+      <div><span>⚠️</span><span><b>Orders need clear states.</b> Keep pending, paid, failed, refunded and chargeback states separate before accepting real money.</span></div>
+      <div><span>✅</span><span><b>This panel is guidance only.</b> It does not change checkout, payment provider settings, orders or draw logic.</span></div>
+    </div>
+
+    <div class="payment-actions-v272">
+      <button type="button" data-payment-action="system">Open System Check</button>
+      <button type="button" class="secondary" data-payment-action="launch">Open Launch Centre</button>
+      <button type="button" class="secondary" data-payment-action="orders">Open Orders</button>
+      <button type="button" class="secondary" data-payment-action="hide">Hide for this session</button>
+    </div>
+  `;
+
+  panel.querySelector('[data-payment-action="hide"]')?.addEventListener('click', () => panel.remove());
+  panel.querySelector('[data-payment-action="system"]')?.addEventListener('click', () => clickPaymentAdminThingV272(['system check', 'tools']));
+  panel.querySelector('[data-payment-action="launch"]')?.addEventListener('click', () => clickPaymentAdminThingV272(['launch centre', 'launch']));
+  panel.querySelector('[data-payment-action="orders"]')?.addEventListener('click', () => clickPaymentAdminThingV272(['orders']));
+};
+
+const clickPaymentAdminThingV272 = (labels) => {
+  const buttons = Array.from(document.querySelectorAll('button, a'));
+  const target = buttons.find((button) => {
+    const text = (button.textContent || '').trim().toLowerCase();
+    return labels.some((label) => text.includes(label));
+  });
+  if (target) {
+    target.click();
+    return true;
+  }
+  alert('Could not find that admin shortcut on this view.');
+  return false;
+};
+
+mountPaymentReadinessV272();
+setTimeout(mountPaymentReadinessV272, 300);
+setTimeout(mountPaymentReadinessV272, 1000);
+window.addEventListener('hashchange', mountPaymentReadinessV272);
+window.addEventListener('popstate', mountPaymentReadinessV272);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
