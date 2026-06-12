@@ -536,7 +536,27 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v246' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v247' }));
+app.get('/admin/google-drive/status', auth('admin'), (_req, res) => {
+  const folderId = process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID || process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON || '';
+  const credentialsFile = process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GOOGLE_DRIVE_CREDENTIALS_FILE || '';
+  const credentialsConfigured = Boolean(serviceAccountJson || credentialsFile);
+  res.json({
+    ok: true,
+    provider: 'google-drive',
+    configured: Boolean(folderId && credentialsConfigured),
+    folder_id_configured: Boolean(folderId),
+    credentials_configured: credentialsConfigured,
+    credential_source: serviceAccountJson ? 'GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON' : credentialsFile ? 'credentials file path' : null,
+    required_env: [
+      'GOOGLE_DRIVE_BACKUP_FOLDER_ID or GOOGLE_DRIVE_FOLDER_ID',
+      'GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS'
+    ],
+    note: 'Status only. Upload/test backup action will be added after credentials are configured.'
+  });
+});
+
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -646,7 +666,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
 
   add('warning', 'Payment: webhook hardening', 'Live payment webhooks/idempotency are not connected yet. Do not allocate paid tickets from frontend-only payment state.');
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v246' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v247' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -664,7 +684,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v246',
+    version: 'v247',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -2086,7 +2106,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v246 google drive backup guide)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v247 google drive status integration)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

@@ -3527,6 +3527,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Export Reminder', 'Backup Readiness now reminds admins what to copy into an outside record before major updates or launch work.'],
             ['After Restore Checks', 'Backup Readiness now includes a compact checklist of screens and data to verify after any restore or rollback.'],
             ['Google Drive Backup Guide', 'Backup Readiness now includes Google Drive folder, naming, sharing and upload guidance for off-site backup copies.'],
+            ['Google Drive Status Integration', 'Backup Readiness now has a backend Google Drive status endpoint that checks folder and credential environment configuration without exposing secrets.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4058,6 +4059,18 @@ function BackupReadinessPanel() {
         <article><strong>What to upload</strong><p>Upload database dumps, uploads copies, TrueNAS YAML/compose files, env notes without secrets, and restore drill notes.</p></article>
         <article><strong>Sharing rule</strong><p>Keep the folder private and only share with trusted admins who genuinely need restore access.</p></article>
         <article><strong>Monthly check</strong><p>Open the Drive folder monthly and confirm the newest database, uploads and config copies are present.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Google Drive integration status</h2>
+      <p className="muted">First live integration step: the API can now check whether Google Drive backup settings are configured, without exposing secrets.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Status endpoint</strong><p>Admin API route: /admin/google-drive/status</p></article>
+        <article><strong>Folder env</strong><p>Set GOOGLE_DRIVE_BACKUP_FOLDER_ID or GOOGLE_DRIVE_FOLDER_ID to the Drive backup folder ID.</p></article>
+        <article><strong>Credentials env</strong><p>Set GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS for service-account/JWT access.</p></article>
+        <article><strong>Safe response</strong><p>The endpoint only returns true/false configuration status, not private keys or secret values.</p></article>
+        <article><strong>Next integration step</strong><p>After env is configured, add a test upload action and then a real backup upload action.</p></article>
       </div>
     </div>
 
@@ -4745,7 +4758,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v246';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v247';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
