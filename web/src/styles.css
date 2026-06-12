@@ -6307,3 +6307,66 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v184: Public trust pages */
+.trust-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.trust-hero {
+  display: grid;
+  gap: .9rem;
+  margin-bottom: 1rem;
+}
+
+.trust-hero h1 {
+  max-width: 920px;
+}
+
+.trust-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.trust-grid.four {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .85rem;
+  margin: 1rem 0;
+}
+
+.trust-grid article {
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(15,23,42,.04);
+}
+
+.trust-grid strong {
+  display: block;
+  margin-bottom: .35rem;
+}
+
+.trust-grid span {
+  color: var(--muted, #64748b);
+}
+
+.trust-copy-panel {
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .trust-grid.four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .trust-grid.four {
+    grid-template-columns: 1fr;
+  }
+}

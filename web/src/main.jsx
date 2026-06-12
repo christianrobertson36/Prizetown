@@ -381,7 +381,7 @@ function brandStyle(settings = {}) {
   };
 }
 
-function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/how-it-works')) return 'how-it-works'; if (p.includes('/entry-lists')) return 'entry-lists'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
+function initialPage() { const p = window.location.pathname.toLowerCase(); if (p.includes('/draw-live') || p.includes('/draw-broadcast')) return 'draw-broadcast'; if (p.includes('/admin')) return 'admin'; if (p.includes('/account')) return 'account'; if (p.includes('/cart')) return 'cart'; if (p.includes('/about')) return 'about'; if (p.includes('/fair-draws')) return 'fair-draws'; if (p.includes('/how-it-works')) return 'how-it-works'; if (p.includes('/entry-lists')) return 'entry-lists'; if (p.includes('/winners')) return 'winners'; if (p.includes('/privacy')) return 'privacy'; if (p.includes('/terms')) return 'terms'; if (p.includes('/free-entry')) return 'free-entry'; if (p.includes('/cookies')) return 'cookies'; if (p.includes('/refunds')) return 'refunds'; return 'home'; }
 
 
 class AppErrorBoundary extends React.Component {
@@ -496,7 +496,7 @@ function App() {
   return <div style={brandStyle(settings)}>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track">{welcomeMarqueeLoop.map((item, index) => <span key={index}>{item}</span>)}</div></div>
     <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
-      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('how-it-works')}>How it works</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
+      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('how-it-works')}>How it works</button><button onClick={() => setPage('about')}>About</button><button onClick={() => setPage('fair-draws')}>Fair draws</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
       {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
       <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
       {user?.role === 'admin' && <button onClick={() => { setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
@@ -508,6 +508,8 @@ function App() {
     {page === 'home' && <Home settings={settings} resetCookieChoice={resetCookieChoice} competitions={homepageCompetitions} instantWinners={instantWinners} user={user} setPage={setPage} cart={cart} saveCart={saveCart} setMessage={setMessage} selected={selected} setSelected={setSelected} />}
     {page === 'login' && <Login setUser={setUser} setPage={setPage} setMessage={setMessage} settings={settings} />}
     {page === 'how-it-works' && <HowItWorks setPage={setPage} settings={settings} />}
+    {page === 'about' && <AboutPage setPage={setPage} settings={settings} />}
+    {page === 'fair-draws' && <FairDrawsPage setPage={setPage} settings={settings} />}
     {page === 'entry-lists' && <EntryLists competitions={competitions} />}
     {page === 'winners' && <Winners winners={winners} instantWinners={instantWinners} />}
     {page === 'terms' && <LegalPage title="Terms and Conditions" text={settings.terms_text || defaultSettings.terms_text} settings={settings} setPage={setPage} />}
@@ -691,11 +693,11 @@ return <main>
           </div>
 
           <div className="launch-trust-strip" aria-label="Launch trust badges">
-            <button type="button" onClick={() => setPage('how-it-works')}>How it works</button>
+            <button type="button" onClick={() => setPage('how-it-works')}>How it works</button><button type="button" onClick={() => setPage('about')}>About Prizetown</button><button type="button" onClick={() => setPage('fair-draws')}>Fair draws</button>
             <button type="button" onClick={() => setPage('entry-lists')}>Public entry lists</button>
             <button type="button" onClick={() => setPage('winners')}>Winners & results</button><a className="live-draw-hero-button" href="/draw-broadcast">Watch live draws</a>
             <button type="button" onClick={() => setPage('free-entry')}>Free entry route</button>
-            <span>18+ responsible entry</span>
+            <span>18+ responsible entry</span><span>Built around public proof</span>
           </div>
         </div>
       </div>
@@ -3258,6 +3260,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Draw Test Lab', 'Use Draws > Test Lab to generate fake sample tickets and run a safe test intro, spin and winner reveal on the broadcast screen. It can also queue multiple same-day fake competitions to test OBS, sounds and back-to-back draw performance. It does not create real orders, entries or winners.'],
             ['Trusted Draw Time', 'The live draw broadcast uses Prizetown server time in the Europe/London timezone, not the viewer device clock. The footer shows the time source and sync age so viewers can see the clock is server-backed.'],
             ['Public Winner Proof', 'The public Winners page shows final draw proof details including winning ticket number, eligible entry count, draw method, recorded time and trusted server-time source where available.'],
+            ['Public Trust Pages', 'The public About and Fair draws pages explain who Prizetown is for, how entries work, how free entry is handled, how server-backed draw time helps trust, and where winner proof can be checked.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
@@ -3546,6 +3549,63 @@ function LegalPage({ title, text, settings, setPage }) {
   </main>;
 }
 
+
+function AboutPage({ setPage, settings }) {
+  return <main className="trust-page about-page">
+    <section className="trust-hero panel">
+      <p className="eyebrow">About Prizetown</p>
+      <h1>Postcode prize competitions built around trust, local excitement and clear public results.</h1>
+      <p>{settings?.site_name || 'Prizetown'} is designed for UK prize competitions where customers can see how entries work, check public ticket lists, follow live draws and review winner proof after results are published.</p>
+      <div className="trust-action-row">
+        <button type="button" className="primary" onClick={() => setPage('how-it-works')}>How it works</button>
+        <button type="button" className="secondary" onClick={() => setPage('fair-draws')}>Fair draws</button>
+        <button type="button" className="secondary" onClick={() => setPage('winners')}>Winner proof</button>
+      </div>
+    </section>
+
+    <section className="trust-grid four">
+      <article><strong>Local-first competitions</strong><span>Postcode tools help Prizetown start with believable local competitions before scaling wider.</span></article>
+      <article><strong>Visible ticket numbers</strong><span>Entry lists and account tickets help customers check their allocated numbers.</span></article>
+      <article><strong>Live draw moments</strong><span>Final draws can be shown on the live broadcast screen with clear winner reveal.</span></article>
+      <article><strong>Public proof</strong><span>The Winners page shows final draw proof details such as ticket number, eligible count and recorded time where available.</span></article>
+    </section>
+
+    <section className="panel trust-copy-panel">
+      <h2>Our trust promise</h2>
+      <p>Prizetown should feel simple, transparent and responsible. Each competition should explain the prize, price, ticket limit, entry limits, draw date, rules and free-entry route before customers enter.</p>
+      <p>Customers should be able to follow the journey from competition page, to ticket allocation, to public entry lists, to live draw and winner proof.</p>
+    </section>
+  </main>;
+}
+
+function FairDrawsPage({ setPage }) {
+  return <main className="trust-page fair-draws-page">
+    <section className="trust-hero panel">
+      <p className="eyebrow">Fair draws</p>
+      <h1>Clear entries, trusted timing and public winner proof.</h1>
+      <p>Prizetown final draws are designed to be easy to explain: eligible entries are loaded, the live draw screen shows the draw, and the result can be published with proof details.</p>
+      <div className="trust-action-row">
+        <button type="button" className="primary" onClick={() => setPage('entry-lists')}>View entry lists</button>
+        <button type="button" className="secondary" onClick={() => setPage('winners')}>View winners</button>
+        <button type="button" className="secondary" onClick={() => setPage('free-entry')}>Free entry route</button>
+      </div>
+    </section>
+
+    <section className="trust-grid four">
+      <article><strong>1. Entry accepted</strong><span>Valid paid and free entries receive ticket numbers for the relevant competition.</span></article>
+      <article><strong>2. Eligible list checked</strong><span>Final draws use eligible entries, and entry lists can be checked before the draw.</span></article>
+      <article><strong>3. Server-backed time</strong><span>The live broadcast footer uses Prizetown server time in the Europe/London timezone.</span></article>
+      <article><strong>4. Result published</strong><span>Winner proof can show ticket number, draw method, eligible count, recorded time and time source.</span></article>
+    </section>
+
+    <section className="panel trust-copy-panel">
+      <h2>Free entry and responsible play</h2>
+      <p>Where a competition offers a free postal entry route, free entries should be handled fairly and entered into the same draw as valid paid entries, subject to the competition rules and deadlines.</p>
+      <p>Prizetown is for UK residents aged 18+ only. Enter for entertainment and never spend more than you can afford.</p>
+    </section>
+  </main>;
+}
+
 function HowItWorks({ setPage, settings }) {
   const faqs = [
     ['How do I enter?', 'Choose a live competition, answer the entry question where shown, add tickets to your basket and complete checkout. Ticket numbers are allocated after a valid entry is accepted.'],
@@ -3794,7 +3854,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v183';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v184';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
