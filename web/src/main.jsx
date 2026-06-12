@@ -3575,6 +3575,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Automation Panel Placement', 'Automation Control Centre is scoped to the admin content area so it does not appear above the public navigation/header.'],
             ['Automation Wording Polish', 'Automation buttons now use clearer wording: real draw controls keep the Run due auto draws label, while the overview uses safer shortcut wording.'],
             ['Automation Panel Size', 'Automation Control Centre is displayed as a compact admin helper so it does not dominate the top of the dashboard.'],
+            ['Floating Automation Panel Disabled', 'The experimental injected Automation Control Centre panel is disabled so it cannot appear above the public header. Automation controls remain available in their normal admin sections.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5750,7 +5751,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v270';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v271';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6192,7 +6193,7 @@ const automationCentreV266State = {
   loading: false
 };
 
-const isAdminPageV266 = () => window.location.pathname.toLowerCase().includes('/admin');
+const isAdminPageV266 = () => false; // v271: disabled injected floating automation panel
 
 const findAdminTargetV266 = () => {
   return document.querySelector('main.admin, .admin-page, .admin-shell, main');
@@ -6332,11 +6333,11 @@ const mountAutomationCentreV266 = () => {
   if (isAdminPageV266() && !automationCentreV266State.lastData) fetchAutomationCentreV266();
 };
 
-mountAutomationCentreV266();
-setTimeout(mountAutomationCentreV266, 350);
-setTimeout(mountAutomationCentreV266, 1000);
-window.addEventListener('hashchange', mountAutomationCentreV266);
-window.addEventListener('popstate', mountAutomationCentreV266);
+// v271 disabled: mountAutomationCentreV266();
+// v271 disabled: setTimeout(mountAutomationCentreV266, 350);
+// v271 disabled: setTimeout(mountAutomationCentreV266, 1000);
+// v271 disabled: window.addEventListener('hashchange', mountAutomationCentreV266);
+// v271 disabled: window.addEventListener('popstate', mountAutomationCentreV266);
 
 if (!document.getElementById('prizetown-live-activity-safe-zone-v267')) {
   const style = document.createElement('style');
@@ -6577,9 +6578,9 @@ const watchAutomationTimelineV268 = () => {
   setTimeout(hookAutomationTimelineV268, 1000);
 };
 
-watchAutomationTimelineV268();
-window.addEventListener('hashchange', watchAutomationTimelineV268);
-window.addEventListener('popstate', watchAutomationTimelineV268);
+// v271 disabled: watchAutomationTimelineV268();
+// v271 disabled: window.addEventListener('hashchange', watchAutomationTimelineV268);
+// v271 disabled: window.addEventListener('popstate', watchAutomationTimelineV268);
 
 if (!document.getElementById('prizetown-automation-placement-fix-v269')) {
   const style = document.createElement('style');
@@ -6722,6 +6723,29 @@ if (!document.getElementById('prizetown-automation-compact-v270')) {
   `;
   document.head.appendChild(style);
 }
+
+if (!document.getElementById('prizetown-disable-floating-automation-v271')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-disable-floating-automation-v271';
+  style.textContent = `
+    #prizetown-automation-centre-v266,
+    .automation-centre-v266 {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const removeFloatingAutomationV271 = () => {
+  document.querySelectorAll('#prizetown-automation-centre-v266, .automation-centre-v266').forEach((el) => el.remove());
+};
+
+removeFloatingAutomationV271();
+setTimeout(removeFloatingAutomationV271, 100);
+setTimeout(removeFloatingAutomationV271, 500);
+setTimeout(removeFloatingAutomationV271, 1500);
+window.addEventListener('hashchange', removeFloatingAutomationV271);
+window.addEventListener('popstate', removeFloatingAutomationV271);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
