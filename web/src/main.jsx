@@ -3560,6 +3560,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Scheduled Backup Spec', 'Backup Readiness now includes a button to upload a suggested scheduled backup job specification to Drive.'],
             ['Environment Checklist Report', 'Backup Readiness now includes a button to upload a no-secrets environment/config checklist to Drive.'],
             ['Launch Go/No-Go Report', 'Backup Readiness now includes a button to upload a launch readiness decision report to Drive.'],
+            ['Backup Tools Cleanup', 'Backup Readiness now has a fast-path workflow panel, grouped button labels and clearer guidance so admins do not need to guess which backup button to use first.'],
+            ['Backup Fast Path', 'Use the recommended path first: status, preflight, backup pack, go/no-go. Use the other report buttons only when you need evidence or handover files.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4598,7 +4600,14 @@ function GoogleDriveStatusButton() {
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
+    <div className="backup-notes-grid">
+      <article><strong>Recommended fast path</strong><p>1. Status → 2. Preflight → 3. Backup pack → 4. Go/no-go.</p></article>
+      <article><strong>Daily quick check</strong><p>Status, latest report, readiness score, then daily ops checklist if needed.</p></article>
+      <article><strong>Before risky changes</strong><p>Upload backup pack, preflight report, audit report and rollback runbook.</p></article>
+      <article><strong>Advanced reports</strong><p>Use the extra report buttons for evidence, handover and launch paperwork only.</p></article>
+    </div>
     <div className="admin-actions">
+      <span className="backup-tool-section">1. Quick checks</span>
       <button type="button" onClick={checkStatus} disabled={loading}>{loading ? 'Checking...' : 'Check Google Drive status'}</button>
       <button type="button" onClick={runTestUpload} disabled={testLoading}>{testLoading ? 'Uploading...' : 'Run test upload'}</button>
       <button type="button" onClick={uploadManifest} disabled={manifestLoading}>{manifestLoading ? 'Uploading manifest...' : 'Upload backup manifest'}</button>
@@ -4607,6 +4616,7 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={uploadBackupRunSummary} disabled={runSummaryLoading}>{runSummaryLoading ? 'Uploading summary...' : 'Upload run summary'}</button>
       <button type="button" onClick={uploadUploadsBatch} disabled={uploadsBatchLoading}>{uploadsBatchLoading ? 'Uploading files...' : 'Upload uploads batch'}</button>
       <button type="button" onClick={checkFolderInventory} disabled={inventoryLoading}>{inventoryLoading ? 'Checking folder...' : 'Check Drive folder inventory'}</button>
+      <span className="backup-tool-section">2. Core evidence uploads</span>
       <button type="button" onClick={uploadBackupPack} disabled={backupPackLoading}>{backupPackLoading ? 'Uploading pack...' : 'Upload backup pack'}</button>
       <button type="button" onClick={checkBackupHealth} disabled={backupHealthLoading}>{backupHealthLoading ? 'Checking health...' : 'Check backup health'}</button>
       <button type="button" onClick={checkLatestBackupReport} disabled={latestReportLoading}>{latestReportLoading ? 'Loading report...' : 'Check latest backup report'}</button>
@@ -4618,8 +4628,10 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkRetentionReport} disabled={retentionReportLoading}>{retentionReportLoading ? 'Checking retention...' : 'Check retention report'}</button>
       <button type="button" onClick={uploadRetentionPolicyReport} disabled={policyReportLoading}>{policyReportLoading ? 'Uploading policy...' : 'Upload retention policy report'}</button>
       <button type="button" onClick={checkVerificationMatrix} disabled={verificationMatrixLoading}>{verificationMatrixLoading ? 'Checking matrix...' : 'Check verification matrix'}</button>
+      <span className="backup-tool-section">3. Restore / handover evidence</span>
       <button type="button" onClick={uploadRestoreDrillEvidence} disabled={restoreDrillLoading}>{restoreDrillLoading ? 'Uploading drill...' : 'Upload restore drill evidence'}</button>
       <button type="button" onClick={uploadOperatorHandover} disabled={handoverLoading}>{handoverLoading ? 'Uploading handover...' : 'Upload operator handover'}</button>
+      <span className="backup-tool-section">4. Planning / runbooks</span>
       <button type="button" onClick={checkSchedulePlan} disabled={schedulePlanLoading}>{schedulePlanLoading ? 'Planning schedule...' : 'Check backup schedule plan'}</button>
       <button type="button" onClick={uploadDatabaseDumpGuide} disabled={dumpGuideLoading}>{dumpGuideLoading ? 'Uploading guide...' : 'Upload DB dump guide'}</button>
       <button type="button" onClick={uploadUploadsBackupPlan} disabled={uploadsPlanLoading}>{uploadsPlanLoading ? 'Uploading uploads plan...' : 'Upload uploads backup plan'}</button>
@@ -4627,11 +4639,13 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={uploadBackupPreflightReport} disabled={preflightReportLoading}>{preflightReportLoading ? 'Uploading preflight...' : 'Upload preflight report'}</button>
       <button type="button" onClick={uploadTrueNasRunbook} disabled={truenasRunbookLoading}>{truenasRunbookLoading ? 'Uploading TrueNAS runbook...' : 'Upload TrueNAS runbook'}</button>
       <button type="button" onClick={uploadEmergencyRollbackRunbook} disabled={rollbackRunbookLoading}>{rollbackRunbookLoading ? 'Uploading rollback...' : 'Upload rollback runbook'}</button>
+      <span className="backup-tool-section">5. Launch gate</span>
       <button type="button" onClick={checkScheduledBackupReadiness} disabled={scheduledReadinessLoading}>{scheduledReadinessLoading ? 'Checking scheduler...' : 'Check scheduled backup readiness'}</button>
       <button type="button" onClick={uploadScheduledBackupSpec} disabled={scheduledSpecLoading}>{scheduledSpecLoading ? 'Uploading spec...' : 'Upload scheduled backup spec'}</button>
       <button type="button" onClick={uploadEnvironmentChecklist} disabled={envChecklistLoading}>{envChecklistLoading ? 'Uploading checklist...' : 'Upload environment checklist'}</button>
       <button type="button" onClick={uploadLaunchGoNoGo} disabled={goNoGoLoading}>{goNoGoLoading ? 'Uploading decision...' : 'Upload launch go/no-go report'}</button>
     </div>
+    <p className="muted">Most days you only need the first section. Use evidence uploads before risky changes, and use launch-gate reports before public launch or major releases.</p>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
       <article><strong>Overall</strong><p>{status.configured ? 'Configured' : 'Not fully configured yet'}</p></article>
@@ -5700,7 +5714,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v261';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v262';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
