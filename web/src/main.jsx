@@ -3584,6 +3584,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Upload Hardening Guards', 'Upload requests now have safer size/type checks, with SVG/HTML/JavaScript-style files blocked before public launch.'],
             ['CORS Origin Allowlist', 'The API now has a configurable browser-origin allowlist so only approved public, admin and local testing origins can call it from browsers.'],
             ['Security Event Log', 'Admin can now review recent in-memory security events such as blocked origins, rate-limit blocks and blocked uploads.'],
+            ['Security Events Viewer', 'Admin now has a compact viewer for recent blocked origins, upload blocks and login rate-limit security events.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5759,7 +5760,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v279';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v280';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7231,6 +7232,184 @@ setTimeout(removeFloatingReadinessV274, 500);
 setTimeout(removeFloatingReadinessV274, 1500);
 window.addEventListener('hashchange', removeFloatingReadinessV274);
 window.addEventListener('popstate', removeFloatingReadinessV274);
+
+
+if (!document.getElementById('prizetown-security-events-viewer-v280-style')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-security-events-viewer-v280-style';
+  style.textContent = `
+    #prizetown-security-events-viewer-v280 {
+      width: min(980px, calc(100% - 24px));
+      margin: 18px auto 28px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.32);
+      background: rgba(15,23,42,.72);
+      color: #f8fafc;
+      box-shadow: 0 18px 45px rgba(0,0,0,.16);
+    }
+    #prizetown-security-events-viewer-v280 header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    #prizetown-security-events-viewer-v280 h2 {
+      margin: 0 0 4px;
+      font-size: 1.18rem;
+    }
+    #prizetown-security-events-viewer-v280 p {
+      margin: 0;
+      opacity: .82;
+      line-height: 1.4;
+    }
+    .security-events-actions-v280 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .security-events-actions-v280 button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+    }
+    .security-events-status-v280 {
+      display: inline-flex;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(59,130,246,.18);
+      border: 1px solid rgba(96,165,250,.38);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .security-events-list-v280 {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+    .security-event-row-v280 {
+      display: grid;
+      grid-template-columns: 150px 150px 1fr;
+      gap: 8px;
+      align-items: start;
+      padding: 9px 10px;
+      border-radius: 13px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.09);
+      font-size: .88rem;
+      line-height: 1.35;
+    }
+    .security-event-row-v280 b {
+      display: block;
+      color: #bfdbfe;
+    }
+    .security-event-row-v280 code {
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: inherit;
+    }
+    @media (max-width: 760px) {
+      #prizetown-security-events-viewer-v280 header {
+        display: grid;
+      }
+      .security-event-row-v280 {
+        grid-template-columns: 1fr;
+      }
+      .security-events-actions-v280 button {
+        flex: 1 1 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const isAdminSecurityEventsPageV280 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+async function loadSecurityEventsV280(panel) {
+  const list = panel.querySelector('[data-security-events-list]');
+  const status = panel.querySelector('[data-security-events-status]');
+  if (!list || !status) return;
+
+  status.textContent = 'Loading...';
+  list.innerHTML = '<p>Loading recent security events...</p>';
+
+  try {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || '';
+    const response = await fetch('/admin/security/events', {
+      headers: token ? { Authorization: 'Bearer ' + token } : {}
+    });
+
+    if (!response.ok) throw new Error('Security events request failed: ' + response.status);
+    const data = await response.json();
+    const events = Array.isArray(data.events) ? data.events : [];
+
+    status.textContent = String(data.count || events.length || 0) + ' recent';
+
+    if (!events.length) {
+      list.innerHTML = '<p>No blocked security events recorded since the API last restarted.</p>';
+      return;
+    }
+
+    list.innerHTML = events.slice(0, 12).map((event) => {
+      const details = event.details ? JSON.stringify(event.details, null, 2) : '';
+      return '<div class="security-event-row-v280">' +
+        '<span><b>' + String(event.type || 'event') + '</b>' + String(event.at || '') + '</span>' +
+        '<span><b>IP / origin</b>' + String(event.ip || 'unknown') + '<br>' + String(event.origin || '') + '</span>' +
+        '<span><b>Path / details</b>' + String(event.method || '') + ' ' + String(event.path || '') + '<br><code>' + details.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c])) + '</code></span>' +
+      '</div>';
+    }).join('');
+  } catch (err) {
+    status.textContent = 'Error';
+    list.innerHTML = '<p>Could not load security events. Check you are logged in as admin and API v279/v280 is deployed.</p>';
+  }
+}
+
+function mountSecurityEventsViewerV280() {
+  if (!isAdminSecurityEventsPageV280()) {
+    document.getElementById('prizetown-security-events-viewer-v280')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-security-events-viewer-v280');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-security-events-viewer-v280';
+    panel.innerHTML = `
+      <header>
+        <div>
+          <h2>Security events</h2>
+          <p>Recent blocked origins, upload blocks and login rate-limit events. This is in-memory and clears when the API restarts.</p>
+        </div>
+        <span class="security-events-status-v280" data-security-events-status>Not loaded</span>
+      </header>
+      <div class="security-events-actions-v280">
+        <button type="button" data-security-events-refresh>Refresh security events</button>
+      </div>
+      <div class="security-events-list-v280" data-security-events-list>
+        <p>Click refresh to load recent security events.</p>
+      </div>
+    `;
+
+    target.appendChild(panel);
+    panel.querySelector('[data-security-events-refresh]')?.addEventListener('click', () => loadSecurityEventsV280(panel));
+    setTimeout(() => loadSecurityEventsV280(panel), 250);
+  }
+}
+
+mountSecurityEventsViewerV280();
+setTimeout(mountSecurityEventsViewerV280, 500);
+setTimeout(mountSecurityEventsViewerV280, 1500);
+window.addEventListener('hashchange', mountSecurityEventsViewerV280);
+window.addEventListener('popstate', mountSecurityEventsViewerV280);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
