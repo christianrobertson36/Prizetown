@@ -3245,27 +3245,48 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'error-pages' && <div className="panel list-panel">
           <h1>Error pages</h1>
-          <p className="muted">Preview the friendly Arnold pages used for 404, maintenance and offline states.</p>
+          <p className="muted">Preview the friendly Arnold pages used for 404, maintenance and offline states. Direct .html URLs are currently caught by the app fallback, so the previews below are shown safely inside admin.</p>
           <div className="backup-notes-grid">
             <article>
               <strong>404 page</strong>
               <p>Use when a visitor lands on a page that does not exist.</p>
-              <a className="button-like" href="/404.html" target="_blank" rel="noreferrer">Open 404 page</a>
             </article>
             <article>
               <strong>Maintenance page</strong>
               <p>Use when Prizetown is intentionally being serviced or updated.</p>
-              <a className="button-like" href="/maintenance.html" target="_blank" rel="noreferrer">Open maintenance page</a>
             </article>
             <article>
               <strong>Offline page</strong>
               <p>Use when the site or connection needs a friendly temporary offline message.</p>
-              <a className="button-like" href="/offline.html" target="_blank" rel="noreferrer">Open offline page</a>
+            </article>
+          </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Arnold preview artwork</h2>
+            <img src="/arnold-server-repair-404.png" alt="Arnold fixing tangled server wires" style={{ width: '100%', maxWidth: 760, borderRadius: 18, display: 'block' }} />
+          </div>
+          <div className="backup-notes-grid" style={{ marginTop: 16 }}>
+            <article>
+              <strong>404 preview</strong>
+              <p><strong>Arnold is fixing the wires</strong></p>
+              <p>This page has wandered into the cable cupboard. Try heading back home while Arnold checks the plugs.</p>
+              <p className="muted"><strong>Status:</strong> Page not found</p>
+            </article>
+            <article>
+              <strong>Maintenance preview</strong>
+              <p><strong>Arnold is tuning the servers</strong></p>
+              <p>Prizetown is having a quick service. Nothing dramatic — just a few wires, lights and a strong cup of tea.</p>
+              <p className="muted"><strong>Status:</strong> Service in progress</p>
+            </article>
+            <article>
+              <strong>Offline preview</strong>
+              <p><strong>Arnold is reconnecting Prizetown</strong></p>
+              <p>The connection is taking a breather. Arnold is checking the rack and we should be back once things settle.</p>
+              <p className="muted"><strong>Status:</strong> Temporarily offline</p>
             </article>
           </div>
           <div className="panel subtle-panel" style={{ marginTop: 16 }}>
             <h2>Artwork</h2>
-            <p className="muted">These pages use the Arnold server-rack artwork at <code>/arnold-server-repair-404.png</code>.</p>
+            <p className="muted">These previews use the Arnold server-rack artwork at <code>/arnold-server-repair-404.png</code>.</p>
           </div>
           <div className="panel subtle-panel" style={{ marginTop: 16 }}>
             <h2>When to use each page</h2>
@@ -3407,6 +3428,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Error Pages Admin Preview', 'Tools now includes an Error pages tab so admins can quickly open and check the Arnold 404, maintenance and offline pages.'],
             ['Launch Centre Error Page Shortcuts', 'Launch centre now links directly to Error pages from the main shortcut row and emergency route so Arnold fallback pages are easier to find.'],
             ['Error Pages Usage Notes', 'Error pages now explains when to use the 404, maintenance and offline Arnold fallback pages.'],
+            ['Error Page Inline Previews', 'Error pages now shows the Arnold 404, maintenance and offline previews directly inside admin because direct .html URLs are caught by the app fallback.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4470,7 +4492,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v222';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v223';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
