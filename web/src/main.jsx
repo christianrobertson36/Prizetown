@@ -3523,6 +3523,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Readiness Summary', 'Backup Readiness now includes a quick summary of the minimum proof needed before risky updates.'],
             ['Backup Emergency Notes', 'Backup Readiness now includes emergency restore notes for owner/contact, last stable tags, backup locations and go/no-go decisions.'],
             ['Backup Launch Gate', 'Backup Readiness now includes a final launch gate checklist for backup confidence before real traffic or payments.'],
+            ['Backup Do and Do Not', 'Backup Readiness now includes simple safe rules for what to do and avoid before updates or restores.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4006,6 +4007,18 @@ function BackupReadinessPanel() {
         <article><strong>Is data protected?</strong><p>Database backup and uploads backup locations are known and recently checked.</p></article>
         <article><strong>Is config protected?</strong><p>TrueNAS YAML/compose, domain/DNS notes and environment settings are saved.</p></article>
         <article><strong>Is the decision clear?</strong><p>If any answer is no, pause launch/update until the missing backup proof is fixed.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Backup do and do not</h2>
+      <p className="muted">Simple safety rules for updates, restores and public-launch changes.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Do: save stable tags</strong><p>Record the currently working API and web tags before changing TrueNAS.</p></article>
+        <article><strong>Do: protect data first</strong><p>Confirm database and uploads backups exist before risky patches or setting changes.</p></article>
+        <article><strong>Do: test after deploy</strong><p>Check health, admin login, public homepage, competitions, orders, entries, winners and images.</p></article>
+        <article><strong>Do not: use latest</strong><p>Never switch production images to latest. Keep fixed version tags only.</p></article>
+        <article><strong>Do not: keep patching a broken deploy</strong><p>If public pages break, rollback first, then investigate from a stable state.</p></article>
       </div>
     </div>
 
@@ -4693,7 +4706,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v242';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v243';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
