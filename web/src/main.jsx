@@ -3518,6 +3518,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Admin Card Text Contrast', 'Admin note cards now force darker paragraph and list text inside light grey cards so longer guidance is easier to read.'],
             ['Backup Evidence Checklist', 'Backup Readiness now includes evidence to record before/after risky updates, including image tags, DB dump, uploads path and restore test notes.'],
             ['Restore Drill Checklist', 'Backup Readiness now includes a safe restore drill checklist for testing backup confidence without changing live data first.'],
+            ['Backup Schedule Guide', 'Backup Readiness now includes simple daily, weekly, before-update and before-launch backup schedule guidance.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3941,6 +3942,17 @@ function BackupReadinessPanel() {
         <article><strong>4. Restore in a safe place</strong><p>Prefer a test app, clone or isolated database before trying anything on live production data.</p></article>
         <article><strong>5. Check core screens</strong><p>Open Admin, Competitions, Orders, Entries, Winners, uploads/images and API health.</p></article>
         <article><strong>6. Record result</strong><p>Write down what worked, what failed, how long it took and what needs fixing before launch.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Backup schedule guide</h2>
+      <p className="muted">Use this as a simple rhythm for keeping Prizetown recoverable. This is guidance only and does not run backups automatically yet.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Daily</strong><p>Back up the PostgreSQL database and keep at least the latest few days available.</p></article>
+        <article><strong>Weekly</strong><p>Copy uploads/images and save a fresh TrueNAS app YAML or compose record.</p></article>
+        <article><strong>Before updates</strong><p>Record stable image tags, create a DB backup and confirm the uploads folder path before applying patches.</p></article>
+        <article><strong>Before launch</strong><p>Do a restore drill, confirm off-site backup exists and record the last successful health check.</p></article>
       </div>
     </div>
 
@@ -4628,7 +4640,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v237';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v238';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
