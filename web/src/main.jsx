@@ -3083,6 +3083,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       title: 'Sales',
       items: [
         ['orders-entries', 'Orders & entries', Ticket],
+        ['payment-readiness', 'Payments / Readiness', Shield],
         ['free-entries', 'Free entries', Ticket]
       ]
     },
@@ -3222,6 +3223,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           ['Competition rules', competitions.filter(c => c.status === 'active').every(c => !!(c.rules_text || '').trim()), 'Every active competition should have visible rules.'],
           ['Support email', !!(settingsForm.support_email || '').trim(), 'Set a customer support email.'],
           ['Global legal/free entry text', !!(settingsForm.terms_text || '').trim() && !!(settingsForm.free_entry_global || '').trim(), 'Legal pages and global free-entry text should be filled in.'],
+          ['Payment readiness', false, 'Before real payments, connect a provider safely, verify webhooks, handle pending/paid/failed/refunded/chargeback statuses and only allocate paid tickets after confirmed payment.'],
           ['Postal entry address', !!(settingsForm.postal_entry_address || '').trim() && !(settingsForm.postal_entry_address || '').includes('Add postal entry address'), 'Add a real postal entry address before launch.'],
           ['Branding', !!(settingsForm.site_name || '').trim() && !!(settingsForm.hero_title || '').trim(), 'Check site name, homepage title, logo and colours.'],
           ['Homepage content', !!(settingsForm.hero_title || '').trim() && !!(settingsForm.hero_text || '').trim(), 'Homepage title and intro text should be filled in before launch.'],
@@ -3240,8 +3242,11 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           ['Free-entry setup', competitions.filter(c => c.status === 'active').every(c => !!(c.free_entry_text || '').trim()), 'Active competitions should include free-entry wording.'],
           ['Rules setup', competitions.filter(c => c.status === 'active').every(c => !!(c.rules_text || '').trim()), 'Active competitions should include rules text.'],
           ['Email automation', true, 'Order, free-entry and test transactional emails are available when Resend is configured.'],
+          ['Payment provider safety', false, 'Live payment provider/webhook confirmation is not connected yet. Current online checkout should be treated as paid_test until payment hardening is complete.'],
           ['Winner publishing', true, 'Winner records and public winner pages are available after final draws.']
         ].map(([title, ok, help]) => <div className="list-row entry-row" key={title}><div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div></div>)}</div>}
+
+        {activeTab === 'payment-readiness' && <PaymentReadinessPanel orders={orders} />}
 
         {activeTab === 'help-guide' && <div className="panel list-panel help-guide-panel">
           <h1>Admin Help Guide</h1>
@@ -3261,6 +3266,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Trusted Draw Time', 'The live draw broadcast uses Prizetown server time in the Europe/London timezone, not the viewer device clock. The footer shows the time source and sync age so viewers can see the clock is server-backed.'],
             ['Public Winner Proof', 'The public Winners page shows final draw proof details including winning ticket number, eligible entry count, draw method, recorded time and trusted server-time source where available.'],
             ['Public Trust Pages', 'The public About and Fair draws pages explain who Prizetown is for, how entries work, how free entry is handled, how server-backed draw time helps trust, and where winner proof can be checked.'],
+            ['Payments / Readiness', 'Use the Payments readiness panel before connecting real payments. Live launch should wait until provider webhooks, idempotency, paid/failed/refunded/chargeback states and ticket allocation-after-confirmed-payment are properly tested.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
@@ -3532,6 +3538,49 @@ function LegalDisclaimer({ settings, setPage, onAccept }) {
       </div>
       <button type="button" className="primary full" onClick={onAccept}>I understand</button>
     </section>
+  </div>;
+}
+
+
+function PaymentReadinessPanel({ orders = [] }) {
+  const orderRows = safeArray(orders);
+  const paidTest = orderRows.filter(o => String(o.status || '').toLowerCase() === 'paid_test').length;
+  const paid = orderRows.filter(o => String(o.status || '').toLowerCase() === 'paid').length;
+  const pending = orderRows.filter(o => String(o.status || '').toLowerCase() === 'pending').length;
+  const failed = orderRows.filter(o => String(o.status || '').toLowerCase() === 'failed').length;
+  const refunded = orderRows.filter(o => String(o.status || '').toLowerCase() === 'refunded').length;
+  const chargeback = orderRows.filter(o => String(o.status || '').toLowerCase() === 'chargeback').length;
+
+  const readiness = [
+    ['Real payment provider', false, 'Stripe/Square/other live payment provider is not connected yet. Keep real-money launch paused.'],
+    ['Webhook verification', false, 'Before real payments, verify provider webhooks and only trust signed payment events.'],
+    ['Ticket allocation rule', false, 'Paid tickets should only be allocated after confirmed paid status. Current online checkout creates paid_test entries for testing.'],
+    ['Refund/chargeback handling', false, 'Refund, failed-payment and chargeback states need a safe admin workflow before public paid launch.'],
+    ['Free-entry fairness', true, 'Free and manual free entries are already tracked separately and included in eligible draw logic.'],
+    ['Winner/draw proof', true, 'Winner proof and server-backed draw time are now visible for trust after draws.']
+  ];
+
+  return <div className="panel list-panel payment-readiness-panel">
+    <h1>Payments / Readiness</h1>
+    <p className="muted">This is a safety checklist before connecting real payments. It does not change checkout or enable live payments.</p>
+
+    <div className="payment-readiness-grid">
+      <article><strong>{orderRows.length}</strong><span>Total orders</span></article>
+      <article><strong>{paidTest}</strong><span>Test paid orders</span></article>
+      <article><strong>{paid}</strong><span>Live paid orders</span></article>
+      <article><strong>{pending}</strong><span>Pending orders</span></article>
+      <article><strong>{failed}</strong><span>Failed orders</span></article>
+      <article><strong>{refunded + chargeback}</strong><span>Refund/chargeback records</span></article>
+    </div>
+
+    <div className="payment-warning-box">
+      <strong>Launch warning</strong>
+      <p>Do not take real payments until webhook verification, idempotency, paid/failed/refunded/chargeback statuses and ticket allocation rules are hardened and tested.</p>
+    </div>
+
+    {readiness.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
+      <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
+    </div>)}
   </div>;
 }
 
@@ -3854,7 +3903,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v184';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v185';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
