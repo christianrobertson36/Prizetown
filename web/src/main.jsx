@@ -3546,6 +3546,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Backup Size Report', 'Backup Readiness now includes a button to total Google Drive backup storage by file type.'],
             ['Google Drive Retention Report', 'Backup Readiness now includes a review-only retention report for older backup files.'],
             ['Google Drive Retention Policy Report', 'Backup Readiness now includes a button to upload a combined size and retention policy report to Drive.'],
+            ['Google Drive Verification Matrix', 'Backup Readiness now includes a quick matrix showing backup evidence, readiness, size and retention status.'],
+            ['Google Drive Restore Drill Evidence', 'Backup Readiness now includes a button to upload a restore drill evidence template to Drive.'],
+            ['Google Drive Operator Handover', 'Backup Readiness now includes a button to upload a handover report for another admin/operator.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3943,6 +3946,12 @@ function GoogleDriveStatusButton() {
   const [retentionReportResult, setRetentionReportResult] = useState(null);
   const [policyReportLoading, setPolicyReportLoading] = useState(false);
   const [policyReportResult, setPolicyReportResult] = useState(null);
+  const [verificationMatrixLoading, setVerificationMatrixLoading] = useState(false);
+  const [verificationMatrixResult, setVerificationMatrixResult] = useState(null);
+  const [restoreDrillLoading, setRestoreDrillLoading] = useState(false);
+  const [restoreDrillResult, setRestoreDrillResult] = useState(null);
+  const [handoverLoading, setHandoverLoading] = useState(false);
+  const [handoverResult, setHandoverResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4287,6 +4296,63 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkVerificationMatrix() {
+    setVerificationMatrixLoading(true);
+    setError('');
+    setVerificationMatrixResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/verification-matrix`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Verification matrix failed (${res.status})`);
+      setVerificationMatrixResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load Google Drive verification matrix.');
+    } finally {
+      setVerificationMatrixLoading(false);
+    }
+  }
+
+  async function uploadRestoreDrillEvidence() {
+    setRestoreDrillLoading(true);
+    setError('');
+    setRestoreDrillResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/restore-drill-evidence`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Restore drill evidence upload failed (${res.status})`);
+      setRestoreDrillResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive restore drill evidence.');
+    } finally {
+      setRestoreDrillLoading(false);
+    }
+  }
+
+  async function uploadOperatorHandover() {
+    setHandoverLoading(true);
+    setError('');
+    setHandoverResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/operator-handover-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Operator handover upload failed (${res.status})`);
+      setHandoverResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive operator handover report.');
+    } finally {
+      setHandoverLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4309,6 +4375,9 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkBackupSizeReport} disabled={sizeReportLoading}>{sizeReportLoading ? 'Calculating size...' : 'Check backup size report'}</button>
       <button type="button" onClick={checkRetentionReport} disabled={retentionReportLoading}>{retentionReportLoading ? 'Checking retention...' : 'Check retention report'}</button>
       <button type="button" onClick={uploadRetentionPolicyReport} disabled={policyReportLoading}>{policyReportLoading ? 'Uploading policy...' : 'Upload retention policy report'}</button>
+      <button type="button" onClick={checkVerificationMatrix} disabled={verificationMatrixLoading}>{verificationMatrixLoading ? 'Checking matrix...' : 'Check verification matrix'}</button>
+      <button type="button" onClick={uploadRestoreDrillEvidence} disabled={restoreDrillLoading}>{restoreDrillLoading ? 'Uploading drill...' : 'Upload restore drill evidence'}</button>
+      <button type="button" onClick={uploadOperatorHandover} disabled={handoverLoading}>{handoverLoading ? 'Uploading handover...' : 'Upload operator handover'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4418,6 +4487,24 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{policyReportResult.file?.name || 'Created policy report'}</p></article>
       <article><strong>Total size</strong><p>{policyReportResult.total_bytes ?? 0} bytes</p></article>
       <article><strong>Review candidates</strong><p>{policyReportResult.old_candidate_count ?? 0}</p></article>
+    </div>}
+    {verificationMatrixResult && <div className="backup-notes-grid">
+      <article><strong>Verification matrix</strong><p>Loaded successfully</p></article>
+      <article><strong>Items</strong><p>{verificationMatrixResult.matrix?.length ?? 0}</p></article>
+      <article><strong>Score</strong><p>{verificationMatrixResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Warnings</strong><p>{(verificationMatrixResult.matrix || []).filter((item) => item.status !== 'ok').length}</p></article>
+    </div>}
+    {restoreDrillResult && <div className="backup-notes-grid">
+      <article><strong>Restore drill</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{restoreDrillResult.file?.name || 'Created restore drill evidence'}</p></article>
+      <article><strong>Score</strong><p>{restoreDrillResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Matrix items</strong><p>{restoreDrillResult.matrix_items ?? 0}</p></article>
+    </div>}
+    {handoverResult && <div className="backup-notes-grid">
+      <article><strong>Operator handover</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{handoverResult.file?.name || 'Created handover report'}</p></article>
+      <article><strong>Score</strong><p>{handoverResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Next</strong><p>Share this with the admin/operator who may need to restore or maintain the app.</p></article>
     </div>}
   </div>;
 }
@@ -5294,7 +5381,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v257';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v258';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
