@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v186' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v187' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,24 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v186' });
+
+
+  const jwtSecretConfigured = !!process.env.JWT_SECRET && process.env.JWT_SECRET !== 'dev_secret_change_me' && String(process.env.JWT_SECRET).length >= 32;
+  add(jwtSecretConfigured ? 'ok' : 'warning', 'Security: JWT secret', jwtSecretConfigured ? 'JWT_SECRET is configured and not using the development fallback.' : 'JWT_SECRET is missing, too short or using the development fallback. Set a long random secret before public launch.');
+
+  add('warning', 'Security: CORS policy', 'API currently uses open CORS. Before public launch, lock CORS to prizetown.co.uk and trusted admin origins only.');
+
+  add('warning', 'Security: rate limiting', 'Rate limiting is not yet confirmed for login, checkout, free-entry, uploads and admin actions. Add limits before larger public traffic.');
+
+  add('warning', 'Security: upload hardening', 'Uploads are writable, but file-size/type/MIME/SVG-script checks should be hardened before public launch.');
+
+  add('warning', 'Security: admin access', 'Keep admin access behind Tailscale/Cloudflare rules and keep public /admin blocked.');
+
+  add('warning', 'Security: backups and restore', 'Confirm daily database backups and test a restore before taking real payments.');
+
+  add('warning', 'Payment: webhook hardening', 'Live payment webhooks/idempotency are not connected yet. Do not allocate paid tickets from frontend-only payment state.');
+
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v187' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +654,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v186',
+    version: 'v187',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -2059,7 +2076,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v186 security readiness)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v187 system security checks)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
