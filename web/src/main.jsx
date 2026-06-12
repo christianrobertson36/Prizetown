@@ -3562,6 +3562,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Launch Go/No-Go Report', 'Backup Readiness now includes a button to upload a launch readiness decision report to Drive.'],
             ['Backup Tools Cleanup', 'Backup Readiness now has a fast-path workflow panel, grouped button labels and clearer guidance so admins do not need to guess which backup button to use first.'],
             ['Backup Fast Path', 'Use the recommended path first: status, preflight, backup pack, go/no-go. Use the other report buttons only when you need evidence or handover files.'],
+            ['Admin Navigation Polish', 'Admin screens now get clearer button spacing, grouped action rows, sticky section helpers and a small back-to-top helper for faster movement around long admin pages.'],
+            ['Admin Button Layout', 'Action buttons across admin areas are easier to scan on desktop and mobile, with section labels and consistent wrapping.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4646,6 +4648,7 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={uploadLaunchGoNoGo} disabled={goNoGoLoading}>{goNoGoLoading ? 'Uploading decision...' : 'Upload launch go/no-go report'}</button>
     </div>
     <p className="muted">Most days you only need the first section. Use evidence uploads before risky changes, and use launch-gate reports before public launch or major releases.</p>
+    <p className="admin-nav-polish-note">Buttons are now grouped into sections. Start at the top, then only use the advanced/report buttons when you need proof, handover notes or launch paperwork.</p>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
       <article><strong>Overall</strong><p>{status.configured ? 'Configured' : 'Not fully configured yet'}</p></article>
@@ -5714,7 +5717,194 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v262';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v263';
+if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-admin-nav-polish-v263';
+  style.textContent = `
+    .admin-actions,
+    .admin-tabs,
+    .admin-menu,
+    .admin-nav,
+    .admin-toolbar,
+    .admin-shortcuts,
+    .admin-button-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-actions {
+      padding: 10px 0;
+    }
+
+    .admin-actions button,
+    .admin-tabs button,
+    .admin-menu button,
+    .admin-nav button,
+    .admin-toolbar button,
+    .admin-shortcuts button,
+    .admin-button-row button,
+    .admin-actions a,
+    .admin-tabs a,
+    .admin-menu a,
+    .admin-nav a,
+    .admin-toolbar a,
+    .admin-shortcuts a {
+      min-height: 38px;
+      line-height: 1.2;
+      white-space: normal;
+      text-align: center;
+      border-radius: 12px;
+    }
+
+    .admin-actions button,
+    .admin-toolbar button,
+    .admin-button-row button {
+      flex: 0 1 auto;
+    }
+
+    .backup-tool-section,
+    .admin-tool-section {
+      flex: 1 0 100%;
+      display: block;
+      margin-top: 12px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .admin-card,
+    .admin-panel,
+    .admin-section,
+    .backup-manual-notes {
+      scroll-margin-top: 90px;
+    }
+
+    .admin-card h2,
+    .admin-panel h2,
+    .admin-section h2,
+    .backup-manual-notes h2 {
+      scroll-margin-top: 90px;
+    }
+
+    .admin-actions:has(.backup-tool-section),
+    .backup-manual-notes .admin-actions {
+      align-items: stretch;
+    }
+
+    .backup-manual-notes .admin-actions button {
+      min-width: 180px;
+    }
+
+    .backup-manual-notes .backup-notes-grid {
+      margin-bottom: 12px;
+    }
+
+    .admin-nav-polish-note {
+      margin: 10px 0 14px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      font-size: .94rem;
+    }
+
+    .admin-scroll-top {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 60;
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 13px;
+      font-weight: 900;
+      box-shadow: 0 10px 30px rgba(0,0,0,.24);
+      cursor: pointer;
+      opacity: .92;
+    }
+
+    .admin-scroll-top:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 760px) {
+      .admin-actions,
+      .admin-tabs,
+      .admin-menu,
+      .admin-nav,
+      .admin-toolbar,
+      .admin-shortcuts,
+      .admin-button-row {
+        gap: 8px;
+      }
+
+      .admin-actions button,
+      .admin-tabs button,
+      .admin-menu button,
+      .admin-nav button,
+      .admin-toolbar button,
+      .admin-shortcuts button,
+      .admin-button-row button,
+      .admin-actions a,
+      .admin-tabs a,
+      .admin-menu a,
+      .admin-nav a,
+      .admin-toolbar a,
+      .admin-shortcuts a {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 138px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .backup-manual-notes .admin-actions button {
+        min-width: 138px;
+      }
+
+      .admin-scroll-top {
+        right: 12px;
+        bottom: 12px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .admin-actions button,
+      .admin-tabs button,
+      .admin-menu button,
+      .admin-nav button,
+      .admin-toolbar button,
+      .admin-shortcuts button,
+      .admin-button-row button,
+      .admin-actions a,
+      .admin-tabs a,
+      .admin-menu a,
+      .admin-nav a,
+      .admin-toolbar a,
+      .admin-shortcuts a {
+        flex-basis: 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+if (!document.getElementById('admin-scroll-top-v263')) {
+  const button = document.createElement('button');
+  button.id = 'admin-scroll-top-v263';
+  button.className = 'admin-scroll-top';
+  button.type = 'button';
+  button.textContent = '↑ Top';
+  button.setAttribute('aria-label', 'Back to top');
+  button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.body.appendChild(button);
+}
+
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
