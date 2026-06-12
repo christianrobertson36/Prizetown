@@ -3294,6 +3294,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Response Safety', 'Support Readiness now includes response safety reminders so admins avoid sharing private data, promising outcomes too early or replying before records are checked.'],
             ['Support Launch Sign-off', 'Support Readiness now includes a final support sign-off checklist before wider public marketing or paid competition launch.'],
             ['Support Handover Summary', 'Support Readiness now includes a short handover summary for new admins covering what to check first and where support evidence lives.'],
+            ['Support Readiness Sections', 'Support Readiness now includes a quick section guide so admins can understand the support page without reading every card first.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3895,6 +3896,19 @@ function SupportReadinessPanel() {
     </div>
 
     <div className="backup-manual-notes">
+      <h2>Support readiness sections</h2>
+      <p className="muted">Quick guide for this page now it contains a lot of launch support checks.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Launch basics</strong><p>Use Launch Support Summary, Support Launch Sign-off and Support Contact Visibility first.</p></article>
+        <article><strong>Daily handling</strong><p>Use Support Daily Review, Workflow Checklist and Issue Log Guidance during normal support work.</p></article>
+        <article><strong>Customer replies</strong><p>Use Message Templates, Customer FAQ Checklist and Support Response Safety before replying.</p></article>
+        <article><strong>Risk/escalation</strong><p>Use Escalation Checklist for refunds, chargebacks, complaints, privacy, identity and winner disputes.</p></article>
+        <article><strong>Winner support</strong><p>Use Winner Contact Checklist and Handover Summary when handling prize fulfilment or winner proof.</p></article>
+        <article><strong>Admin backup</strong><p>Use Admin Handover Checklist, Help Guide and Backup Readiness if another trusted admin is helping.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
       <h2>Support launch sign-off</h2>
       <p className="muted">Final support checks before wider marketing, live draws or real paid competitions.</p>
       <div className="backup-notes-grid">
@@ -4320,7 +4334,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v208';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v209';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
