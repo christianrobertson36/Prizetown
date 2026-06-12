@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v259' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v260' }));
 app.get('/admin/google-drive/status', auth('admin'), (_req, res) => {
   const folderId = process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID || process.env.GOOGLE_DRIVE_FOLDER_ID || '';
   const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON || '';
@@ -658,7 +658,7 @@ app.post('/admin/google-drive/backup-manifest', auth('admin'), async (_req, res)
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_manifest',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       upload_dir_configured: Boolean(uploadDir),
       public_api_url_configured: Boolean(process.env.PUBLIC_API_URL),
       counts,
@@ -738,7 +738,7 @@ app.post('/admin/google-drive/uploads-index', auth('admin'), async (_req, res) =
       app: 'Prizetown',
       manifest_type: 'google_drive_uploads_index',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       upload_dir_configured: Boolean(uploadDir),
       upload_dir_exists: Boolean(uploadDir && fs.existsSync(uploadDir)),
       file_count: files.length,
@@ -840,7 +840,7 @@ app.post('/admin/google-drive/database-snapshot', auth('admin'), async (_req, re
       app: 'Prizetown',
       manifest_type: 'google_drive_database_snapshot',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       max_rows_per_table: 5000,
       table_count: tables.length,
       tables,
@@ -880,7 +880,7 @@ app.post('/admin/google-drive/backup-run-summary', auth('admin'), async (_req, r
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_run_summary',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       google_drive: {
         folder_id_configured: Boolean(folderId),
         credentials_configured: Boolean(serviceAccountJson || credentialsFile),
@@ -1072,7 +1072,7 @@ app.post('/admin/google-drive/backup-pack', auth('admin'), async (_req, res) => 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_pack_summary',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       database: {
         table_count: dbTables.length,
         max_rows_per_table: 1000,
@@ -1105,7 +1105,7 @@ app.post('/admin/google-drive/backup-pack', auth('admin'), async (_req, res) => 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_pack_database_snapshot',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       max_rows_per_table: 1000,
       table_count: dbTables.length,
       tables: dbTables
@@ -1115,7 +1115,7 @@ app.post('/admin/google-drive/backup-pack', auth('admin'), async (_req, res) => 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_pack_uploads_index',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       file_count: uploadFiles.length,
       total_bytes: totalUploadBytes,
       files: uploadFiles
@@ -1236,7 +1236,7 @@ app.post('/admin/google-drive/restore-check-report', auth('admin'), async (_req,
       app: 'Prizetown',
       manifest_type: 'google_drive_restore_check_report',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       latest_backup_report: latestReport,
       local_uploads_snapshot: {
         upload_dir_configured: Boolean(uploadDir),
@@ -1370,7 +1370,7 @@ app.post('/admin/google-drive/backup-audit-report', auth('admin'), async (_req, 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_audit_report',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       google_drive: {
         folder_id_configured: Boolean(folderId),
         credentials_configured: Boolean(serviceAccountJson || credentialsFile),
@@ -1538,7 +1538,7 @@ app.post('/admin/google-drive/retention-policy-report', auth('admin'), async (_r
       app: 'Prizetown',
       manifest_type: 'google_drive_retention_policy_report',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       google_drive: {
         folder_id_configured: Boolean(folderId),
         credentials_configured: Boolean(serviceAccountJson || credentialsFile),
@@ -1648,7 +1648,7 @@ app.post('/admin/google-drive/restore-drill-evidence', auth('admin'), async (_re
       app: 'Prizetown',
       manifest_type: 'google_drive_restore_drill_evidence',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       readiness,
       verification_matrix: matrix,
       latest_backup_report: latestReport,
@@ -1706,10 +1706,10 @@ app.post('/admin/google-drive/operator-handover-report', auth('admin'), async (_
       app: 'Prizetown',
       manifest_type: 'google_drive_operator_handover_report',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       current_expected_tags: {
-        api: 'ghcr.io/christianrobertson36/prizetown-api:v258',
-        web: 'ghcr.io/christianrobertson36/prizetown-web:v258'
+        api: 'ghcr.io/christianrobertson36/prizetown-api:v260',
+        web: 'ghcr.io/christianrobertson36/prizetown-web:v260'
       },
       google_drive: {
         folder_id_configured: Boolean(folderId),
@@ -1842,7 +1842,7 @@ app.post('/admin/google-drive/database-dump-guide', auth('admin'), async (_req, 
       app: 'Prizetown',
       manifest_type: 'database_dump_command_guide',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       guide: buildDatabaseDumpGuide(),
       environment: {
         database_url_configured: Boolean(process.env.DATABASE_URL),
@@ -1877,7 +1877,7 @@ app.post('/admin/google-drive/uploads-backup-plan', auth('admin'), async (_req, 
       app: 'Prizetown',
       manifest_type: 'uploads_backup_plan',
       created_at: createdAt,
-      api_version: 'v259',
+      api_version: 'v260',
       plan,
       note: 'This uploads planning evidence only. It does not copy all files.'
     };
@@ -1896,6 +1896,253 @@ app.post('/admin/google-drive/uploads-backup-plan', auth('admin'), async (_req, 
     res.status(500).json({
       ok: false,
       error: err.message || 'Uploads backup plan upload failed.'
+    });
+  }
+});
+
+
+function buildBackupPreflightReport(latestReport, readiness, sizeReport, retentionReport, schedulePlan) {
+  const checks = [
+    {
+      name: 'Google Drive readable',
+      ok: Boolean(latestReport),
+      detail: latestReport ? 'Drive backup folder can be read.' : 'Drive backup folder could not be read.'
+    },
+    {
+      name: 'Core backup evidence present',
+      ok: (latestReport?.missing_types || []).length === 0,
+      detail: (latestReport?.missing_types || []).length === 0
+        ? 'No core evidence types missing.'
+        : `Missing: ${(latestReport?.missing_types || []).join(', ')}`
+    },
+    {
+      name: 'Readiness score',
+      ok: Number(readiness?.score || 0) >= 85,
+      detail: `${readiness?.score ?? 0}/100 - ${readiness?.status || 'unknown'}`
+    },
+    {
+      name: 'Backup files visible',
+      ok: Number(sizeReport?.file_count || 0) > 0,
+      detail: `${sizeReport?.file_count ?? 0} Drive files checked.`
+    },
+    {
+      name: 'Retention is review-only',
+      ok: true,
+      detail: `${retentionReport?.old_candidate_count ?? 0} review candidates; no delete action is enabled.`
+    },
+    {
+      name: 'Schedule plan available',
+      ok: Boolean(schedulePlan?.recommended_schedule?.length),
+      detail: `${schedulePlan?.recommended_schedule?.length ?? 0} recommended cadences.`
+    }
+  ];
+
+  const failed = checks.filter((check) => !check.ok);
+  return {
+    checked_at: new Date().toISOString(),
+    ready: failed.length === 0,
+    failed_count: failed.length,
+    checks,
+    next_actions: failed.length === 0
+      ? ['Proceed with cautious launch operations, but keep manual restore checks.']
+      : failed.map((check) => check.detail)
+  };
+}
+
+function buildTrueNasBackupRunbook(readiness) {
+  return {
+    title: 'TrueNAS backup runbook',
+    api_version: 'v260',
+    readiness_score: readiness?.score ?? 0,
+    goal: 'Keep database, uploads and deployed image references recoverable outside the running app.',
+    routine: [
+      'Confirm API health returns the expected version before changes.',
+      'Export or snapshot PostgreSQL data before risky changes.',
+      'Back up the uploads dataset separately from the container image.',
+      'Record current API and web image tags before updates.',
+      'Upload backup evidence reports to Google Drive after backup actions.',
+      'Keep at least one known-good rollback tag pair documented.'
+    ],
+    truenas_items_to_check: [
+      'App/container image tags are fixed versions, never latest.',
+      'Database dataset/volume is included in TrueNAS snapshots.',
+      'Uploads dataset/volume is included in TrueNAS snapshots.',
+      'Snapshots are retained long enough to recover from accidental deletion.',
+      'A restore test has been run on a safe target.'
+    ],
+    suggested_manual_commands: [
+      'Record current compose/YAML before changing image tags.',
+      'Run a PostgreSQL dump from the database container or host context.',
+      'Copy uploads dataset or confirm snapshot exists.',
+      'Deploy new fixed tags only after backup evidence is created.'
+    ],
+    warning: 'This runbook is guidance only. It does not create snapshots or run commands.'
+  };
+}
+
+function buildEmergencyRollbackRunbook(readiness) {
+  return {
+    title: 'Emergency rollback runbook',
+    api_version: 'v260',
+    readiness_score: readiness?.score ?? 0,
+    first_steps: [
+      'Do not make multiple changes at once during an outage.',
+      'Check API /health first.',
+      'Check whether public web, API, database or uploads are affected.',
+      'If a new version broke the app, rollback API and web image tags to the last known working pair.',
+      'If data is missing, stop writes before restoring database/uploads.'
+    ],
+    rollback_order: [
+      'Rollback web image tag if only frontend/admin UI is broken.',
+      'Rollback API image tag if endpoints or login are broken.',
+      'Rollback both tags together if version mismatch is suspected.',
+      'Only restore database/uploads after taking a fresh emergency copy.'
+    ],
+    current_expected_tags: {
+      api: 'ghcr.io/christianrobertson36/prizetown-api:v260',
+      web: 'ghcr.io/christianrobertson36/prizetown-web:v260'
+    },
+    checks_after_rollback: [
+      'Confirm /health returns the rollback version.',
+      'Log in to Admin.',
+      'Check competitions, entries, orders and winners.',
+      'Check uploaded images/files.',
+      'Run Backup Readiness > Check verification matrix.'
+    ],
+    warning: 'This is guidance only. It does not rollback anything automatically.'
+  };
+}
+
+app.get('/admin/google-drive/backup-preflight', auth('admin'), async (_req, res) => {
+  try {
+    const files = await listGoogleDriveBackupFolderFiles(100);
+    const latestReport = buildGoogleDriveLatestBackupReport(files);
+    const uploadFiles = typeof listUploadFilesForManifest === 'function' ? listUploadFilesForManifest(uploadDir) : [];
+    const readiness = calculateBackupReadinessScore(latestReport, uploadFiles);
+    const sizeReport = buildDriveSizeReport(files);
+    const retentionReport = buildDriveRetentionReport(files);
+    const schedulePlan = buildBackupSchedulePlan(readiness);
+    const preflight = buildBackupPreflightReport(latestReport, readiness, sizeReport, retentionReport, schedulePlan);
+
+    res.json({
+      ok: true,
+      preflight,
+      readiness,
+      note: 'Preflight is a launch/backup readiness check. It does not change data.'
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || 'Backup preflight failed.'
+    });
+  }
+});
+
+app.post('/admin/google-drive/backup-preflight-report', auth('admin'), async (_req, res) => {
+  try {
+    const createdAt = new Date().toISOString();
+    const safeTimestamp = createdAt.replace(/[:.]/g, '-');
+    const files = await listGoogleDriveBackupFolderFiles(100);
+    const latestReport = buildGoogleDriveLatestBackupReport(files);
+    const uploadFiles = typeof listUploadFilesForManifest === 'function' ? listUploadFilesForManifest(uploadDir) : [];
+    const readiness = calculateBackupReadinessScore(latestReport, uploadFiles);
+    const sizeReport = buildDriveSizeReport(files);
+    const retentionReport = buildDriveRetentionReport(files);
+    const schedulePlan = buildBackupSchedulePlan(readiness);
+    const preflight = buildBackupPreflightReport(latestReport, readiness, sizeReport, retentionReport, schedulePlan);
+
+    const report = {
+      app: 'Prizetown',
+      manifest_type: 'backup_preflight_report',
+      created_at: createdAt,
+      api_version: 'v260',
+      preflight,
+      readiness,
+      latest_backup_report: latestReport,
+      schedule_plan: schedulePlan,
+      note: 'Uploaded by admin before launch/change operations.'
+    };
+
+    const file = await uploadJsonToGoogleDrive(`prizetown-backup-preflight-report-${safeTimestamp}.json`, report);
+    res.json({
+      ok: true,
+      uploaded: true,
+      file,
+      ready: preflight.ready,
+      failed_count: preflight.failed_count,
+      readiness,
+      note: 'Backup preflight report uploaded to Google Drive.'
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || 'Backup preflight report upload failed.'
+    });
+  }
+});
+
+app.post('/admin/google-drive/truenas-backup-runbook', auth('admin'), async (_req, res) => {
+  try {
+    const createdAt = new Date().toISOString();
+    const safeTimestamp = createdAt.replace(/[:.]/g, '-');
+    const files = await listGoogleDriveBackupFolderFiles(100);
+    const latestReport = buildGoogleDriveLatestBackupReport(files);
+    const uploadFiles = typeof listUploadFilesForManifest === 'function' ? listUploadFilesForManifest(uploadDir) : [];
+    const readiness = calculateBackupReadinessScore(latestReport, uploadFiles);
+    const runbook = buildTrueNasBackupRunbook(readiness);
+
+    const file = await uploadJsonToGoogleDrive(`prizetown-truenas-backup-runbook-${safeTimestamp}.json`, {
+      app: 'Prizetown',
+      manifest_type: 'truenas_backup_runbook',
+      created_at: createdAt,
+      api_version: 'v260',
+      runbook
+    });
+
+    res.json({
+      ok: true,
+      uploaded: true,
+      file,
+      readiness,
+      note: 'TrueNAS backup runbook uploaded to Google Drive.'
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || 'TrueNAS backup runbook upload failed.'
+    });
+  }
+});
+
+app.post('/admin/google-drive/emergency-rollback-runbook', auth('admin'), async (_req, res) => {
+  try {
+    const createdAt = new Date().toISOString();
+    const safeTimestamp = createdAt.replace(/[:.]/g, '-');
+    const files = await listGoogleDriveBackupFolderFiles(100);
+    const latestReport = buildGoogleDriveLatestBackupReport(files);
+    const uploadFiles = typeof listUploadFilesForManifest === 'function' ? listUploadFilesForManifest(uploadDir) : [];
+    const readiness = calculateBackupReadinessScore(latestReport, uploadFiles);
+    const runbook = buildEmergencyRollbackRunbook(readiness);
+
+    const file = await uploadJsonToGoogleDrive(`prizetown-emergency-rollback-runbook-${safeTimestamp}.json`, {
+      app: 'Prizetown',
+      manifest_type: 'emergency_rollback_runbook',
+      created_at: createdAt,
+      api_version: 'v260',
+      runbook
+    });
+
+    res.json({
+      ok: true,
+      uploaded: true,
+      file,
+      readiness,
+      note: 'Emergency rollback runbook uploaded to Google Drive.'
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || 'Emergency rollback runbook upload failed.'
     });
   }
 });
@@ -2009,7 +2256,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
 
   add('warning', 'Payment: webhook hardening', 'Live payment webhooks/idempotency are not connected yet. Do not allocate paid tickets from frontend-only payment state.');
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v259' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v260' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -2027,7 +2274,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v259',
+    version: 'v260',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -3449,7 +3696,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v259 backup schedule dump uploads plan)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v260 backup preflight runbooks)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

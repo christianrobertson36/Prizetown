@@ -3552,6 +3552,10 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Schedule Plan', 'Backup Readiness now includes a non-destructive schedule plan for daily, weekly and monthly backup routines.'],
             ['Database Dump Guide', 'Backup Readiness now includes a button to upload pg_dump command guidance to Google Drive.'],
             ['Uploads Backup Plan', 'Backup Readiness now includes a button to upload a local uploads backup plan and file count report.'],
+            ['Backup Preflight Check', 'Backup Readiness now includes a launch/change preflight check across Drive evidence, score, schedule, size and retention status.'],
+            ['Backup Preflight Report', 'Backup Readiness now includes a button to upload the preflight report to Google Drive.'],
+            ['TrueNAS Backup Runbook', 'Backup Readiness now includes a button to upload a TrueNAS backup runbook to Drive.'],
+            ['Emergency Rollback Runbook', 'Backup Readiness now includes a button to upload rollback instructions and current expected tags to Drive.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3961,6 +3965,14 @@ function GoogleDriveStatusButton() {
   const [dumpGuideResult, setDumpGuideResult] = useState(null);
   const [uploadsPlanLoading, setUploadsPlanLoading] = useState(false);
   const [uploadsPlanResult, setUploadsPlanResult] = useState(null);
+  const [preflightLoading, setPreflightLoading] = useState(false);
+  const [preflightResult, setPreflightResult] = useState(null);
+  const [preflightReportLoading, setPreflightReportLoading] = useState(false);
+  const [preflightReportResult, setPreflightReportResult] = useState(null);
+  const [truenasRunbookLoading, setTruenasRunbookLoading] = useState(false);
+  const [truenasRunbookResult, setTruenasRunbookResult] = useState(null);
+  const [rollbackRunbookLoading, setRollbackRunbookLoading] = useState(false);
+  const [rollbackRunbookResult, setRollbackRunbookResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4419,6 +4431,82 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkBackupPreflight() {
+    setPreflightLoading(true);
+    setError('');
+    setPreflightResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-preflight`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Backup preflight failed (${res.status})`);
+      setPreflightResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not run backup preflight.');
+    } finally {
+      setPreflightLoading(false);
+    }
+  }
+
+  async function uploadBackupPreflightReport() {
+    setPreflightReportLoading(true);
+    setError('');
+    setPreflightReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-preflight-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Backup preflight report upload failed (${res.status})`);
+      setPreflightReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload backup preflight report.');
+    } finally {
+      setPreflightReportLoading(false);
+    }
+  }
+
+  async function uploadTrueNasRunbook() {
+    setTruenasRunbookLoading(true);
+    setError('');
+    setTruenasRunbookResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/truenas-backup-runbook`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `TrueNAS backup runbook upload failed (${res.status})`);
+      setTruenasRunbookResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload TrueNAS backup runbook.');
+    } finally {
+      setTruenasRunbookLoading(false);
+    }
+  }
+
+  async function uploadEmergencyRollbackRunbook() {
+    setRollbackRunbookLoading(true);
+    setError('');
+    setRollbackRunbookResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/emergency-rollback-runbook`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Emergency rollback runbook upload failed (${res.status})`);
+      setRollbackRunbookResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload emergency rollback runbook.');
+    } finally {
+      setRollbackRunbookLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4447,6 +4535,10 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkSchedulePlan} disabled={schedulePlanLoading}>{schedulePlanLoading ? 'Planning schedule...' : 'Check backup schedule plan'}</button>
       <button type="button" onClick={uploadDatabaseDumpGuide} disabled={dumpGuideLoading}>{dumpGuideLoading ? 'Uploading guide...' : 'Upload DB dump guide'}</button>
       <button type="button" onClick={uploadUploadsBackupPlan} disabled={uploadsPlanLoading}>{uploadsPlanLoading ? 'Uploading uploads plan...' : 'Upload uploads backup plan'}</button>
+      <button type="button" onClick={checkBackupPreflight} disabled={preflightLoading}>{preflightLoading ? 'Running preflight...' : 'Check backup preflight'}</button>
+      <button type="button" onClick={uploadBackupPreflightReport} disabled={preflightReportLoading}>{preflightReportLoading ? 'Uploading preflight...' : 'Upload preflight report'}</button>
+      <button type="button" onClick={uploadTrueNasRunbook} disabled={truenasRunbookLoading}>{truenasRunbookLoading ? 'Uploading TrueNAS runbook...' : 'Upload TrueNAS runbook'}</button>
+      <button type="button" onClick={uploadEmergencyRollbackRunbook} disabled={rollbackRunbookLoading}>{rollbackRunbookLoading ? 'Uploading rollback...' : 'Upload rollback runbook'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4592,6 +4684,30 @@ function GoogleDriveStatusButton() {
       <article><strong>Files counted</strong><p>{uploadsPlanResult.upload_file_count ?? 0}</p></article>
       <article><strong>Total bytes</strong><p>{uploadsPlanResult.total_upload_bytes ?? 0}</p></article>
       <article><strong>Batch size</strong><p>{uploadsPlanResult.suggested_batch_size ?? 10}</p></article>
+    </div>}
+    {preflightResult && <div className="backup-notes-grid">
+      <article><strong>Preflight</strong><p>{preflightResult.preflight?.ready ? 'Ready' : 'Needs attention'}</p></article>
+      <article><strong>Failed checks</strong><p>{preflightResult.preflight?.failed_count ?? 0}</p></article>
+      <article><strong>Score</strong><p>{preflightResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Checks</strong><p>{preflightResult.preflight?.checks?.length ?? 0}</p></article>
+    </div>}
+    {preflightReportResult && <div className="backup-notes-grid">
+      <article><strong>Preflight report</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{preflightReportResult.file?.name || 'Created preflight report'}</p></article>
+      <article><strong>Ready</strong><p>{preflightReportResult.ready ? 'Yes' : 'Needs attention'}</p></article>
+      <article><strong>Failed checks</strong><p>{preflightReportResult.failed_count ?? 0}</p></article>
+    </div>}
+    {truenasRunbookResult && <div className="backup-notes-grid">
+      <article><strong>TrueNAS runbook</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{truenasRunbookResult.file?.name || 'Created TrueNAS runbook'}</p></article>
+      <article><strong>Score</strong><p>{truenasRunbookResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Use</strong><p>Keep with backup/operator docs</p></article>
+    </div>}
+    {rollbackRunbookResult && <div className="backup-notes-grid">
+      <article><strong>Rollback runbook</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{rollbackRunbookResult.file?.name || 'Created rollback runbook'}</p></article>
+      <article><strong>Score</strong><p>{rollbackRunbookResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Use</strong><p>Use during outage/change rollback</p></article>
     </div>}
   </div>;
 }
@@ -5468,7 +5584,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v259';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v260';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
