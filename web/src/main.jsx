@@ -3275,6 +3275,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Security Readiness', 'Use Security Readiness to track launch hardening work such as admin password, JWT secret, admin-only access, rate limiting, upload checks, backups, HTTPS and Cloudflare protection.'],
             ['Backup Readiness', 'Use Backup Readiness to track the backup plan before launch: TrueNAS snapshots, PostgreSQL database dumps, uploads backup, Google Drive/off-site copy, saved compose/YAML and a tested restore.'],
             ['Backup Export Notes', 'Backup Readiness now includes manual export notes for PostgreSQL dumps, uploads, compose/YAML, image tags and Google Drive/off-site copies. These are planning notes only until backup automation is added.'],
+            ['Backup System Checks', 'System Check now includes backup warnings for TrueNAS snapshots, PostgreSQL dumps, uploads, Google Drive/off-site copy and restore testing.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4078,7 +4079,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v190';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v191';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {

@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v190' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v191' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -634,9 +634,19 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
 
   add('warning', 'Security: backups and restore', 'Confirm daily database backups and test a restore before taking real payments.');
 
+  add('warning', 'Backup: TrueNAS snapshot', 'Confirm a local TrueNAS snapshot or dataset backup exists for the Prizetown app, database and uploads paths.');
+
+  add('warning', 'Backup: PostgreSQL dump', 'Confirm a scheduled pg_dump exists for the Prizetown database and is stored outside the live database volume.');
+
+  add('warning', 'Backup: uploads folder', 'Confirm the uploads volume is included in backups so prize images and uploaded files can be restored.');
+
+  add('warning', 'Backup: Google Drive off-site copy', 'Confirm database dumps, uploads backup and release notes are copied to Google Drive or another off-site location.');
+
+  add('warning', 'Backup: restore test', 'Complete a restore test to a safe temporary location before trusting backups for public launch or real payments.');
+
   add('warning', 'Payment: webhook hardening', 'Live payment webhooks/idempotency are not connected yet. Do not allocate paid tickets from frontend-only payment state.');
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v190' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v191' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -654,7 +664,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v190',
+    version: 'v191',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -2076,7 +2086,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v190 backup export notes)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v191 backup system checks)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
