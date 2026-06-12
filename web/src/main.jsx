@@ -3566,6 +3566,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Admin Button Layout', 'Action buttons across admin areas are easier to scan on desktop and mobile, with section labels and consistent wrapping.'],
             ['Admin Quick Navigation', 'Admin pages now show a compact quick navigation helper so operators can jump to the most-used admin areas faster.'],
             ['Public Trust Blocks', 'The public homepage now includes clearer how-it-works, draw transparency, free-entry and winner proof guidance to improve customer trust.'],
+            ['Live Activity Polish', 'The public Live Activity area now removes the extra competitions link and makes the next draw date/time easier to read.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5741,7 +5742,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v264';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v265';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -5985,6 +5986,85 @@ if (!document.getElementById('prizetown-public-trust-v264')) {
   `;
   document.head.appendChild(style);
 }
+
+if (!document.getElementById('prizetown-live-activity-polish-v265')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-live-activity-polish-v265';
+  style.textContent = `
+    .live-activity-next-draw-card,
+    .next-draw-polished-card {
+      min-width: 220px;
+    }
+
+    .live-activity-next-draw-date,
+    .next-draw-polished-date {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      font-size: clamp(1.1rem, 2vw, 1.55rem);
+      font-weight: 900;
+      line-height: 1.12;
+      white-space: nowrap;
+      letter-spacing: -0.02em;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .live-activity-next-draw-card small,
+    .next-draw-polished-card small {
+      display: block;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 520px) {
+      .live-activity-next-draw-date,
+      .next-draw-polished-date {
+        white-space: normal;
+        text-align: center;
+        font-size: 1.08rem;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const polishLiveActivityV265 = () => {
+  const interactive = Array.from(document.querySelectorAll('a, button'));
+  interactive.forEach((el) => {
+    const text = (el.textContent || '').trim().toLowerCase();
+    if (text === 'view live competitions') {
+      el.remove();
+    }
+  });
+
+  const labels = Array.from(document.querySelectorAll('strong, span, p, small, div, article'));
+  labels.forEach((el) => {
+    const text = (el.textContent || '').trim().toLowerCase();
+    if (text !== 'next draw') return;
+
+    const card = el.closest('article, .card, .stat-card, .metric-card, .live-card, div');
+    if (card) card.classList.add('live-activity-next-draw-card', 'next-draw-polished-card');
+
+    const prev = el.previousElementSibling;
+    if (prev && (prev.textContent || '').match(/\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|\d{1,2}:\d{2}|no draw|soon/i)) {
+      prev.classList.add('live-activity-next-draw-date', 'next-draw-polished-date');
+    }
+
+    const next = el.nextElementSibling;
+    if (next && (next.textContent || '').match(/\d{1,2}\s+[A-Za-z]{3}\s+\d{4}|\d{1,2}:\d{2}|no draw|soon/i)) {
+      next.classList.add('live-activity-next-draw-date', 'next-draw-polished-date');
+    }
+  });
+};
+
+polishLiveActivityV265();
+setTimeout(polishLiveActivityV265, 250);
+setTimeout(polishLiveActivityV265, 900);
+window.addEventListener('hashchange', polishLiveActivityV265);
+window.addEventListener('popstate', polishLiveActivityV265);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
