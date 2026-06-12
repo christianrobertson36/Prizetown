@@ -3543,6 +3543,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Backup Timeline', 'Backup Readiness now includes a button to list recent backup files in timeline form.'],
             ['Google Drive Readiness Score', 'Backup Readiness now includes a simple score based on backup evidence files and local uploads visibility.'],
             ['Google Drive Backup Audit Report', 'Backup Readiness now includes a button to upload a combined audit report with timeline and readiness evidence.'],
+            ['Google Drive Backup Size Report', 'Backup Readiness now includes a button to total Google Drive backup storage by file type.'],
+            ['Google Drive Retention Report', 'Backup Readiness now includes a review-only retention report for older backup files.'],
+            ['Google Drive Retention Policy Report', 'Backup Readiness now includes a button to upload a combined size and retention policy report to Drive.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3934,6 +3937,12 @@ function GoogleDriveStatusButton() {
   const [readinessScoreResult, setReadinessScoreResult] = useState(null);
   const [auditReportLoading, setAuditReportLoading] = useState(false);
   const [auditReportResult, setAuditReportResult] = useState(null);
+  const [sizeReportLoading, setSizeReportLoading] = useState(false);
+  const [sizeReportResult, setSizeReportResult] = useState(null);
+  const [retentionReportLoading, setRetentionReportLoading] = useState(false);
+  const [retentionReportResult, setRetentionReportResult] = useState(null);
+  const [policyReportLoading, setPolicyReportLoading] = useState(false);
+  const [policyReportResult, setPolicyReportResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4221,6 +4230,63 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkBackupSizeReport() {
+    setSizeReportLoading(true);
+    setError('');
+    setSizeReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-size-report`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Backup size report failed (${res.status})`);
+      setSizeReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load Google Drive backup size report.');
+    } finally {
+      setSizeReportLoading(false);
+    }
+  }
+
+  async function checkRetentionReport() {
+    setRetentionReportLoading(true);
+    setError('');
+    setRetentionReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/retention-report`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Retention report failed (${res.status})`);
+      setRetentionReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load Google Drive retention report.');
+    } finally {
+      setRetentionReportLoading(false);
+    }
+  }
+
+  async function uploadRetentionPolicyReport() {
+    setPolicyReportLoading(true);
+    setError('');
+    setPolicyReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/retention-policy-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Retention policy report upload failed (${res.status})`);
+      setPolicyReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive retention policy report.');
+    } finally {
+      setPolicyReportLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4240,6 +4306,9 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkBackupTimeline} disabled={timelineLoading}>{timelineLoading ? 'Loading timeline...' : 'Check backup timeline'}</button>
       <button type="button" onClick={checkReadinessScore} disabled={readinessScoreLoading}>{readinessScoreLoading ? 'Scoring...' : 'Check readiness score'}</button>
       <button type="button" onClick={uploadBackupAuditReport} disabled={auditReportLoading}>{auditReportLoading ? 'Uploading audit...' : 'Upload audit report'}</button>
+      <button type="button" onClick={checkBackupSizeReport} disabled={sizeReportLoading}>{sizeReportLoading ? 'Calculating size...' : 'Check backup size report'}</button>
+      <button type="button" onClick={checkRetentionReport} disabled={retentionReportLoading}>{retentionReportLoading ? 'Checking retention...' : 'Check retention report'}</button>
+      <button type="button" onClick={uploadRetentionPolicyReport} disabled={policyReportLoading}>{policyReportLoading ? 'Uploading policy...' : 'Upload retention policy report'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4331,6 +4400,24 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{auditReportResult.file?.name || 'Created audit report'}</p></article>
       <article><strong>Score</strong><p>{auditReportResult.readiness?.score ?? 0}/100</p></article>
       <article><strong>Timeline files</strong><p>{auditReportResult.timeline_count ?? 0}</p></article>
+    </div>}
+    {sizeReportResult && <div className="backup-notes-grid">
+      <article><strong>Size report</strong><p>Loaded successfully</p></article>
+      <article><strong>Files counted</strong><p>{sizeReportResult.report?.file_count ?? 0}</p></article>
+      <article><strong>Total size</strong><p>{sizeReportResult.report?.total_bytes ?? 0} bytes</p></article>
+      <article><strong>Largest file</strong><p>{sizeReportResult.report?.largest_files?.[0]?.name || 'No file returned'}</p></article>
+    </div>}
+    {retentionReportResult && <div className="backup-notes-grid">
+      <article><strong>Retention report</strong><p>Review only</p></article>
+      <article><strong>Files checked</strong><p>{retentionReportResult.report?.file_count_checked ?? 0}</p></article>
+      <article><strong>Old candidates</strong><p>{retentionReportResult.report?.old_candidate_count ?? 0}</p></article>
+      <article><strong>Policy</strong><p>{retentionReportResult.report?.retention_days ?? 30} days, keep {retentionReportResult.report?.keep_recent_per_type ?? 5} per type</p></article>
+    </div>}
+    {policyReportResult && <div className="backup-notes-grid">
+      <article><strong>Policy report</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{policyReportResult.file?.name || 'Created policy report'}</p></article>
+      <article><strong>Total size</strong><p>{policyReportResult.total_bytes ?? 0} bytes</p></article>
+      <article><strong>Review candidates</strong><p>{policyReportResult.old_candidate_count ?? 0}</p></article>
     </div>}
   </div>;
 }
@@ -5207,7 +5294,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v256';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v257';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
