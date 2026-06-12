@@ -3592,6 +3592,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
+            ['Spinner Preview Gallery', 'Admin now has four new draw-show spinner concepts to compare before choosing one to wire into the live broadcast draw.'],
             ['Mobile Preview', 'Use Draws > Mobile Preview to test the live draw page inside phone-sized frames before changing public mobile draw CSS. Check spinner visibility, Arnold overlap, text wrapping and sideways scrolling.'],
             ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
@@ -5764,7 +5765,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v284';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v285';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7981,6 +7982,280 @@ setTimeout(disableInjectedAdminPanelsV284, 800);
 setTimeout(disableInjectedAdminPanelsV284, 1800);
 window.addEventListener('hashchange', disableInjectedAdminPanelsV284);
 window.addEventListener('popstate', disableInjectedAdminPanelsV284);
+
+
+
+if (!document.getElementById('prizetown-spinner-preview-gallery-v285-style')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-spinner-preview-gallery-v285-style';
+  style.textContent = `
+    #prizetown-spinner-preview-gallery-v285 {
+      width: min(1120px, calc(100% - 24px));
+      margin: 18px auto 28px;
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(245,158,11,.28);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(245,158,11,.18), transparent 34%),
+        radial-gradient(circle at 80% 10%, rgba(168,85,247,.14), transparent 36%),
+        rgba(15,23,42,.82);
+      color: #f8fafc;
+      box-shadow: 0 22px 55px rgba(0,0,0,.2);
+    }
+    #prizetown-spinner-preview-gallery-v285 h2 {
+      margin: 0 0 4px;
+      font-size: 1.25rem;
+    }
+    #prizetown-spinner-preview-gallery-v285 p {
+      margin: 0;
+      opacity: .84;
+      line-height: 1.45;
+    }
+    .spinner-gallery-grid-v285 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .spinner-preview-card-v285 {
+      min-height: 245px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    .spinner-preview-card-v285 h3 {
+      margin: 0;
+      font-size: 1rem;
+      position: relative;
+      z-index: 3;
+    }
+    .spinner-preview-card-v285 small {
+      display: block;
+      margin-top: 4px;
+      opacity: .78;
+      line-height: 1.35;
+      position: relative;
+      z-index: 3;
+    }
+    .spinner-preview-wheel-v285 {
+      width: 150px;
+      height: 150px;
+      margin: 18px auto 8px;
+      border-radius: 999px;
+      position: relative;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      animation: spinPreviewV285 9s linear infinite;
+    }
+    .spinner-preview-wheel-v285::after {
+      content: '';
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.88);
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: inset 0 0 20px rgba(255,255,255,.08);
+    }
+    .spinner-preview-pointer-v285 {
+      width: 0;
+      height: 0;
+      border-left: 11px solid transparent;
+      border-right: 11px solid transparent;
+      border-top: 24px solid #fff7ed;
+      position: absolute;
+      left: 50%;
+      top: 72px;
+      transform: translateX(-50%);
+      z-index: 4;
+      filter: drop-shadow(0 5px 8px rgba(0,0,0,.35));
+    }
+    @keyframes spinPreviewV285 {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner-style-neon-v285 {
+      background:
+        radial-gradient(circle at 50% 44%, rgba(14,165,233,.16), transparent 42%),
+        linear-gradient(145deg, rgba(6,8,25,.95), rgba(36,8,66,.92));
+    }
+    .spinner-style-neon-v285 .spinner-preview-wheel-v285 {
+      background: conic-gradient(#22d3ee 0 12%, #a78bfa 12% 25%, #f472b6 25% 38%, #38bdf8 38% 50%, #c084fc 50% 64%, #fb7185 64% 76%, #67e8f9 76% 88%, #8b5cf6 88% 100%);
+      box-shadow: 0 0 28px rgba(34,211,238,.42), 0 0 46px rgba(168,85,247,.28);
+    }
+    .spinner-style-neon-v285::before {
+      content: 'LIVE';
+      position: absolute;
+      right: 13px;
+      top: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(239,68,68,.18);
+      border: 1px solid rgba(248,113,113,.38);
+      color: #fecaca;
+      font-weight: 900;
+      font-size: .72rem;
+    }
+
+    .spinner-style-vault-v285 {
+      background:
+        radial-gradient(circle at 50% 44%, rgba(251,191,36,.18), transparent 45%),
+        linear-gradient(145deg, rgba(28,20,8,.96), rgba(83,52,11,.88));
+    }
+    .spinner-style-vault-v285 .spinner-preview-wheel-v285 {
+      background: conic-gradient(#f59e0b 0 13%, #78350f 13% 25%, #fbbf24 25% 38%, #451a03 38% 50%, #fde68a 50% 63%, #92400e 63% 75%, #f97316 75% 88%, #facc15 88% 100%);
+      border: 8px solid rgba(253,230,138,.44);
+      box-shadow: 0 0 30px rgba(245,158,11,.35);
+    }
+    .spinner-style-vault-v285::before {
+      content: '£££';
+      position: absolute;
+      left: 16px;
+      bottom: 18px;
+      opacity: .18;
+      font-size: 3rem;
+      font-weight: 900;
+    }
+
+    .spinner-style-ticketstorm-v285 {
+      background:
+        radial-gradient(circle at 50% 46%, rgba(34,197,94,.15), transparent 46%),
+        linear-gradient(145deg, rgba(4,47,46,.95), rgba(20,83,45,.86));
+    }
+    .spinner-style-ticketstorm-v285 .spinner-preview-wheel-v285 {
+      border-radius: 26px;
+      background:
+        linear-gradient(35deg, rgba(255,255,255,.94) 0 10%, transparent 10% 20%),
+        conic-gradient(#bbf7d0 0 14%, #22c55e 14% 28%, #dcfce7 28% 42%, #16a34a 42% 56%, #f0fdf4 56% 70%, #4ade80 70% 84%, #14532d 84% 100%);
+      box-shadow: 0 0 28px rgba(34,197,94,.34);
+    }
+    .spinner-style-ticketstorm-v285::before,
+    .spinner-style-ticketstorm-v285::after {
+      content: '';
+      position: absolute;
+      width: 54px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.18);
+      border: 1px dashed rgba(255,255,255,.35);
+      transform: rotate(-14deg);
+    }
+    .spinner-style-ticketstorm-v285::before { right: 18px; top: 72px; }
+    .spinner-style-ticketstorm-v285::after { left: 20px; bottom: 32px; transform: rotate(18deg); }
+
+    .spinner-style-stage-v285 {
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(255,255,255,.20), transparent 38%),
+        linear-gradient(145deg, rgba(15,23,42,.96), rgba(49,46,129,.86));
+    }
+    .spinner-style-stage-v285 .spinner-preview-wheel-v285 {
+      background: conic-gradient(#f8fafc 0 12%, #60a5fa 12% 25%, #dbeafe 25% 38%, #818cf8 38% 50%, #e0e7ff 50% 63%, #38bdf8 63% 75%, #c7d2fe 75% 88%, #2563eb 88% 100%);
+      box-shadow: 0 18px 40px rgba(96,165,250,.26), 0 0 0 12px rgba(255,255,255,.06);
+    }
+    .spinner-style-stage-v285::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(74deg, transparent 0 39%, rgba(255,255,255,.10) 40% 43%, transparent 44% 100%),
+        linear-gradient(106deg, transparent 0 57%, rgba(255,255,255,.10) 58% 61%, transparent 62% 100%);
+      pointer-events: none;
+    }
+
+    .spinner-preview-footer-v285 {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .spinner-preview-footer-v285 span {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.16);
+      font-weight: 900;
+      font-size: .78rem;
+    }
+    @media (max-width: 980px) {
+      .spinner-gallery-grid-v285 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .spinner-gallery-grid-v285 { grid-template-columns: 1fr; }
+      .spinner-preview-wheel-v285 { width: 132px; height: 132px; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function mountSpinnerPreviewGalleryV285() {
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  const isAdminDrawArea = path.includes('/admin') && (
+    document.body.innerText.includes('Final Draw') ||
+    document.body.innerText.includes('Spinner style') ||
+    hash.includes('draw')
+  );
+
+  if (!isAdminDrawArea) {
+    document.getElementById('prizetown-spinner-preview-gallery-v285')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-spinner-preview-gallery-v285');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-spinner-preview-gallery-v285';
+    panel.innerHTML = `
+      <h2>Spinner style preview gallery</h2>
+      <p>Four more draw-show concepts to compare before wiring one into the live OBS broadcast spinner.</p>
+      <div class="spinner-gallery-grid-v285">
+        <article class="spinner-preview-card-v285 spinner-style-neon-v285">
+          <h3>Neon Jackpot Ring</h3>
+          <small>High-energy live stream look. Best for YouTube/OBS countdowns and evening draws.</small>
+          <div class="spinner-preview-pointer-v285"></div>
+          <div class="spinner-preview-wheel-v285"></div>
+          <div class="spinner-preview-footer-v285"><span>Premium live draw</span></div>
+        </article>
+        <article class="spinner-preview-card-v285 spinner-style-vault-v285">
+          <h3>Golden Prize Vault</h3>
+          <small>Dark luxury gold style for bigger-value prizes and final winner reveals.</small>
+          <div class="spinner-preview-pointer-v285"></div>
+          <div class="spinner-preview-wheel-v285"></div>
+          <div class="spinner-preview-footer-v285"><span>Big prize feel</span></div>
+        </article>
+        <article class="spinner-preview-card-v285 spinner-style-ticketstorm-v285">
+          <h3>Ticket Storm</h3>
+          <small>Fun ticket-card energy for local competitions, smaller prizes and quick draws.</small>
+          <div class="spinner-preview-pointer-v285"></div>
+          <div class="spinner-preview-wheel-v285"></div>
+          <div class="spinner-preview-footer-v285"><span>Entry ticket vibe</span></div>
+        </article>
+        <article class="spinner-preview-card-v285 spinner-style-stage-v285">
+          <h3>Spotlight Stage</h3>
+          <small>Clean broadcast style with stage lights. Safest pick for professional OBS scenes.</small>
+          <div class="spinner-preview-pointer-v285"></div>
+          <div class="spinner-preview-wheel-v285"></div>
+          <div class="spinner-preview-footer-v285"><span>Broadcast clean</span></div>
+        </article>
+      </div>
+    `;
+    target.appendChild(panel);
+  }
+}
+
+mountSpinnerPreviewGalleryV285();
+setTimeout(mountSpinnerPreviewGalleryV285, 600);
+setTimeout(mountSpinnerPreviewGalleryV285, 1600);
+window.addEventListener('hashchange', mountSpinnerPreviewGalleryV285);
+window.addEventListener('popstate', mountSpinnerPreviewGalleryV285);
 
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
