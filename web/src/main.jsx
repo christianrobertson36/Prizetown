@@ -3284,6 +3284,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Winner Contact Checklist', 'Support Readiness now includes winner-contact guidance for checking draw proof, ticket number, contact details, prize fulfilment notes and safe public/private data handling.'],
             ['Support Message Templates', 'Support Readiness now includes simple starter reply templates for order questions, free-entry questions, winner contact, refund queries and escalations.'],
             ['Support Workflow Checklist', 'Support Readiness now includes a simple step-by-step workflow for checking support requests before replying to customers.'],
+            ['Admin Handover Checklist', 'Support Readiness now includes an admin handover checklist so another trusted admin can understand support, orders, draws, backups and launch safety checks.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3780,6 +3781,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Admin handover checklist</h2>
+      <p className="muted">Use this before letting another trusted person help run Prizetown.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Admin access route</strong><p>Explain that admin should use the protected Tailscale/admin route, not public /admin.</p></article>
+        <article><strong>Daily checks</strong><p>Show Overview, Launch checklist, Orders & entries, System check, Support Readiness and Audit log.</p></article>
+        <article><strong>Order support</strong><p>Explain how to find customers, orders, entries, ticket numbers and public entry lists.</p></article>
+        <article><strong>Draw support</strong><p>Explain Draw Control Room, Final draw, Draw Proof, Winners and OBS broadcast basics.</p></article>
+        <article><strong>Backup safety</strong><p>Show Backup Readiness and explain snapshots, database dumps, uploads backup and restore testing.</p></article>
+        <article><strong>Escalation rule</strong><p>If money, legal, winner, refund, chargeback or identity details are unclear, pause and escalate before replying.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4180,7 +4194,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v198';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v199';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
