@@ -3593,6 +3593,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
             ['Spinner Preview Gallery', 'Admin now has four new draw-show spinner concepts to compare before choosing one to wire into the live broadcast draw.'],
+            ['Visible Spinner Gallery', 'The spinner preview gallery now appears near the top of Admin so it is easy to find before choosing a live draw style.'],
             ['Mobile Preview', 'Use Draws > Mobile Preview to test the live draw page inside phone-sized frames before changing public mobile draw CSS. Check spinner visibility, Arnold overlap, text wrapping and sideways scrolling.'],
             ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
@@ -5765,7 +5766,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v285';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v286';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7405,7 +7406,7 @@ function mountSecurityEventsViewerV280() {
       </div>
     `;
 
-    target.appendChild(panel);
+    target.prepend(panel);
     panel.querySelector('[data-security-events-refresh]')?.addEventListener('click', () => loadSecurityEventsV280(panel));
     setTimeout(() => loadSecurityEventsV280(panel), 250);
   }
@@ -7590,7 +7591,7 @@ function mountEmailReadinessV281() {
       <div class="email-readiness-output-v281" data-email-output>Click refresh to load email readiness.</div>
     `;
 
-    target.appendChild(panel);
+    target.prepend(panel);
     panel.querySelector('[data-email-refresh]')?.addEventListener('click', () => loadEmailReadinessV281(panel));
     panel.querySelector('[data-email-test]')?.addEventListener('click', () => sendTestEmailV281(panel));
     setTimeout(() => loadEmailReadinessV281(panel), 300);
@@ -7733,7 +7734,7 @@ function mountEmailWorkflowV282() {
       </div>
       <div class="email-workflow-preview-v282" data-email-workflow-output>Choose a template to preview.</div>
     `;
-    target.appendChild(panel);
+    target.prepend(panel);
     panel.querySelectorAll('[data-template]').forEach((button) => {
       button.addEventListener('click', () => previewManualEmailV282(panel, button.getAttribute('data-template')));
     });
@@ -7947,7 +7948,7 @@ function mountEmailSenderV283() {
       </div>
       <div class="email-sender-output-v283" data-email-sender-output-v283>Fill the form and preview before sending.</div>
     `;
-    target.appendChild(panel);
+    target.prepend(panel);
     panel.querySelector('[data-preview-email-v283]')?.addEventListener('click', () => previewSenderEmailV283(panel));
     panel.querySelector('[data-send-email-v283]')?.addEventListener('click', () => sendSenderEmailV283(panel));
   }
@@ -8194,14 +8195,9 @@ if (!document.getElementById('prizetown-spinner-preview-gallery-v285-style')) {
 
 function mountSpinnerPreviewGalleryV285() {
   const path = window.location.pathname.toLowerCase();
-  const hash = window.location.hash.toLowerCase();
-  const isAdminDrawArea = path.includes('/admin') && (
-    document.body.innerText.includes('Final Draw') ||
-    document.body.innerText.includes('Spinner style') ||
-    hash.includes('draw')
-  );
+  const isAdminArea = path.includes('/admin');
 
-  if (!isAdminDrawArea) {
+  if (!isAdminArea) {
     document.getElementById('prizetown-spinner-preview-gallery-v285')?.remove();
     return;
   }
@@ -8210,12 +8206,13 @@ function mountSpinnerPreviewGalleryV285() {
   if (!target) return;
 
   let panel = document.getElementById('prizetown-spinner-preview-gallery-v285');
+  // spinner-gallery-v286-top-fix
   if (!panel) {
     panel = document.createElement('section');
     panel.id = 'prizetown-spinner-preview-gallery-v285';
     panel.innerHTML = `
       <h2>Spinner style preview gallery</h2>
-      <p>Four more draw-show concepts to compare before wiring one into the live OBS broadcast spinner.</p>
+      <p>Four draw-show concepts to compare before wiring one into the live OBS broadcast spinner.</p>
       <div class="spinner-gallery-grid-v285">
         <article class="spinner-preview-card-v285 spinner-style-neon-v285">
           <h3>Neon Jackpot Ring</h3>
@@ -8247,13 +8244,14 @@ function mountSpinnerPreviewGalleryV285() {
         </article>
       </div>
     `;
-    target.appendChild(panel);
+    target.prepend(panel);
   }
 }
 
 mountSpinnerPreviewGalleryV285();
 setTimeout(mountSpinnerPreviewGalleryV285, 600);
 setTimeout(mountSpinnerPreviewGalleryV285, 1600);
+setTimeout(mountSpinnerPreviewGalleryV285, 3200);
 window.addEventListener('hashchange', mountSpinnerPreviewGalleryV285);
 window.addEventListener('popstate', mountSpinnerPreviewGalleryV285);
 
