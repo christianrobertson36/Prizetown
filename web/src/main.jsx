@@ -3526,6 +3526,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Do and Do Not', 'Backup Readiness now includes simple safe rules for what to do and avoid before updates or restores.'],
             ['Backup Export Reminder', 'Backup Readiness now reminds admins what to copy into an outside record before major updates or launch work.'],
             ['After Restore Checks', 'Backup Readiness now includes a compact checklist of screens and data to verify after any restore or rollback.'],
+            ['Google Drive Backup Guide', 'Backup Readiness now includes Google Drive folder, naming, sharing and upload guidance for off-site backup copies.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4045,6 +4046,18 @@ function BackupReadinessPanel() {
         <article><strong>Core data</strong><p>Competitions, orders, entries, winners, customers and audit logs still look correct.</p></article>
         <article><strong>Uploads/images</strong><p>Prize images, Arnold images, logos and uploaded files still load.</p></article>
         <article><strong>Final record</strong><p>Write down restore time, restored version, checks passed and any follow-up fixes needed.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Google Drive backup guide</h2>
+      <p className="muted">Use Google Drive as an off-site copy for backup evidence. This panel is guidance only and does not connect to Google Drive yet.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Folder structure</strong><p>Create a Prizetown Backups folder with subfolders for Database, Uploads, TrueNAS YAML, Restore Drills and Launch Records.</p></article>
+        <article><strong>File naming</strong><p>Use clear names such as prizetown-db-YYYY-MM-DD-v246.dump and uploads-YYYY-MM-DD.zip.</p></article>
+        <article><strong>What to upload</strong><p>Upload database dumps, uploads copies, TrueNAS YAML/compose files, env notes without secrets, and restore drill notes.</p></article>
+        <article><strong>Sharing rule</strong><p>Keep the folder private and only share with trusted admins who genuinely need restore access.</p></article>
+        <article><strong>Monthly check</strong><p>Open the Drive folder monthly and confirm the newest database, uploads and config copies are present.</p></article>
       </div>
     </div>
 
@@ -4732,7 +4745,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v245';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v246';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
