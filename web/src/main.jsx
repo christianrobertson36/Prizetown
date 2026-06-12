@@ -3582,6 +3582,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['System Check Security Hardening', 'System Check now warns about default admin credentials, weak JWT secrets and non-HTTPS public API settings before launch.'],
             ['Security Headers and Login Rate Limit', 'The API now adds basic browser safety headers and a lightweight in-memory rate limit around login-style requests.'],
             ['Upload Hardening Guards', 'Upload requests now have safer size/type checks, with SVG/HTML/JavaScript-style files blocked before public launch.'],
+            ['CORS Origin Allowlist', 'The API now has a configurable browser-origin allowlist so only approved public, admin and local testing origins can call it from browsers.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5757,7 +5758,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v277';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v278';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
