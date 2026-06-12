@@ -3123,6 +3123,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         ['social-integrations', 'Social Integrations', ListChecks],
         ['security-readiness', 'Security Readiness', Shield],
         ['backup-readiness', 'Backup Readiness', Shield],
+        ['support-readiness', 'Support Readiness', Shield],
         ['system-check', 'System check', Shield],
         ['email-test', 'Email test', Shield],
         ['audit', 'Audit log', ListChecks]
@@ -3278,6 +3279,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup System Checks', 'System Check now includes backup warnings for TrueNAS snapshots, PostgreSQL dumps, uploads, Google Drive/off-site copy and restore testing.'],
             ['Backup Launch Guidance', 'Before real payments, keep a local TrueNAS backup plus a Google Drive/off-site copy, save compose/YAML and image tags, and complete a restore test.'],
             ['Restore Test Checklist', 'Backup Readiness now includes a simple restore-test checklist so backups are not trusted until login, orders, entries, winners and uploads are checked on a safe temporary restore.'],
+            ['Support Readiness', 'Use Support Readiness before launch to check support email, refund/help process, winner contact process, free-entry support and complaint/escalation notes.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3289,6 +3291,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'security-readiness' && <SecurityReadinessPanel />}
 
         {activeTab === 'backup-readiness' && <BackupReadinessPanel />}
+
+        {activeTab === 'support-readiness' && <SupportReadinessPanel />}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
@@ -3701,6 +3705,31 @@ function BackupReadinessPanel() {
   </div>;
 }
 
+function SupportReadinessPanel() {
+  const checks = [
+    ['Support email set', false, 'Confirm the customer support email is visible and monitored before launch.'],
+    ['Refund/help process', false, 'Write down how refunds, mistaken entries, failed payments and customer questions will be handled.'],
+    ['Winner contact process', false, 'Prepare a clear process for contacting winners, verifying details and recording prize fulfilment notes.'],
+    ['Free-entry support', false, 'Make sure postal/free-entry questions can be answered fairly and consistently.'],
+    ['Complaint escalation notes', false, 'Keep simple notes for complaints, disputes, chargebacks and legal/escalation situations.'],
+    ['Admin handover notes', false, 'Make sure another trusted admin can understand the Help Guide and key launch checks.']
+  ];
+
+  return <div className="panel list-panel support-readiness-panel">
+    <h1>Support Readiness</h1>
+    <p className="muted">Use this before public launch so customer support is clear before real payments or live competitions.</p>
+
+    <div className="security-warning-box">
+      <strong>Launch support warning</strong>
+      <p>Do not launch paid public competitions until support email, refund handling, winner contact, free-entry support and complaint notes are ready.</p>
+    </div>
+
+    {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
+      <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
+    </div>)}
+  </div>;
+}
+
 function SecurityReadinessPanel() {
   const checks = [
     ['Admin password', false, 'Change the default admin password before any public or real-payment launch.'],
@@ -4095,7 +4124,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v193';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v194';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
