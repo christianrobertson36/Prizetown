@@ -3285,6 +3285,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Message Templates', 'Support Readiness now includes simple starter reply templates for order questions, free-entry questions, winner contact, refund queries and escalations.'],
             ['Support Workflow Checklist', 'Support Readiness now includes a simple step-by-step workflow for checking support requests before replying to customers.'],
             ['Admin Handover Checklist', 'Support Readiness now includes an admin handover checklist so another trusted admin can understand support, orders, draws, backups and launch safety checks.'],
+            ['Launch Support Summary', 'Support Readiness now includes a simple launch support summary to remind admins what must be ready before public paid competitions.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3794,6 +3795,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Launch support summary</h2>
+      <p className="muted">Quick final reminder before paid public competitions or wider marketing.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Support inbox</strong><p>Support email is visible, monitored and someone knows who replies.</p></article>
+        <article><strong>Records first</strong><p>Orders, entries, payments, winners and free-entry records are checked before replying.</p></article>
+        <article><strong>Templates ready</strong><p>Starter replies are available but must be edited for each customer.</p></article>
+        <article><strong>Winner process</strong><p>Winner contact, verification and fulfilment notes are agreed before any draw promotion.</p></article>
+        <article><strong>Escalation path</strong><p>Refund, complaint, chargeback, legal and identity issues have a pause-and-escalate rule.</p></article>
+        <article><strong>Admin backup</strong><p>Another trusted admin can follow the Help Guide, Support Readiness and Backup Readiness panels.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4194,7 +4208,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v199';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v200';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
