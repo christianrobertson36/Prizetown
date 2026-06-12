@@ -3524,6 +3524,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Emergency Notes', 'Backup Readiness now includes emergency restore notes for owner/contact, last stable tags, backup locations and go/no-go decisions.'],
             ['Backup Launch Gate', 'Backup Readiness now includes a final launch gate checklist for backup confidence before real traffic or payments.'],
             ['Backup Do and Do Not', 'Backup Readiness now includes simple safe rules for what to do and avoid before updates or restores.'],
+            ['Backup Export Reminder', 'Backup Readiness now reminds admins what to copy into an outside record before major updates or launch work.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4019,6 +4020,18 @@ function BackupReadinessPanel() {
         <article><strong>Do: test after deploy</strong><p>Check health, admin login, public homepage, competitions, orders, entries, winners and images.</p></article>
         <article><strong>Do not: use latest</strong><p>Never switch production images to latest. Keep fixed version tags only.</p></article>
         <article><strong>Do not: keep patching a broken deploy</strong><p>If public pages break, rollback first, then investigate from a stable state.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Backup export reminder</h2>
+      <p className="muted">Before major updates, copy these details into an outside note, password manager, shared admin document or printed launch folder.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Current version</strong><p>API tag, web tag, health output and deploy date.</p></article>
+        <article><strong>Data backup</strong><p>Database dump/snapshot name, path, time created and who checked it.</p></article>
+        <article><strong>Uploads backup</strong><p>Uploads path, copy/snapshot location and last checked time.</p></article>
+        <article><strong>App config</strong><p>TrueNAS YAML/compose, env notes, domain/DNS notes and any rollback instructions.</p></article>
+        <article><strong>Final sign-off</strong><p>Write who approved the update and what screens were checked after deploy.</p></article>
       </div>
     </div>
 
@@ -4706,7 +4719,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v243';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v244';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
