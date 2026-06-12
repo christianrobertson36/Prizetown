@@ -3274,6 +3274,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Security Reminder', 'Before real payments, change default admin credentials, use a strong JWT secret, protect admin access, verify payment webhooks, keep database backups and test restore.'],
             ['Security Readiness', 'Use Security Readiness to track launch hardening work such as admin password, JWT secret, admin-only access, rate limiting, upload checks, backups, HTTPS and Cloudflare protection.'],
             ['Backup Readiness', 'Use Backup Readiness to track the backup plan before launch: TrueNAS snapshots, PostgreSQL database dumps, uploads backup, Google Drive/off-site copy, saved compose/YAML and a tested restore.'],
+            ['Backup Export Notes', 'Backup Readiness now includes manual export notes for PostgreSQL dumps, uploads, compose/YAML, image tags and Google Drive/off-site copies. These are planning notes only until backup automation is added.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3660,6 +3661,21 @@ function BackupReadinessPanel() {
     <div className="backup-warning-box">
       <strong>Recommended backup rule</strong>
       <p>Keep at least one local TrueNAS backup and one off-site Google Drive copy. A backup is only trusted after a successful restore test.</p>
+    </div>
+
+
+
+    <div className="backup-manual-notes">
+      <h2>Manual backup notes</h2>
+      <p className="muted">Use these as the basic backup set until automated exports are added.</p>
+      <div className="backup-notes-grid">
+        <article><strong>PostgreSQL dump</strong><p>Export the database so competitions, orders, entries, winners, settings and audit records can be restored.</p></article>
+        <article><strong>Uploads folder</strong><p>Back up the API uploads volume so prize images and uploaded files are not lost.</p></article>
+        <article><strong>Compose / YAML</strong><p>Save the TrueNAS compose/YAML and important environment notes, but keep secrets private.</p></article>
+        <article><strong>Image tags</strong><p>Record current fixed image tags, for example API/web v190, so rollback and restore are simpler.</p></article>
+        <article><strong>Google Drive copy</strong><p>Keep an off-site copy of database dumps, uploads backup and release notes in Google Drive.</p></article>
+        <article><strong>Restore test</strong><p>Test a restore to a safe temporary app before trusting the backup for real payments.</p></article>
+      </div>
     </div>
 
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
@@ -4062,7 +4078,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v189';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v190';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {

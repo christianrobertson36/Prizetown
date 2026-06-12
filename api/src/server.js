@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v189' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v190' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -636,7 +636,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
 
   add('warning', 'Payment: webhook hardening', 'Live payment webhooks/idempotency are not connected yet. Do not allocate paid tickets from frontend-only payment state.');
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v189' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v190' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -654,7 +654,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v189',
+    version: 'v190',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -2076,7 +2076,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v189 backup readiness)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v190 backup export notes)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
