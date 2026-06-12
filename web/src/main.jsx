@@ -3515,6 +3515,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Recovery Flow', 'Backup Readiness now includes a before, rollback and after-recovery flow for safer updates and restores.'],
             ['Backup Rollback Checklist', 'Backup Readiness now includes rollback steps for pausing changes, using fixed image tags, checking health, checking data and recording the outcome.'],
             ['Admin Readability Contrast', 'Admin light cards and grey helper text now use stronger contrast so checklist and note wording is easier to read.'],
+            ['Admin Card Text Contrast', 'Admin note cards now force darker paragraph and list text inside light grey cards so longer guidance is easier to read.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4600,7 +4601,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v234';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v235';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {

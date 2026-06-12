@@ -6651,3 +6651,50 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
 .admin-app .backup-manual-notes h2 {
   color: #111827;
 }
+
+
+/* v235 admin card text contrast */
+.admin-app .backup-notes-grid article p,
+.admin-app .backup-manual-notes article p,
+.admin-app .backup-manual-notes p,
+.admin-app .backup-manual-notes li,
+.admin-app .backup-warning-box p,
+.admin-app .security-warning-box p,
+.admin-app .support-readiness-panel article p,
+.admin-app .security-readiness-panel article p,
+.admin-app .backup-readiness-panel article p,
+.admin-app .launch-warning-card p,
+.admin-app .list-panel article p,
+.admin-app .subtle-panel article p,
+.admin-app .subtle-panel li,
+.admin-app .panel article p,
+.admin-app .panel li,
+.admin-app .entry-row p,
+.admin-app .list-row p {
+  color: #1f2937 !important;
+}
+
+.admin-app .backup-notes-grid article,
+.admin-app .backup-manual-notes article,
+.admin-app .backup-readiness-grid article,
+.admin-app .list-panel article,
+.admin-app .subtle-panel article {
+  color: #1f2937;
+}
+
+.admin-app .backup-notes-grid article strong,
+.admin-app .backup-manual-notes article strong,
+.admin-app .backup-readiness-grid article strong,
+.admin-app .list-panel article strong,
+.admin-app .subtle-panel article strong {
+  color: #0f172a !important;
+}
+
+.admin-app .muted,
+.admin-app .panel .muted,
+.admin-app .subtle-panel .muted,
+.admin-app .backup-manual-notes .muted,
+.admin-app .backup-warning-box .muted,
+.admin-app .security-warning-box .muted {
+  color: #334155 !important;
+}
