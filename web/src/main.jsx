@@ -3289,6 +3289,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Customer FAQ Checklist', 'Support Readiness now includes a simple customer FAQ checklist for common questions about entering, tickets, free entry, draws, winners and refunds.'],
             ['Support Contact Visibility', 'Support Readiness now includes checks for making the support email and customer help routes easy to find before launch.'],
             ['Support Escalation Checklist', 'Support Readiness now includes clear escalation triggers for refunds, chargebacks, winner disputes, identity checks, legal complaints and data/privacy issues.'],
+            ['Support Daily Review', 'Support Readiness now includes a daily review checklist for checking new orders, support messages, failed payments, free entries, winner follow-ups and audit notes.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3850,6 +3851,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support daily review</h2>
+      <p className="muted">Use this once a day during launch/testing so customer issues are not missed.</p>
+      <div className="backup-notes-grid">
+        <article><strong>New support messages</strong><p>Check the support inbox and decide which messages need records checked before reply.</p></article>
+        <article><strong>New orders</strong><p>Review new orders, ticket allocation and any unusual paid/test/payment statuses.</p></article>
+        <article><strong>Free-entry requests</strong><p>Check postal/free-entry requests and record valid entries fairly and consistently.</p></article>
+        <article><strong>Winner follow-ups</strong><p>Check whether any winners need contact, verification, fulfilment notes or public proof updates.</p></article>
+        <article><strong>Escalations</strong><p>Review refunds, complaints, chargebacks, identity/privacy issues or legal concerns before replying.</p></article>
+        <article><strong>Audit notes</strong><p>Check Audit log and Help Guide notes if another admin has made changes or handled support.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4250,7 +4264,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v203';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v204';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
