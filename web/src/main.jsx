@@ -3588,6 +3588,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Email Readiness Tools', 'Admin now has email readiness status, template preview and a safe test-email sender before automatic customer emails are enabled.'],
             ['Manual Email Workflow Centre', 'Admin can preview and copy approved email wording while automatic payment/customer emails stay disabled until webhook safety is ready.'],
             ['Manual Email Sender UI', 'Admin can now fill a recipient/template form, preview the message and send only after typing SEND_EMAIL.'],
+            ['Injected Admin Panels Disabled', 'Security/email admin panels that were mounting in the wrong place have been hidden until they are rebuilt as proper admin menu sections.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5763,7 +5764,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v283';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v284';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7374,6 +7375,7 @@ async function loadSecurityEventsV280(panel) {
 }
 
 function mountSecurityEventsViewerV280() {
+  return;
   if (!isAdminSecurityEventsPageV280()) {
     document.getElementById('prizetown-security-events-viewer-v280')?.remove();
     return;
@@ -7558,6 +7560,7 @@ async function sendTestEmailV281(panel) {
 }
 
 function mountEmailReadinessV281() {
+  return;
   if (!isAdminEmailReadinessPageV281()) {
     document.getElementById('prizetown-email-readiness-v281')?.remove();
     return;
@@ -7702,6 +7705,7 @@ async function copyManualEmailV282(panel) {
 }
 
 function mountEmailWorkflowV282() {
+  return;
   if (!isAdminEmailWorkflowPageV282()) {
     document.getElementById('prizetown-email-workflow-v282')?.remove();
     return;
@@ -7903,6 +7907,7 @@ async function sendSenderEmailV283(panel) {
 }
 
 function mountEmailSenderV283() {
+  return;
   if (!isAdminEmailSenderPageV283()) {
     document.getElementById('prizetown-email-sender-v283')?.remove();
     return;
@@ -7952,6 +7957,31 @@ setTimeout(mountEmailSenderV283, 900);
 setTimeout(mountEmailSenderV283, 1900);
 window.addEventListener('hashchange', mountEmailSenderV283);
 window.addEventListener('popstate', mountEmailSenderV283);
+
+
+function disableInjectedAdminPanelsV284() {
+  [
+    'prizetown-security-events-viewer-v280',
+    'prizetown-email-readiness-v281',
+    'prizetown-email-workflow-v282',
+    'prizetown-email-sender-v283'
+  ].forEach((id) => document.getElementById(id)?.remove());
+
+  [
+    'prizetown-security-events-viewer-v280-style',
+    'prizetown-email-readiness-v281-style',
+    'prizetown-email-workflow-v282-style',
+    'prizetown-email-sender-v283-style'
+  ].forEach((id) => document.getElementById(id)?.remove());
+}
+
+disableInjectedAdminPanelsV284();
+setTimeout(disableInjectedAdminPanelsV284, 200);
+setTimeout(disableInjectedAdminPanelsV284, 800);
+setTimeout(disableInjectedAdminPanelsV284, 1800);
+window.addEventListener('hashchange', disableInjectedAdminPanelsV284);
+window.addEventListener('popstate', disableInjectedAdminPanelsV284);
+
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
