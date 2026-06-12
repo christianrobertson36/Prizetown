@@ -3312,6 +3312,15 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               <a className="button-like" href="https://prizetown.co.uk/support" target="_blank" rel="noreferrer">Open Support</a>
             </div>
           </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Customer-facing message checklist</h2>
+            <ul className="muted">
+              <li>Keep maintenance messages calm, short and clear.</li>
+              <li>Say whether entries/orders are paused or still safe.</li>
+              <li>Give visitors the Support link if they need help.</li>
+              <li>Remove or update the message as soon as the site is back.</li>
+            </ul>
+          </div>
           <div className="backup-notes-grid">
             <article>
               <strong>404 page</strong>
@@ -3502,6 +3511,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Maintenance Flow', 'Error pages now includes a before, during and after maintenance flow so admins know what to check around a maintenance window.'],
             ['Public Recovery Checklist', 'Error pages now includes a post-maintenance public recovery checklist for homepage, checkout, entries, winners, support and audit checks.'],
             ['Public Recovery Quick Links', 'Error pages now includes quick links to the public homepage, My entries, Winners and Support for post-maintenance checks.'],
+            ['Customer Message Checklist', 'Error pages now includes a customer-facing message checklist for clear, calm maintenance/offline wording.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4565,7 +4575,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v230';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v231';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
