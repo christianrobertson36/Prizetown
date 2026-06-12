@@ -3120,6 +3120,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       title: 'Tools',
       items: [
         ['launch-centre', 'Launch centre', ListChecks],
+        ['error-pages', 'Error pages', ListChecks],
         ['tools-overview', 'Tools overview', ListChecks],
         ['help-guide', 'Help guide', ListChecks],
         ['social-integrations', 'Social Integrations', ListChecks],
@@ -3242,6 +3243,32 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'payment-readiness' && <PaymentReadinessPanel orders={orders} />}
 
+        {activeTab === 'error-pages' && <div className="panel list-panel">
+          <h1>Error pages</h1>
+          <p className="muted">Preview the friendly Arnold pages used for 404, maintenance and offline states.</p>
+          <div className="backup-notes-grid">
+            <article>
+              <strong>404 page</strong>
+              <p>Use when a visitor lands on a page that does not exist.</p>
+              <a className="button-like" href="/404.html" target="_blank" rel="noreferrer">Open 404 page</a>
+            </article>
+            <article>
+              <strong>Maintenance page</strong>
+              <p>Use when Prizetown is intentionally being serviced or updated.</p>
+              <a className="button-like" href="/maintenance.html" target="_blank" rel="noreferrer">Open maintenance page</a>
+            </article>
+            <article>
+              <strong>Offline page</strong>
+              <p>Use when the site or connection needs a friendly temporary offline message.</p>
+              <a className="button-like" href="/offline.html" target="_blank" rel="noreferrer">Open offline page</a>
+            </article>
+          </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Artwork</h2>
+            <p className="muted">These pages use the Arnold server-rack artwork at <code>/arnold-server-repair-404.png</code>.</p>
+          </div>
+        </div>}
+
         {activeTab === 'launch-centre' && <div className="panel list-panel">
           <h1>Launch centre</h1>
           <p className="muted">Use this as the fast route into the main areas you need before and during launch.</p>
@@ -3363,6 +3390,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Launch Centre Daily Flow', 'Launch centre now includes a compact daily admin flow so admins know what to check first when opening Prizetown.'],
             ['Launch Centre Emergency Route', 'Launch centre now includes an emergency route for checking system health, support, backups and audit logs before changing live settings.'],
             ['Arnold Error Pages', 'Static public pages are available at /404.html, /maintenance.html and /offline.html using the Arnold server-rack artwork for friendly error, maintenance and offline states.'],
+            ['Error Pages Admin Preview', 'Tools now includes an Error pages tab so admins can quickly open and check the Arnold 404, maintenance and offline pages.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4426,7 +4454,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v219';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v220';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
