@@ -70,6 +70,53 @@ app.use((req, res, next) => {
 const port = process.env.PORT || 5000;
 const jwtSecret = process.env.JWT_SECRET || 'dev_secret_change_me';
 const uploadDir = process.env.UPLOAD_DIR || '/app/uploads';
+
+const v277UploadMaxBytes = Number(process.env.UPLOAD_MAX_BYTES || 5 * 1024 * 1024);
+// v277 upload filter wired into common multer patterns where present.
+const v277AllowedUploadExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.pdf']);
+const v277AllowedUploadMimes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']);
+const v277BlockedUploadExtensions = new Set(['.svg', '.svgz', '.html', '.htm', '.js', '.mjs', '.cjs', '.css', '.xml', '.xhtml', '.php', '.exe', '.sh', '.bat', '.cmd']);
+
+function v277FileExtension(fileName = '') {
+  const clean = String(fileName || '').toLowerCase().split('?')[0].split('#')[0];
+  const dot = clean.lastIndexOf('.');
+  return dot >= 0 ? clean.slice(dot) : '';
+}
+
+function v277UploadFileFilter(_req, file, cb) {
+  const originalName = file?.originalname || '';
+  const ext = v277FileExtension(originalName);
+  const mime = String(file?.mimetype || '').toLowerCase();
+
+  if (!ext || v277BlockedUploadExtensions.has(ext)) {
+    return cb(new Error('Upload blocked: this file type is not allowed.'));
+  }
+
+  if (!v277AllowedUploadExtensions.has(ext)) {
+    return cb(new Error('Upload blocked: only JPG, PNG, WEBP, GIF and PDF files are allowed.'));
+  }
+
+  if (mime && !v277AllowedUploadMimes.has(mime)) {
+    return cb(new Error('Upload blocked: file content type is not allowed.'));
+  }
+
+  return cb(null, true);
+}
+
+app.use((req, res, next) => {
+  const type = String(req.headers['content-type'] || '').toLowerCase();
+  if (!type.includes('multipart/form-data')) return next();
+
+  const length = Number(req.headers['content-length'] || 0);
+  if (length && length > v277UploadMaxBytes) {
+    return res.status(413).json({
+      error: 'Upload too large.',
+      max_bytes: v277UploadMaxBytes
+    });
+  }
+
+  return next();
+});
 const publicSiteUrl = process.env.PUBLIC_SITE_URL || 'https://prizetown.co.uk';
 const resendApiKey = process.env.RESEND_API_KEY || '';
 const emailFrom = process.env.EMAIL_FROM || 'Prizetown <no-reply@prizetown.co.uk>';
@@ -91,7 +138,7 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${safe}`);
   }
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: v277UploadMaxBytes, files: 1 }, fileFilter: v277UploadFileFilter });
 
 async function query(sql, params = []) {
   return pool.query(sql, params);
@@ -301,6 +348,18 @@ function competitionProfitPlan(input = {}) {
     warning
   };
 }
+
+// v277b upload error handler
+app.use((err, _req, res, next) => {
+  if (!err) return next();
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'Upload too large.', max_bytes: v277UploadMaxBytes });
+  }
+  if (String(err.message || '').toLowerCase().includes('upload blocked')) {
+    return res.status(400).json({ error: err.message });
+  }
+  return next(err);
+});
 
 async function initDb() {
   await query(`
@@ -592,7 +651,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v276' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v277' }));
 app.get('/admin/google-drive/status', auth('admin'), (_req, res) => {
   const folderId = process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID || process.env.GOOGLE_DRIVE_FOLDER_ID || '';
   const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON || '';
@@ -714,7 +773,7 @@ app.post('/admin/google-drive/backup-manifest', auth('admin'), async (_req, res)
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_manifest',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       upload_dir_configured: Boolean(uploadDir),
       public_api_url_configured: Boolean(process.env.PUBLIC_API_URL),
       counts,
@@ -794,7 +853,7 @@ app.post('/admin/google-drive/uploads-index', auth('admin'), async (_req, res) =
       app: 'Prizetown',
       manifest_type: 'google_drive_uploads_index',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       upload_dir_configured: Boolean(uploadDir),
       upload_dir_exists: Boolean(uploadDir && fs.existsSync(uploadDir)),
       file_count: files.length,
@@ -896,7 +955,7 @@ app.post('/admin/google-drive/database-snapshot', auth('admin'), async (_req, re
       app: 'Prizetown',
       manifest_type: 'google_drive_database_snapshot',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       max_rows_per_table: 5000,
       table_count: tables.length,
       tables,
@@ -936,7 +995,7 @@ app.post('/admin/google-drive/backup-run-summary', auth('admin'), async (_req, r
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_run_summary',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       google_drive: {
         folder_id_configured: Boolean(folderId),
         credentials_configured: Boolean(serviceAccountJson || credentialsFile),
@@ -1128,7 +1187,7 @@ app.post('/admin/google-drive/backup-pack', auth('admin'), async (_req, res) => 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_pack_summary',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       database: {
         table_count: dbTables.length,
         max_rows_per_table: 1000,
@@ -1161,7 +1220,7 @@ app.post('/admin/google-drive/backup-pack', auth('admin'), async (_req, res) => 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_pack_database_snapshot',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       max_rows_per_table: 1000,
       table_count: dbTables.length,
       tables: dbTables
@@ -1171,7 +1230,7 @@ app.post('/admin/google-drive/backup-pack', auth('admin'), async (_req, res) => 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_pack_uploads_index',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       file_count: uploadFiles.length,
       total_bytes: totalUploadBytes,
       files: uploadFiles
@@ -1292,7 +1351,7 @@ app.post('/admin/google-drive/restore-check-report', auth('admin'), async (_req,
       app: 'Prizetown',
       manifest_type: 'google_drive_restore_check_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       latest_backup_report: latestReport,
       local_uploads_snapshot: {
         upload_dir_configured: Boolean(uploadDir),
@@ -1426,7 +1485,7 @@ app.post('/admin/google-drive/backup-audit-report', auth('admin'), async (_req, 
       app: 'Prizetown',
       manifest_type: 'google_drive_backup_audit_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       google_drive: {
         folder_id_configured: Boolean(folderId),
         credentials_configured: Boolean(serviceAccountJson || credentialsFile),
@@ -1594,7 +1653,7 @@ app.post('/admin/google-drive/retention-policy-report', auth('admin'), async (_r
       app: 'Prizetown',
       manifest_type: 'google_drive_retention_policy_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       google_drive: {
         folder_id_configured: Boolean(folderId),
         credentials_configured: Boolean(serviceAccountJson || credentialsFile),
@@ -1704,7 +1763,7 @@ app.post('/admin/google-drive/restore-drill-evidence', auth('admin'), async (_re
       app: 'Prizetown',
       manifest_type: 'google_drive_restore_drill_evidence',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       readiness,
       verification_matrix: matrix,
       latest_backup_report: latestReport,
@@ -1762,10 +1821,10 @@ app.post('/admin/google-drive/operator-handover-report', auth('admin'), async (_
       app: 'Prizetown',
       manifest_type: 'google_drive_operator_handover_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       current_expected_tags: {
-        api: 'ghcr.io/christianrobertson36/prizetown-api:v276',
-        web: 'ghcr.io/christianrobertson36/prizetown-web:v276'
+        api: 'ghcr.io/christianrobertson36/prizetown-api:v277',
+        web: 'ghcr.io/christianrobertson36/prizetown-web:v277'
       },
       google_drive: {
         folder_id_configured: Boolean(folderId),
@@ -1898,7 +1957,7 @@ app.post('/admin/google-drive/database-dump-guide', auth('admin'), async (_req, 
       app: 'Prizetown',
       manifest_type: 'database_dump_command_guide',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       guide: buildDatabaseDumpGuide(),
       environment: {
         database_url_configured: Boolean(process.env.DATABASE_URL),
@@ -1933,7 +1992,7 @@ app.post('/admin/google-drive/uploads-backup-plan', auth('admin'), async (_req, 
       app: 'Prizetown',
       manifest_type: 'uploads_backup_plan',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       plan,
       note: 'This uploads planning evidence only. It does not copy all files.'
     };
@@ -2008,7 +2067,7 @@ function buildBackupPreflightReport(latestReport, readiness, sizeReport, retenti
 function buildTrueNasBackupRunbook(readiness) {
   return {
     title: 'TrueNAS backup runbook',
-    api_version: 'v276',
+    api_version: 'v277',
     readiness_score: readiness?.score ?? 0,
     goal: 'Keep database, uploads and deployed image references recoverable outside the running app.',
     routine: [
@@ -2039,7 +2098,7 @@ function buildTrueNasBackupRunbook(readiness) {
 function buildEmergencyRollbackRunbook(readiness) {
   return {
     title: 'Emergency rollback runbook',
-    api_version: 'v276',
+    api_version: 'v277',
     readiness_score: readiness?.score ?? 0,
     first_steps: [
       'Do not make multiple changes at once during an outage.',
@@ -2055,8 +2114,8 @@ function buildEmergencyRollbackRunbook(readiness) {
       'Only restore database/uploads after taking a fresh emergency copy.'
     ],
     current_expected_tags: {
-      api: 'ghcr.io/christianrobertson36/prizetown-api:v276',
-      web: 'ghcr.io/christianrobertson36/prizetown-web:v276'
+      api: 'ghcr.io/christianrobertson36/prizetown-api:v277',
+      web: 'ghcr.io/christianrobertson36/prizetown-web:v277'
     },
     checks_after_rollback: [
       'Confirm /health returns the rollback version.',
@@ -2111,7 +2170,7 @@ app.post('/admin/google-drive/backup-preflight-report', auth('admin'), async (_r
       app: 'Prizetown',
       manifest_type: 'backup_preflight_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       preflight,
       readiness,
       latest_backup_report: latestReport,
@@ -2151,7 +2210,7 @@ app.post('/admin/google-drive/truenas-backup-runbook', auth('admin'), async (_re
       app: 'Prizetown',
       manifest_type: 'truenas_backup_runbook',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       runbook
     });
 
@@ -2184,7 +2243,7 @@ app.post('/admin/google-drive/emergency-rollback-runbook', auth('admin'), async 
       app: 'Prizetown',
       manifest_type: 'emergency_rollback_runbook',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       runbook
     });
 
@@ -2247,7 +2306,7 @@ function buildScheduledBackupReadiness(preflight, readiness, schedulePlan, uploa
 function buildScheduledBackupSpec(readiness) {
   return {
     app: 'Prizetown',
-    api_version: 'v276',
+    api_version: 'v277',
     spec_type: 'scheduled_backup_job_spec',
     timezone: 'Europe/London',
     jobs: [
@@ -2293,7 +2352,7 @@ function buildEnvironmentChecklist() {
   const { folderId, serviceAccountJson, credentialsFile } = getGoogleDriveBackupConfig();
   return {
     app: 'Prizetown',
-    api_version: 'v276',
+    api_version: 'v277',
     checklist_type: 'environment_backup_checklist',
     checks: [
       { name: 'DATABASE_URL configured', ok: Boolean(process.env.DATABASE_URL) },
@@ -2302,8 +2361,8 @@ function buildEnvironmentChecklist() {
       { name: 'Google Drive credentials configured', ok: Boolean(serviceAccountJson || credentialsFile) },
       { name: 'Uploads directory configured', ok: Boolean(uploadDir) },
       { name: 'Uploads directory exists', ok: Boolean(uploadDir && fs.existsSync(uploadDir)) },
-      { name: 'Fixed API tag expected', ok: true, expected: 'ghcr.io/christianrobertson36/prizetown-api:v276' },
-      { name: 'Fixed web tag expected', ok: true, expected: 'ghcr.io/christianrobertson36/prizetown-web:v276' }
+      { name: 'Fixed API tag expected', ok: true, expected: 'ghcr.io/christianrobertson36/prizetown-api:v277' },
+      { name: 'Fixed web tag expected', ok: true, expected: 'ghcr.io/christianrobertson36/prizetown-web:v277' }
     ],
     secret_policy: [
       'This checklist does not include secret values.',
@@ -2377,7 +2436,7 @@ app.post('/admin/google-drive/scheduled-backup-spec', auth('admin'), async (_req
       app: 'Prizetown',
       manifest_type: 'scheduled_backup_spec',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       spec
     });
 
@@ -2408,7 +2467,7 @@ app.post('/admin/google-drive/environment-checklist-report', auth('admin'), asyn
       app: 'Prizetown',
       manifest_type: 'environment_checklist_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       checklist
     });
 
@@ -2448,7 +2507,7 @@ app.post('/admin/google-drive/launch-go-no-go-report', auth('admin'), async (_re
       app: 'Prizetown',
       manifest_type: 'launch_go_no_go_report',
       created_at: createdAt,
-      api_version: 'v276',
+      api_version: 'v277',
       go_no_go: goNoGo,
       readiness,
       preflight,
@@ -2598,7 +2657,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   add(publicApiNotHttps ? 'warning' : 'ok', 'Security: public API HTTPS', publicApiNotHttps ? 'PUBLIC_API_URL is not HTTPS. Public launch should use HTTPS only.' : (publicApiUrl ? 'PUBLIC_API_URL uses HTTPS.' : 'PUBLIC_API_URL is not set.'));
   add('ok', 'Security: headers and login rate limit', 'Basic security headers are enabled and login-style POST requests have a lightweight in-memory rate limit.', { login_limit_max: v276LoginLimitMax, login_limit_window_minutes: Math.round(v276LoginLimitWindowMs / 60000) });
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v276' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v277' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -2616,7 +2675,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v276',
+    version: 'v277',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -4038,7 +4097,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v276 security headers login rate limit)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v277 upload hardening guards)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
