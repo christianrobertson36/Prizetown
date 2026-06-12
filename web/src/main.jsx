@@ -3288,6 +3288,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Launch Support Summary', 'Support Readiness now includes a simple launch support summary to remind admins what must be ready before public paid competitions.'],
             ['Customer FAQ Checklist', 'Support Readiness now includes a simple customer FAQ checklist for common questions about entering, tickets, free entry, draws, winners and refunds.'],
             ['Support Contact Visibility', 'Support Readiness now includes checks for making the support email and customer help routes easy to find before launch.'],
+            ['Support Escalation Checklist', 'Support Readiness now includes clear escalation triggers for refunds, chargebacks, winner disputes, identity checks, legal complaints and data/privacy issues.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3836,6 +3837,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support escalation checklist</h2>
+      <p className="muted">Pause and escalate these before giving a final customer answer.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Refund dispute</strong><p>Escalate when a customer challenges a refund decision, payment status or cancellation outcome.</p></article>
+        <article><strong>Chargeback/payment issue</strong><p>Escalate failed payments, duplicate payments, chargebacks or anything involving the payment provider.</p></article>
+        <article><strong>Winner dispute</strong><p>Escalate if the winner, ticket number, eligibility, identity or draw proof is questioned.</p></article>
+        <article><strong>Identity/privacy issue</strong><p>Escalate address, age, identity, data deletion/export or private contact-detail requests.</p></article>
+        <article><strong>Legal complaint</strong><p>Escalate legal threats, regulator questions, formal complaints or competition fairness challenges.</p></article>
+        <article><strong>Public/social issue</strong><p>Escalate public posts, reviews or social comments before replying if records are not fully checked.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4236,7 +4250,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v202';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v203';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
