@@ -3268,6 +3268,15 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               <li>Check Orders, Support Readiness and Audit log after maintenance ends.</li>
             </ul>
           </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Maintenance quick actions</h2>
+            <div className="tools-shortcut-row">
+              <button type="button" onClick={() => setActiveTab('system-check')}>Open System check</button>
+              <button type="button" onClick={() => setActiveTab('support-readiness')}>Open Support Readiness</button>
+              <button type="button" onClick={() => setActiveTab('orders')}>Open Orders</button>
+              <button type="button" onClick={() => setActiveTab('audit-log')}>Open Audit log</button>
+            </div>
+          </div>
           <div className="backup-notes-grid">
             <article>
               <strong>404 page</strong>
@@ -3454,6 +3463,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Error Page Routing Note', 'Error pages now explains that admin previews work, but real public .html fallback pages need future hosting, nginx/Traefik routing or a maintenance-mode switch.'],
             ['Maintenance Mode Plan', 'Error pages now includes a future maintenance mode plan covering an admin toggle, Arnold public page, admin access over Tailscale and API health checks.'],
             ['Maintenance Mode Checklist', 'Error pages now includes a compact checklist for admin access, API checks, marketing pauses and post-maintenance reviews.'],
+            ['Maintenance Quick Actions', 'Error pages now includes quick buttons to System check, Support Readiness, Orders and Audit log for maintenance checks.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4517,7 +4527,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v226';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v227';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
