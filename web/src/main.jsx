@@ -3587,6 +3587,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Security Events Viewer', 'Admin now has a compact viewer for recent blocked origins, upload blocks and login rate-limit security events.'],
             ['Email Readiness Tools', 'Admin now has email readiness status, template preview and a safe test-email sender before automatic customer emails are enabled.'],
             ['Manual Email Workflow Centre', 'Admin can preview and copy approved email wording while automatic payment/customer emails stay disabled until webhook safety is ready.'],
+            ['Manual Email Sender UI', 'Admin can now fill a recipient/template form, preview the message and send only after typing SEND_EMAIL.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5762,7 +5763,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v282';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v283';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7740,6 +7741,217 @@ setTimeout(mountEmailWorkflowV282, 800);
 setTimeout(mountEmailWorkflowV282, 1800);
 window.addEventListener('hashchange', mountEmailWorkflowV282);
 window.addEventListener('popstate', mountEmailWorkflowV282);
+
+
+if (!document.getElementById('prizetown-email-sender-v283-style')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-email-sender-v283-style';
+  style.textContent = `
+    #prizetown-email-sender-v283 {
+      width: min(980px, calc(100% - 24px));
+      margin: 18px auto 28px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(168,85,247,.34);
+      background: rgba(15,23,42,.74);
+      color: #f8fafc;
+      box-shadow: 0 18px 45px rgba(0,0,0,.16);
+    }
+    #prizetown-email-sender-v283 h2 { margin: 0 0 4px; font-size: 1.18rem; }
+    #prizetown-email-sender-v283 p { margin: 0 0 10px; opacity: .84; line-height: 1.4; }
+    .email-sender-grid-v283 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin: 10px 0;
+    }
+    .email-sender-grid-v283 label {
+      display: grid;
+      gap: 5px;
+      font-size: .86rem;
+      font-weight: 900;
+      color: #e9d5ff;
+    }
+    .email-sender-grid-v283 input,
+    .email-sender-grid-v283 select,
+    .email-sender-grid-v283 textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.09);
+      color: #f8fafc;
+      padding: 9px 10px;
+      font: inherit;
+    }
+    .email-sender-grid-v283 textarea { min-height: 78px; resize: vertical; }
+    .email-sender-actions-v283 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .email-sender-actions-v283 button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+    }
+    .email-sender-actions-v283 button[data-send-email-v283] {
+      background: #d8b4fe;
+      color: #3b0764;
+    }
+    .email-sender-output-v283 {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.24);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: .88rem;
+    }
+    .email-sender-warning-v283 {
+      margin-top: 8px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(251,191,36,.35);
+      background: rgba(251,191,36,.12);
+      color: #fde68a;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    @media (max-width: 760px) {
+      .email-sender-grid-v283 { grid-template-columns: 1fr; }
+      .email-sender-actions-v283 button { flex: 1 1 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const isAdminEmailSenderPageV283 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+async function apiFetchEmailSenderV283(path, options = {}) {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || '';
+  const headers = Object.assign({}, options.headers || {}, token ? { Authorization: 'Bearer ' + token } : {});
+  if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const response = await fetch(path, Object.assign({}, options, { headers }));
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || ('Request failed: ' + response.status));
+  return data;
+}
+
+function collectEmailSenderValuesV283(panel) {
+  return {
+    to: panel.querySelector('[data-email-to-v283]')?.value?.trim() || '',
+    template_key: panel.querySelector('[data-email-template-v283]')?.value || 'support_reply',
+    confirm: panel.querySelector('[data-email-confirm-v283]')?.value?.trim() || '',
+    values: {
+      name: panel.querySelector('[data-email-name-v283]')?.value?.trim() || 'Customer',
+      competition: panel.querySelector('[data-email-competition-v283]')?.value?.trim() || 'Prizetown competition',
+      reference: panel.querySelector('[data-email-reference-v283]')?.value?.trim() || 'Not provided',
+      message: panel.querySelector('[data-email-message-v283]')?.value?.trim() || 'No message provided'
+    }
+  };
+}
+
+async function previewSenderEmailV283(panel) {
+  const output = panel.querySelector('[data-email-sender-output-v283]');
+  if (!output) return;
+  output.textContent = 'Loading preview...';
+  try {
+    const payload = collectEmailSenderValuesV283(panel);
+    const data = await apiFetchEmailSenderV283('/admin/email/manual-preview', {
+      method: 'POST',
+      body: JSON.stringify({ template_key: payload.template_key, values: payload.values })
+    });
+    const email = data.email || {};
+    output.textContent = 'PREVIEW ONLY\n\nTo: ' + (payload.to || 'Not entered') + '\nTemplate: ' + (email.label || payload.template_key) + '\nWarning: ' + (email.warning || '') + '\n\nSubject: ' + (email.subject || '') + '\n\n' + (email.text || '');
+  } catch (err) {
+    output.textContent = 'Preview failed.\n' + err.message;
+  }
+}
+
+async function sendSenderEmailV283(panel) {
+  const output = panel.querySelector('[data-email-sender-output-v283]');
+  if (!output) return;
+  const payload = collectEmailSenderValuesV283(panel);
+
+  if (!payload.to) {
+    output.textContent = 'Enter a recipient email before sending.';
+    return;
+  }
+  if (payload.confirm !== 'SEND_EMAIL') {
+    output.textContent = 'Type SEND_EMAIL in the confirmation box before sending.';
+    return;
+  }
+
+  output.textContent = 'Sending manual email...';
+  try {
+    const data = await apiFetchEmailSenderV283('/admin/email/manual-send', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    output.textContent = 'Email sent.\nTo: ' + data.to + '\nTemplate: ' + data.template_key + '\nProvider: ' + JSON.stringify(data.provider || {}, null, 2);
+    const confirmInput = panel.querySelector('[data-email-confirm-v283]');
+    if (confirmInput) confirmInput.value = '';
+  } catch (err) {
+    output.textContent = 'Send failed.\n' + err.message + '\n\nCheck RESEND_API_KEY, EMAIL_FROM and verified sender domain.';
+  }
+}
+
+function mountEmailSenderV283() {
+  if (!isAdminEmailSenderPageV283()) {
+    document.getElementById('prizetown-email-sender-v283')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-email-sender-v283');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-email-sender-v283';
+    panel.innerHTML = `
+      <h2>Manual email sender</h2>
+      <p>Send a one-off email from an approved template. Automatic customer emails stay disabled until payment webhooks are safe.</p>
+      <div class="email-sender-warning-v283">Safety: preview first, then type SEND_EMAIL to send. Do not use order confirmation emails until payment is confirmed safely.</div>
+      <div class="email-sender-grid-v283">
+        <label>Recipient email<input type="email" data-email-to-v283 placeholder="customer@example.com" /></label>
+        <label>Template
+          <select data-email-template-v283>
+            <option value="support_reply">Support reply</option>
+            <option value="winner_notification">Winner notification</option>
+            <option value="order_confirmation">Order / entry confirmation</option>
+            <option value="admin_alert">Admin alert</option>
+          </select>
+        </label>
+        <label>Customer name<input type="text" data-email-name-v283 placeholder="Customer" /></label>
+        <label>Competition<input type="text" data-email-competition-v283 placeholder="Competition name" /></label>
+        <label>Reference<input type="text" data-email-reference-v283 placeholder="PT-123" /></label>
+        <label>Confirmation<input type="text" data-email-confirm-v283 placeholder="Type SEND_EMAIL to send" /></label>
+        <label style="grid-column:1/-1">Message / admin alert text<textarea data-email-message-v283 placeholder="Optional message or admin alert text"></textarea></label>
+      </div>
+      <div class="email-sender-actions-v283">
+        <button type="button" data-preview-email-v283>Preview email</button>
+        <button type="button" data-send-email-v283>Send manual email</button>
+      </div>
+      <div class="email-sender-output-v283" data-email-sender-output-v283>Fill the form and preview before sending.</div>
+    `;
+    target.appendChild(panel);
+    panel.querySelector('[data-preview-email-v283]')?.addEventListener('click', () => previewSenderEmailV283(panel));
+    panel.querySelector('[data-send-email-v283]')?.addEventListener('click', () => sendSenderEmailV283(panel));
+  }
+}
+
+mountEmailSenderV283();
+setTimeout(mountEmailSenderV283, 900);
+setTimeout(mountEmailSenderV283, 1900);
+window.addEventListener('hashchange', mountEmailSenderV283);
+window.addEventListener('popstate', mountEmailSenderV283);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
