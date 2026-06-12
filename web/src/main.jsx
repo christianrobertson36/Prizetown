@@ -3293,6 +3293,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Issue Log Guidance', 'Support Readiness now includes simple guidance for recording customer issues, follow-ups, escalations and outcomes during launch.'],
             ['Support Response Safety', 'Support Readiness now includes response safety reminders so admins avoid sharing private data, promising outcomes too early or replying before records are checked.'],
             ['Support Launch Sign-off', 'Support Readiness now includes a final support sign-off checklist before wider public marketing or paid competition launch.'],
+            ['Support Handover Summary', 'Support Readiness now includes a short handover summary for new admins covering what to check first and where support evidence lives.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3906,6 +3907,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support handover summary</h2>
+      <p className="muted">A quick map for any trusted admin helping with customer support.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Start here</strong><p>Open Support Readiness, Help Guide and Launch checklist before replying to customers.</p></article>
+        <article><strong>Customer evidence</strong><p>Use Orders & entries, Customers, Free entries, Winners, Draw Proof and Audit log to verify records.</p></article>
+        <article><strong>Public evidence</strong><p>Use Public Entry Lists, Winners and Fair draws pages when explaining transparency to customers.</p></article>
+        <article><strong>Unsafe replies</strong><p>Pause if the message involves refunds, chargebacks, legal complaints, private data, identity or winner disputes.</p></article>
+        <article><strong>Daily rhythm</strong><p>Check support inbox, new orders, free-entry requests, winner follow-ups and escalations once per day.</p></article>
+        <article><strong>After replying</strong><p>Record what was checked, what was sent, who owns follow-up and the final outcome.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4306,7 +4320,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v207';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v208';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
