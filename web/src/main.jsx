@@ -3564,6 +3564,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Fast Path', 'Use the recommended path first: status, preflight, backup pack, go/no-go. Use the other report buttons only when you need evidence or handover files.'],
             ['Admin Navigation Polish', 'Admin screens now get clearer button spacing, grouped action rows, sticky section helpers and a small back-to-top helper for faster movement around long admin pages.'],
             ['Admin Button Layout', 'Action buttons across admin areas are easier to scan on desktop and mobile, with section labels and consistent wrapping.'],
+            ['Admin Quick Navigation', 'Admin pages now show a compact quick navigation helper so operators can jump to the most-used admin areas faster.'],
+            ['Public Trust Blocks', 'The public homepage now includes clearer how-it-works, draw transparency, free-entry and winner proof guidance to improve customer trust.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5608,6 +5610,28 @@ function EntryLists({ competitions }) {
 }
 
 
+
+function PublicTrustBlocks() {
+  return <section className="public-trust-blocks">
+    <div className="trust-card">
+      <strong>How it works</strong>
+      <p>Choose a competition, enter securely, then watch for the live draw or winner update.</p>
+    </div>
+    <div className="trust-card">
+      <strong>Transparent draws</strong>
+      <p>Final draws are designed to be recorded, shown clearly and saved with winner details.</p>
+    </div>
+    <div className="trust-card">
+      <strong>Free entry route</strong>
+      <p>Free postal entry information is available from the legal/free-entry pages before you enter.</p>
+    </div>
+    <div className="trust-card">
+      <strong>Winner proof</strong>
+      <p>Winners and draw outcomes can be shown publicly so customers can see real results over time.</p>
+    </div>
+  </section>;
+}
+
 function Winners({ winners, instantWinners }) {
   const finalWinners = safeArray(winners);
   const instantRows = safeArray(instantWinners);
@@ -5717,7 +5741,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v263';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v264';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -5905,7 +5929,101 @@ if (!document.getElementById('admin-scroll-top-v263')) {
   document.body.appendChild(button);
 }
 
+if (!document.getElementById('prizetown-public-trust-v264')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-public-trust-v264';
+  style.textContent = `
+    .admin-quick-nav-v264 {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .public-trust-blocks {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 22px auto;
+      width: min(1120px, calc(100% - 28px));
+    }
+
+    .public-trust-blocks .trust-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    }
+
+    .public-trust-blocks .trust-card strong {
+      display: block;
+      font-size: 1.02rem;
+      margin-bottom: 7px;
+    }
+
+    .public-trust-blocks .trust-card p {
+      margin: 0;
+      opacity: .88;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 900px) {
+      .public-trust-blocks {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 540px) {
+      .public-trust-blocks {
+        grid-template-columns: 1fr;
+        width: min(100% - 20px, 1120px);
+        margin-top: 16px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
+
+if (!document.getElementById('public-trust-dom-mount-v264')) {
+  const mountPublicTrustBlocks = () => {
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    const shouldShow = path === '/' || path === '/competitions';
+    const existing = document.getElementById('public-trust-dom-mount-v264');
+
+    if (!shouldShow) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    if (existing) return;
+
+    const root = document.getElementById('root');
+    const section = document.createElement('section');
+    section.id = 'public-trust-dom-mount-v264';
+    section.className = 'public-trust-blocks';
+    section.innerHTML = `
+      <div class="trust-card"><strong>How it works</strong><p>Choose a competition, enter securely, then watch for the live draw or winner update.</p></div>
+      <div class="trust-card"><strong>Transparent draws</strong><p>Final draws are designed to be recorded, shown clearly and saved with winner details.</p></div>
+      <div class="trust-card"><strong>Free entry route</strong><p>Free postal entry information is available from the legal/free-entry pages before you enter.</p></div>
+      <div class="trust-card"><strong>Winner proof</strong><p>Winners and draw outcomes can be shown publicly so customers can see real results over time.</p></div>
+    `;
+
+    if (root && root.parentNode) {
+      root.parentNode.insertBefore(section, root.nextSibling);
+    } else {
+      document.body.appendChild(section);
+    }
+  };
+
+  mountPublicTrustBlocks();
+  window.addEventListener('popstate', mountPublicTrustBlocks);
+  window.addEventListener('hashchange', mountPublicTrustBlocks);
+  setTimeout(mountPublicTrustBlocks, 350);
+}
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
