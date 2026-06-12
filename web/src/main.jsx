@@ -3296,6 +3296,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Handover Summary', 'Support Readiness now includes a short handover summary for new admins covering what to check first and where support evidence lives.'],
             ['Support Readiness Sections', 'Support Readiness now includes a quick section guide so admins can understand the support page without reading every card first.'],
             ['Support Compact Index', 'Support Readiness now includes a compact index that tells admins which support checklist to use for common customer situations.'],
+            ['Support Page Complete Note', 'Support Readiness now includes a clear top note saying the support page is a reference manual and admins should use the compact index first.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3897,6 +3898,17 @@ function SupportReadinessPanel() {
     </div>
 
     <div className="backup-manual-notes">
+      <h2>Support page complete note</h2>
+      <p className="muted">This page is now a reference manual, not something you need to read top-to-bottom every day.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Use the compact index first</strong><p>Start with the compact index below and jump mentally to the right support checklist.</p></article>
+        <article><strong>Daily use stays simple</strong><p>For normal days, use Daily Review, Issue Log Guidance and Response Safety only.</p></article>
+        <article><strong>Escalate the risky stuff</strong><p>Refunds, complaints, chargebacks, private data and winner disputes should still be paused and escalated.</p></article>
+        <article><strong>Keep the rest as reference</strong><p>The remaining support blocks are there for launch, training, handover and unusual customer issues.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
       <h2>Support compact index</h2>
       <p className="muted">Fast route to the right checklist without reading the whole page.</p>
       <div className="backup-notes-grid">
@@ -4348,7 +4360,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v210';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v211';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
