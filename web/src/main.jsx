@@ -3556,6 +3556,10 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Preflight Report', 'Backup Readiness now includes a button to upload the preflight report to Google Drive.'],
             ['TrueNAS Backup Runbook', 'Backup Readiness now includes a button to upload a TrueNAS backup runbook to Drive.'],
             ['Emergency Rollback Runbook', 'Backup Readiness now includes a button to upload rollback instructions and current expected tags to Drive.'],
+            ['Scheduled Backup Readiness', 'Backup Readiness now includes a check for whether the app is ready to move backup routines into scheduled jobs.'],
+            ['Scheduled Backup Spec', 'Backup Readiness now includes a button to upload a suggested scheduled backup job specification to Drive.'],
+            ['Environment Checklist Report', 'Backup Readiness now includes a button to upload a no-secrets environment/config checklist to Drive.'],
+            ['Launch Go/No-Go Report', 'Backup Readiness now includes a button to upload a launch readiness decision report to Drive.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3973,6 +3977,14 @@ function GoogleDriveStatusButton() {
   const [truenasRunbookResult, setTruenasRunbookResult] = useState(null);
   const [rollbackRunbookLoading, setRollbackRunbookLoading] = useState(false);
   const [rollbackRunbookResult, setRollbackRunbookResult] = useState(null);
+  const [scheduledReadinessLoading, setScheduledReadinessLoading] = useState(false);
+  const [scheduledReadinessResult, setScheduledReadinessResult] = useState(null);
+  const [scheduledSpecLoading, setScheduledSpecLoading] = useState(false);
+  const [scheduledSpecResult, setScheduledSpecResult] = useState(null);
+  const [envChecklistLoading, setEnvChecklistLoading] = useState(false);
+  const [envChecklistResult, setEnvChecklistResult] = useState(null);
+  const [goNoGoLoading, setGoNoGoLoading] = useState(false);
+  const [goNoGoResult, setGoNoGoResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4507,6 +4519,82 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkScheduledBackupReadiness() {
+    setScheduledReadinessLoading(true);
+    setError('');
+    setScheduledReadinessResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/scheduled-backup-readiness`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Scheduled backup readiness failed (${res.status})`);
+      setScheduledReadinessResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not check scheduled backup readiness.');
+    } finally {
+      setScheduledReadinessLoading(false);
+    }
+  }
+
+  async function uploadScheduledBackupSpec() {
+    setScheduledSpecLoading(true);
+    setError('');
+    setScheduledSpecResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/scheduled-backup-spec`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Scheduled backup spec upload failed (${res.status})`);
+      setScheduledSpecResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload scheduled backup spec.');
+    } finally {
+      setScheduledSpecLoading(false);
+    }
+  }
+
+  async function uploadEnvironmentChecklist() {
+    setEnvChecklistLoading(true);
+    setError('');
+    setEnvChecklistResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/environment-checklist-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Environment checklist upload failed (${res.status})`);
+      setEnvChecklistResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload environment checklist.');
+    } finally {
+      setEnvChecklistLoading(false);
+    }
+  }
+
+  async function uploadLaunchGoNoGo() {
+    setGoNoGoLoading(true);
+    setError('');
+    setGoNoGoResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/launch-go-no-go-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Launch go/no-go upload failed (${res.status})`);
+      setGoNoGoResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload launch go/no-go report.');
+    } finally {
+      setGoNoGoLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4539,6 +4627,10 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={uploadBackupPreflightReport} disabled={preflightReportLoading}>{preflightReportLoading ? 'Uploading preflight...' : 'Upload preflight report'}</button>
       <button type="button" onClick={uploadTrueNasRunbook} disabled={truenasRunbookLoading}>{truenasRunbookLoading ? 'Uploading TrueNAS runbook...' : 'Upload TrueNAS runbook'}</button>
       <button type="button" onClick={uploadEmergencyRollbackRunbook} disabled={rollbackRunbookLoading}>{rollbackRunbookLoading ? 'Uploading rollback...' : 'Upload rollback runbook'}</button>
+      <button type="button" onClick={checkScheduledBackupReadiness} disabled={scheduledReadinessLoading}>{scheduledReadinessLoading ? 'Checking scheduler...' : 'Check scheduled backup readiness'}</button>
+      <button type="button" onClick={uploadScheduledBackupSpec} disabled={scheduledSpecLoading}>{scheduledSpecLoading ? 'Uploading spec...' : 'Upload scheduled backup spec'}</button>
+      <button type="button" onClick={uploadEnvironmentChecklist} disabled={envChecklistLoading}>{envChecklistLoading ? 'Uploading checklist...' : 'Upload environment checklist'}</button>
+      <button type="button" onClick={uploadLaunchGoNoGo} disabled={goNoGoLoading}>{goNoGoLoading ? 'Uploading decision...' : 'Upload launch go/no-go report'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4708,6 +4800,30 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{rollbackRunbookResult.file?.name || 'Created rollback runbook'}</p></article>
       <article><strong>Score</strong><p>{rollbackRunbookResult.readiness?.score ?? 0}/100</p></article>
       <article><strong>Use</strong><p>Use during outage/change rollback</p></article>
+    </div>}
+    {scheduledReadinessResult && <div className="backup-notes-grid">
+      <article><strong>Scheduled readiness</strong><p>{scheduledReadinessResult.scheduled_readiness?.ready_for_scheduler_setup ? 'Ready for setup' : 'Needs attention'}</p></article>
+      <article><strong>Blocking</strong><p>{scheduledReadinessResult.scheduled_readiness?.blocking_count ?? 0}</p></article>
+      <article><strong>Score</strong><p>{scheduledReadinessResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Next</strong><p>{scheduledReadinessResult.scheduled_readiness?.suggested_next_step || 'Review scheduler setup'}</p></article>
+    </div>}
+    {scheduledSpecResult && <div className="backup-notes-grid">
+      <article><strong>Scheduled spec</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{scheduledSpecResult.file?.name || 'Created scheduled spec'}</p></article>
+      <article><strong>Jobs</strong><p>{scheduledSpecResult.job_count ?? 0}</p></article>
+      <article><strong>Score</strong><p>{scheduledSpecResult.readiness?.score ?? 0}/100</p></article>
+    </div>}
+    {envChecklistResult && <div className="backup-notes-grid">
+      <article><strong>Environment checklist</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{envChecklistResult.file?.name || 'Created checklist'}</p></article>
+      <article><strong>Checks</strong><p>{envChecklistResult.check_count ?? 0}</p></article>
+      <article><strong>Failed</strong><p>{envChecklistResult.failed_count ?? 0}</p></article>
+    </div>}
+    {goNoGoResult && <div className="backup-notes-grid">
+      <article><strong>Launch decision</strong><p>{goNoGoResult.decision || 'Created'}</p></article>
+      <article><strong>File name</strong><p>{goNoGoResult.file?.name || 'Created go/no-go report'}</p></article>
+      <article><strong>Required items</strong><p>{goNoGoResult.required_count ?? 0}</p></article>
+      <article><strong>Score</strong><p>{goNoGoResult.readiness?.score ?? 0}/100</p></article>
     </div>}
   </div>;
 }
@@ -5584,7 +5700,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v260';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v261';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
