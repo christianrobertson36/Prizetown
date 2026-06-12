@@ -3264,6 +3264,16 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <h2>Daily admin flow</h2>
             <p className="muted">A simple order for opening Prizetown each day: check app health, review orders, review support, confirm draw readiness, then check winners/audit if anything changed.</p>
           </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Emergency route</h2>
+            <p className="muted">If something looks wrong: open System check first, then Support Readiness, Backup Readiness and Audit log before changing live competitions or draw settings.</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
+              <button type="button" onClick={() => setActiveTab('system-check')}>System check</button>
+              <button type="button" onClick={() => setActiveTab('support-readiness')}>Support Readiness</button>
+              <button type="button" onClick={() => setActiveTab('backup-readiness')}>Backup Readiness</button>
+              <button type="button" onClick={() => setActiveTab('audit-log')}>Audit log</button>
+            </div>
+          </div>
         </div>}
 
         {activeTab === 'tools-overview' && <div className="panel list-panel">
@@ -3351,6 +3361,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Tools Shortcut Order', 'Tools overview shortcut buttons are now numbered so admins can follow the recommended pre-launch check order.'],
             ['Admin Launch Centre', 'Tools now includes a Launch centre tab with fast links to launch checks, system checks, safety readiness, support, draws, orders and winners.'],
             ['Launch Centre Daily Flow', 'Launch centre now includes a compact daily admin flow so admins know what to check first when opening Prizetown.'],
+            ['Launch Centre Emergency Route', 'Launch centre now includes an emergency route for checking system health, support, backups and audit logs before changing live settings.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4414,7 +4425,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v217';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v218';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
