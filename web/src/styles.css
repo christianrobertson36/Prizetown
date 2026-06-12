@@ -6423,3 +6423,50 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v186: Security readiness */
+.security-readiness-panel {
+  display: grid;
+  gap: .85rem;
+}
+
+.security-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.security-readiness-grid article,
+.security-warning-box {
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 16px;
+  padding: .9rem;
+  background: rgba(15,23,42,.04);
+}
+
+.security-readiness-grid strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.security-readiness-grid span {
+  color: var(--muted, #64748b);
+  font-size: .9rem;
+}
+
+.security-warning-box {
+  border-color: rgba(239,68,68,.45);
+  background: rgba(239,68,68,.08);
+}
+
+.security-warning-box strong {
+  display: block;
+  margin-bottom: .25rem;
+}
+
+@media (max-width: 720px) {
+  .security-readiness-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3121,6 +3121,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       items: [
         ['help-guide', 'Help guide', ListChecks],
         ['social-integrations', 'Social Integrations', ListChecks],
+        ['security-readiness', 'Security Readiness', Shield],
         ['system-check', 'System check', Shield],
         ['email-test', 'Email test', Shield],
         ['audit', 'Audit log', ListChecks]
@@ -3224,6 +3225,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           ['Support email', !!(settingsForm.support_email || '').trim(), 'Set a customer support email.'],
           ['Global legal/free entry text', !!(settingsForm.terms_text || '').trim() && !!(settingsForm.free_entry_global || '').trim(), 'Legal pages and global free-entry text should be filled in.'],
           ['Payment readiness', false, 'Before real payments, connect a provider safely, verify webhooks, handle pending/paid/failed/refunded/chargeback statuses and only allocate paid tickets after confirmed payment.'],
+          ['Security readiness', false, 'Before public launch, change default credentials/secrets, protect admin access, add rate limits, harden uploads and confirm backups/restore.'],
           ['Postal entry address', !!(settingsForm.postal_entry_address || '').trim() && !(settingsForm.postal_entry_address || '').includes('Add postal entry address'), 'Add a real postal entry address before launch.'],
           ['Branding', !!(settingsForm.site_name || '').trim() && !!(settingsForm.hero_title || '').trim(), 'Check site name, homepage title, logo and colours.'],
           ['Homepage content', !!(settingsForm.hero_title || '').trim() && !!(settingsForm.hero_text || '').trim(), 'Homepage title and intro text should be filled in before launch.'],
@@ -3280,6 +3282,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Email Test', 'Use Email test to confirm Resend transactional emails are configured and working. If emails fail, check the Resend API key and sender domain setup.'],
             ['Audit Log', 'Use Audit log to review important admin/system actions. Useful for checking what changed and when.'],
             ['Security Reminder', 'Before real payments, change default admin credentials, use a strong JWT secret, protect admin access, verify payment webhooks, keep database backups and test restore.'],
+            ['Security Readiness', 'Use Security Readiness to track launch hardening work such as admin password, JWT secret, admin-only access, rate limiting, upload checks, backups, HTTPS and Cloudflare protection.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3287,6 +3290,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Important Rule', 'Whenever a new admin feature is added or changed, add a short plain-English note here so future admins understand what it is for.']
           ].map(([title, text]) => <div className="list-row entry-row" key={title}><div><strong>{title}</strong><p>{text}</p></div></div>)}
         </div>}
+
+        {activeTab === 'security-readiness' && <SecurityReadinessPanel />}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
@@ -3541,6 +3546,40 @@ function LegalDisclaimer({ settings, setPage, onAccept }) {
   </div>;
 }
 
+
+
+function SecurityReadinessPanel() {
+  const checks = [
+    ['Admin password', false, 'Change the default admin password before any public or real-payment launch.'],
+    ['JWT secret', false, 'Use a long random JWT_SECRET in production. Never keep the development fallback secret.'],
+    ['Admin access', true, 'Keep admin access protected through Tailscale/Cloudflare rules and avoid exposing public /admin.'],
+    ['Rate limiting', false, 'Add rate limits for login, checkout, free-entry, admin actions and uploads before larger traffic.'],
+    ['Upload safety', false, 'Restrict upload file types, size and SVG/script risks before public user uploads.'],
+    ['Database backup', false, 'Set daily backups, store them safely and test a restore before launch.'],
+    ['HTTPS / Cloudflare', true, 'Public site/API should stay HTTPS-only with Cloudflare protection and locked-down CORS.'],
+    ['Audit trail', true, 'Audit logging and draw proof are already in place for admin/result transparency.']
+  ];
+
+  return <div className="panel list-panel security-readiness-panel">
+    <h1>Security Readiness</h1>
+    <p className="muted">Use this before a public launch or real payments. This panel is a checklist only and does not change security behaviour yet.</p>
+
+    <div className="security-readiness-grid">
+      <article><strong>Private demo</strong><span>Good for controlled testing</span></article>
+      <article><strong>Public beta</strong><span>Needs hardening first</span></article>
+      <article><strong>Real payments</strong><span>Wait for security + payment checks</span></article>
+    </div>
+
+    <div className="security-warning-box">
+      <strong>Launch warning</strong>
+      <p>Do not run real-money competitions at scale until admin credentials, secrets, rate limits, upload rules, backups, HTTPS/CORS and payment webhooks are hardened and tested.</p>
+    </div>
+
+    {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
+      <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
+    </div>)}
+  </div>;
+}
 
 function PaymentReadinessPanel({ orders = [] }) {
   const orderRows = safeArray(orders);
@@ -3903,7 +3942,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v185';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v186';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
