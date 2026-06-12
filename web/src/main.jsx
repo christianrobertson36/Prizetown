@@ -3281,6 +3281,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Restore Test Checklist', 'Backup Readiness now includes a simple restore-test checklist so backups are not trusted until login, orders, entries, winners and uploads are checked on a safe temporary restore.'],
             ['Support Readiness', 'Use Support Readiness before launch to check support email, refund/help process, winner contact process, free-entry support and complaint/escalation notes.'],
             ['Customer Support Notes', 'Support Readiness now includes simple notes for checking orders, entries, ticket numbers, winner proof, free-entry questions and refunds before replying to customers.'],
+            ['Winner Contact Checklist', 'Support Readiness now includes winner-contact guidance for checking draw proof, ticket number, contact details, prize fulfilment notes and safe public/private data handling.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3738,6 +3739,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Winner contact checklist</h2>
+      <p className="muted">Use this before contacting a winner or publishing extra winner details.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Verify winner record</strong><p>Check Winners and Draw Proof first. Confirm the saved winner record matches the competition.</p></article>
+        <article><strong>Check ticket number</strong><p>Confirm the winning ticket number exists in Orders & entries or the public entry list.</p></article>
+        <article><strong>Confirm contact details</strong><p>Use the customer/order record to confirm email, name and any contact details before sending winner messages.</p></article>
+        <article><strong>Record fulfilment notes</strong><p>Write down when the winner was contacted, what was agreed and any prize delivery/collection notes.</p></article>
+        <article><strong>Protect private data</strong><p>Only publish approved public winner information. Keep phone, email, address and private notes out of public posts.</p></article>
+        <article><strong>Escalate uncertainty</strong><p>If ticket records, identity, payment status or eligibility are unclear, pause and escalate before confirming the prize.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4138,7 +4152,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v195';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v196';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
