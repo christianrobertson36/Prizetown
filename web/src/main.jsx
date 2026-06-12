@@ -3280,6 +3280,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Backup Launch Guidance', 'Before real payments, keep a local TrueNAS backup plus a Google Drive/off-site copy, save compose/YAML and image tags, and complete a restore test.'],
             ['Restore Test Checklist', 'Backup Readiness now includes a simple restore-test checklist so backups are not trusted until login, orders, entries, winners and uploads are checked on a safe temporary restore.'],
             ['Support Readiness', 'Use Support Readiness before launch to check support email, refund/help process, winner contact process, free-entry support and complaint/escalation notes.'],
+            ['Customer Support Notes', 'Support Readiness now includes simple notes for checking orders, entries, ticket numbers, winner proof, free-entry questions and refunds before replying to customers.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3724,6 +3725,19 @@ function SupportReadinessPanel() {
       <p>Do not launch paid public competitions until support email, refund handling, winner contact, free-entry support and complaint notes are ready.</p>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Customer support notes</h2>
+      <p className="muted">Use these before replying to customers. Check records first and avoid promising refunds, prizes or outcomes without verification.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Order questions</strong><p>Check Sales → Orders & entries for the customer order, ticket allocation and payment/test status.</p></article>
+        <article><strong>Ticket questions</strong><p>Check ticket numbers in Orders & entries and compare with Public Entry Lists where needed.</p></article>
+        <article><strong>Winner questions</strong><p>Check Winners, Draw Proof and public winner proof before confirming a result to a customer.</p></article>
+        <article><strong>Free-entry questions</strong><p>Use Free entries and the free-entry legal text to answer postal/free-entry questions consistently.</p></article>
+        <article><strong>Refund questions</strong><p>Do not promise refunds until payment records, competition status and refund policy wording have been checked.</p></article>
+        <article><strong>Escalations</strong><p>Record disputes, complaints, chargebacks or legal concerns and escalate before replying if unsure.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4124,7 +4138,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v194';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v195';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
