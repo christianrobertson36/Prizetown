@@ -3119,6 +3119,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     {
       title: 'Tools',
       items: [
+        ['launch-centre', 'Launch centre', ListChecks],
         ['tools-overview', 'Tools overview', ListChecks],
         ['help-guide', 'Help guide', ListChecks],
         ['social-integrations', 'Social Integrations', ListChecks],
@@ -3241,6 +3242,26 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'payment-readiness' && <PaymentReadinessPanel orders={orders} />}
 
+        {activeTab === 'launch-centre' && <div className="panel list-panel">
+          <h1>Launch centre</h1>
+          <p className="muted">Use this as the fast route into the main areas you need before and during launch.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, margin: '14px 0 18px' }}>
+            <button type="button" onClick={() => setActiveTab('launch-checklist')}>1 Launch checklist</button>
+            <button type="button" onClick={() => setActiveTab('system-check')}>2 System check</button>
+            <button type="button" onClick={() => setActiveTab('security-readiness')}>3 Security Readiness</button>
+            <button type="button" onClick={() => setActiveTab('backup-readiness')}>4 Backup Readiness</button>
+            <button type="button" onClick={() => setActiveTab('support-readiness')}>5 Support Readiness</button>
+            <button type="button" onClick={() => setActiveTab('draw-control-room')}>Draw Control Room</button>
+            <button type="button" onClick={() => setActiveTab('orders')}>Orders</button>
+            <button type="button" onClick={() => setActiveTab('winners')}>Winners</button>
+          </div>
+          <div className="backup-notes-grid">
+            <article><strong>Before launch</strong><p>Start with Launch checklist, then confirm System check, Security Readiness and Backup Readiness.</p></article>
+            <article><strong>During launch</strong><p>Keep Orders, Winners and Draw Control Room close so customer activity and draw readiness are easy to monitor.</p></article>
+            <article><strong>After issues</strong><p>Use Support Readiness and Audit log when checking customer queries, refunds, complaints or admin changes.</p></article>
+          </div>
+        </div>}
+
         {activeTab === 'tools-overview' && <div className="panel list-panel">
           <h1>Tools overview</h1>
           <p className="muted">Use this page as the quick route map for the admin Tools section.</p>
@@ -3324,6 +3345,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Tools Overview Shortcuts', 'Tools overview now includes quick shortcut buttons for Launch checklist, System check, Security Readiness, Backup Readiness, Support Readiness and Help guide.'],
             ['Tools Shortcut Helper', 'Tools overview now includes a short helper line above the shortcut buttons so admins know these are the most-used launch and safety tools.'],
             ['Tools Shortcut Order', 'Tools overview shortcut buttons are now numbered so admins can follow the recommended pre-launch check order.'],
+            ['Admin Launch Centre', 'Tools now includes a Launch centre tab with fast links to launch checks, system checks, safety readiness, support, draws, orders and winners.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4387,7 +4409,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v215';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v216';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
