@@ -3532,6 +3532,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Test Upload', 'Backup Readiness now includes an admin-only test upload button to prove Google Drive folder and credentials can create files.'],
             ['Google Drive Backup Manifest', 'Backup Readiness now includes an admin button to upload a timestamped backup manifest JSON file to Google Drive.'],
             ['Google Drive Uploads Index', 'Backup Readiness now includes an admin button to upload a JSON index of uploaded files to Google Drive for restore checking.'],
+            ['Google Drive Database Snapshot', 'Backup Readiness now includes an admin button to upload a capped JSON database snapshot to Google Drive.'],
+            ['Google Drive Backup Run Summary', 'Backup Readiness now includes an admin button to upload one summary file covering Drive config, database counts and uploads counts.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3901,6 +3903,10 @@ function GoogleDriveStatusButton() {
   const [manifestResult, setManifestResult] = useState(null);
   const [uploadsIndexLoading, setUploadsIndexLoading] = useState(false);
   const [uploadsIndexResult, setUploadsIndexResult] = useState(null);
+  const [dbSnapshotLoading, setDbSnapshotLoading] = useState(false);
+  const [dbSnapshotResult, setDbSnapshotResult] = useState(null);
+  const [runSummaryLoading, setRunSummaryLoading] = useState(false);
+  const [runSummaryResult, setRunSummaryResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -3978,6 +3984,44 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function uploadDatabaseSnapshot() {
+    setDbSnapshotLoading(true);
+    setError('');
+    setDbSnapshotResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/database-snapshot`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Database snapshot upload failed (${res.status})`);
+      setDbSnapshotResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive database snapshot.');
+    } finally {
+      setDbSnapshotLoading(false);
+    }
+  }
+
+  async function uploadBackupRunSummary() {
+    setRunSummaryLoading(true);
+    setError('');
+    setRunSummaryResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-run-summary`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Backup run summary upload failed (${res.status})`);
+      setRunSummaryResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive backup run summary.');
+    } finally {
+      setRunSummaryLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -3986,6 +4030,8 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={runTestUpload} disabled={testLoading}>{testLoading ? 'Uploading...' : 'Run test upload'}</button>
       <button type="button" onClick={uploadManifest} disabled={manifestLoading}>{manifestLoading ? 'Uploading manifest...' : 'Upload backup manifest'}</button>
       <button type="button" onClick={uploadUploadsIndex} disabled={uploadsIndexLoading}>{uploadsIndexLoading ? 'Uploading index...' : 'Upload uploads index'}</button>
+      <button type="button" onClick={uploadDatabaseSnapshot} disabled={dbSnapshotLoading}>{dbSnapshotLoading ? 'Uploading DB snapshot...' : 'Upload DB snapshot'}</button>
+      <button type="button" onClick={uploadBackupRunSummary} disabled={runSummaryLoading}>{runSummaryLoading ? 'Uploading summary...' : 'Upload run summary'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4011,6 +4057,18 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{uploadsIndexResult.file?.name || 'Created uploads index'}</p></article>
       <article><strong>Files recorded</strong><p>{uploadsIndexResult.file_count ?? 0}</p></article>
       <article><strong>Total size</strong><p>{uploadsIndexResult.total_bytes ?? 0} bytes</p></article>
+    </div>}
+    {dbSnapshotResult && <div className="backup-notes-grid">
+      <article><strong>Database snapshot</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{dbSnapshotResult.file?.name || 'Created database snapshot'}</p></article>
+      <article><strong>Tables exported</strong><p>{dbSnapshotResult.table_count ?? 0}</p></article>
+      <article><strong>Drive file ID</strong><p>{dbSnapshotResult.file?.id || 'Not returned'}</p></article>
+    </div>}
+    {runSummaryResult && <div className="backup-notes-grid">
+      <article><strong>Run summary</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{runSummaryResult.file?.name || 'Created backup run summary'}</p></article>
+      <article><strong>Tables counted</strong><p>{runSummaryResult.table_count ?? 0}</p></article>
+      <article><strong>Uploads counted</strong><p>{runSummaryResult.upload_file_count ?? 0}</p></article>
     </div>}
   </div>;
 }
@@ -4887,7 +4945,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v251';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v252';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
