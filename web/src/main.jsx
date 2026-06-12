@@ -3286,6 +3286,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Workflow Checklist', 'Support Readiness now includes a simple step-by-step workflow for checking support requests before replying to customers.'],
             ['Admin Handover Checklist', 'Support Readiness now includes an admin handover checklist so another trusted admin can understand support, orders, draws, backups and launch safety checks.'],
             ['Launch Support Summary', 'Support Readiness now includes a simple launch support summary to remind admins what must be ready before public paid competitions.'],
+            ['Customer FAQ Checklist', 'Support Readiness now includes a simple customer FAQ checklist for common questions about entering, tickets, free entry, draws, winners and refunds.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3808,6 +3809,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Customer FAQ checklist</h2>
+      <p className="muted">Use this to prepare clear answers before customers start asking the same questions.</p>
+      <div className="backup-notes-grid">
+        <article><strong>How do I enter?</strong><p>Point customers to the competition page, entry question, basket and checkout flow.</p></article>
+        <article><strong>Where are my tickets?</strong><p>Explain that ticket numbers should be checked in My entries, Orders & entries or Public Entry Lists.</p></article>
+        <article><strong>Is free entry available?</strong><p>Point to the Free Entry page and competition-specific rules/deadlines before answering.</p></article>
+        <article><strong>When is the draw?</strong><p>Check the competition draw date, status, Draw Control Room and public competition page.</p></article>
+        <article><strong>Who won?</strong><p>Point to Winners and public winner proof after the draw result has been saved.</p></article>
+        <article><strong>Can I get a refund?</strong><p>Check order/payment records, competition status, Refunds page and support notes before replying.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4208,7 +4222,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v200';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v201';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
