@@ -3531,6 +3531,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Status Button', 'Backup Readiness now includes an admin button to check Google Drive folder and credential configuration from the UI.'],
             ['Google Drive Test Upload', 'Backup Readiness now includes an admin-only test upload button to prove Google Drive folder and credentials can create files.'],
             ['Google Drive Backup Manifest', 'Backup Readiness now includes an admin button to upload a timestamped backup manifest JSON file to Google Drive.'],
+            ['Google Drive Uploads Index', 'Backup Readiness now includes an admin button to upload a JSON index of uploaded files to Google Drive for restore checking.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3898,6 +3899,8 @@ function GoogleDriveStatusButton() {
   const [testResult, setTestResult] = useState(null);
   const [manifestLoading, setManifestLoading] = useState(false);
   const [manifestResult, setManifestResult] = useState(null);
+  const [uploadsIndexLoading, setUploadsIndexLoading] = useState(false);
+  const [uploadsIndexResult, setUploadsIndexResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -3956,6 +3959,25 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function uploadUploadsIndex() {
+    setUploadsIndexLoading(true);
+    setError('');
+    setUploadsIndexResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/uploads-index`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Uploads index upload failed (${res.status})`);
+      setUploadsIndexResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive uploads index.');
+    } finally {
+      setUploadsIndexLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -3963,6 +3985,7 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkStatus} disabled={loading}>{loading ? 'Checking...' : 'Check Google Drive status'}</button>
       <button type="button" onClick={runTestUpload} disabled={testLoading}>{testLoading ? 'Uploading...' : 'Run test upload'}</button>
       <button type="button" onClick={uploadManifest} disabled={manifestLoading}>{manifestLoading ? 'Uploading manifest...' : 'Upload backup manifest'}</button>
+      <button type="button" onClick={uploadUploadsIndex} disabled={uploadsIndexLoading}>{uploadsIndexLoading ? 'Uploading index...' : 'Upload uploads index'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -3982,6 +4005,12 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{manifestResult.file?.name || 'Created manifest file'}</p></article>
       <article><strong>Drive file ID</strong><p>{manifestResult.file?.id || 'Not returned'}</p></article>
       <article><strong>Counts</strong><p>{Object.entries(manifestResult.manifest?.counts || {}).map(([k, v]) => `${k}: ${v ?? 'unknown'}`).join(', ') || 'No counts returned'}</p></article>
+    </div>}
+    {uploadsIndexResult && <div className="backup-notes-grid">
+      <article><strong>Uploads index</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{uploadsIndexResult.file?.name || 'Created uploads index'}</p></article>
+      <article><strong>Files recorded</strong><p>{uploadsIndexResult.file_count ?? 0}</p></article>
+      <article><strong>Total size</strong><p>{uploadsIndexResult.total_bytes ?? 0} bytes</p></article>
     </div>}
   </div>;
 }
@@ -4858,7 +4887,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v250';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v251';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
