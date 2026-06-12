@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v249' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v250' }));
 app.get('/admin/google-drive/status', auth('admin'), (_req, res) => {
   const folderId = process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID || process.env.GOOGLE_DRIVE_FOLDER_ID || '';
   const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON || '';
@@ -627,6 +627,72 @@ app.post('/admin/google-drive/test-upload', auth('admin'), async (_req, res) => 
     res.status(500).json({
       ok: false,
       error: err.message || 'Google Drive test upload failed.'
+    });
+  }
+});
+
+app.post('/admin/google-drive/backup-manifest', auth('admin'), async (_req, res) => {
+  try {
+    const { Readable } = require('stream');
+    const { drive, folderId } = await getGoogleDriveClient();
+    const createdAt = new Date().toISOString();
+    const safeTimestamp = createdAt.replace(/[:.]/g, '-');
+    const name = `prizetown-backup-manifest-${safeTimestamp}.json`;
+
+    const counts = {};
+    for (const [key, sql] of Object.entries({
+      competitions: 'SELECT COUNT(*)::int AS count FROM competitions',
+      orders: 'SELECT COUNT(*)::int AS count FROM orders',
+      entries: 'SELECT COUNT(*)::int AS count FROM entries',
+      winners: 'SELECT COUNT(*)::int AS count FROM winners'
+    })) {
+      try {
+        const result = await pool.query(sql);
+        counts[key] = result.rows[0]?.count ?? null;
+      } catch (_err) {
+        counts[key] = null;
+      }
+    }
+
+    const manifest = {
+      app: 'Prizetown',
+      manifest_type: 'google_drive_backup_manifest',
+      created_at: createdAt,
+      api_version: 'v250',
+      upload_dir_configured: Boolean(uploadDir),
+      public_api_url_configured: Boolean(process.env.PUBLIC_API_URL),
+      counts,
+      notes: [
+        'This manifest proves Google Drive backup upload integration is working.',
+        'It is not a database dump and does not include uploaded files.',
+        'Use alongside PostgreSQL dumps, uploads copies and TrueNAS YAML backups.'
+      ]
+    };
+
+    const result = await drive.files.create({
+      requestBody: {
+        name,
+        parents: [folderId],
+        mimeType: 'application/json'
+      },
+      media: {
+        mimeType: 'application/json',
+        body: Readable.from([JSON.stringify(manifest, null, 2)])
+      },
+      fields: 'id,name,mimeType,webViewLink,createdTime'
+    });
+
+    res.json({
+      ok: true,
+      uploaded: true,
+      file: result.data,
+      manifest,
+      note: 'Backup manifest uploaded. This is a backup record, not a full database/uploads backup yet.'
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || 'Google Drive backup manifest upload failed.'
     });
   }
 });
@@ -740,7 +806,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
 
   add('warning', 'Payment: webhook hardening', 'Live payment webhooks/idempotency are not connected yet. Do not allocate paid tickets from frontend-only payment state.');
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v249' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v250' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -758,7 +824,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v249',
+    version: 'v250',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -2180,7 +2246,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v249 google drive test upload)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v250 google drive manifest upload)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);
