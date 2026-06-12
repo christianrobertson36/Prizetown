@@ -3295,6 +3295,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Launch Sign-off', 'Support Readiness now includes a final support sign-off checklist before wider public marketing or paid competition launch.'],
             ['Support Handover Summary', 'Support Readiness now includes a short handover summary for new admins covering what to check first and where support evidence lives.'],
             ['Support Readiness Sections', 'Support Readiness now includes a quick section guide so admins can understand the support page without reading every card first.'],
+            ['Support Compact Index', 'Support Readiness now includes a compact index that tells admins which support checklist to use for common customer situations.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3896,6 +3897,19 @@ function SupportReadinessPanel() {
     </div>
 
     <div className="backup-manual-notes">
+      <h2>Support compact index</h2>
+      <p className="muted">Fast route to the right checklist without reading the whole page.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Customer asks “where are my tickets?”</strong><p>Use Customer FAQ, Orders & entries, Issue Log Guidance and Response Safety.</p></article>
+        <article><strong>Customer asks about free entry</strong><p>Use Customer FAQ, Daily Review, Free-entry records and Support Response Safety.</p></article>
+        <article><strong>Winner needs help</strong><p>Use Winner Contact Checklist, Winners, Draw Proof and Handover Summary.</p></article>
+        <article><strong>Refund or complaint arrives</strong><p>Use Escalation Checklist first, then record the issue before replying.</p></article>
+        <article><strong>New admin is helping</strong><p>Use Admin Handover, Support Handover Summary, Help Guide and Backup Readiness.</p></article>
+        <article><strong>End-of-day support check</strong><p>Use Daily Review, Issue Log Guidance, Audit log and final outcome notes.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
       <h2>Support readiness sections</h2>
       <p className="muted">Quick guide for this page now it contains a lot of launch support checks.</p>
       <div className="backup-notes-grid">
@@ -4334,7 +4348,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v209';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v210';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
