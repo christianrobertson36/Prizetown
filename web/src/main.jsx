@@ -3528,6 +3528,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['After Restore Checks', 'Backup Readiness now includes a compact checklist of screens and data to verify after any restore or rollback.'],
             ['Google Drive Backup Guide', 'Backup Readiness now includes Google Drive folder, naming, sharing and upload guidance for off-site backup copies.'],
             ['Google Drive Status Integration', 'Backup Readiness now has a backend Google Drive status endpoint that checks folder and credential environment configuration without exposing secrets.'],
+            ['Google Drive Status Button', 'Backup Readiness now includes an admin button to check Google Drive folder and credential configuration from the UI.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3888,6 +3889,45 @@ function LaunchChecklistPanel({ competitions, settingsForm, modulePostcodes, mod
 }
 
 
+function GoogleDriveStatusButton() {
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function checkStatus() {
+    setLoading(true);
+    setError('');
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/status`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Status check failed (${res.status})`);
+      setStatus(data);
+    } catch (err) {
+      setError(err.message || 'Could not check Google Drive status.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return <div className="backup-manual-notes">
+    <h2>Google Drive live status</h2>
+    <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
+    <div className="admin-actions">
+      <button type="button" onClick={checkStatus} disabled={loading}>{loading ? 'Checking...' : 'Check Google Drive status'}</button>
+    </div>
+    {error && <p className="notice error">{error}</p>}
+    {status && <div className="backup-notes-grid">
+      <article><strong>Overall</strong><p>{status.configured ? 'Configured' : 'Not fully configured yet'}</p></article>
+      <article><strong>Folder ID</strong><p>{status.folder_id_configured ? 'Configured' : 'Missing'}</p></article>
+      <article><strong>Credentials</strong><p>{status.credentials_configured ? 'Configured' : 'Missing'}</p></article>
+      <article><strong>Credential source</strong><p>{status.credential_source || 'Not set'}</p></article>
+    </div>}
+  </div>;
+}
+
 function BackupReadinessPanel() {
   const checks = [
     ['TrueNAS local snapshot', false, 'Set up a local TrueNAS snapshot or backup for the Prizetown app dataset before launch.'],
@@ -4061,6 +4101,8 @@ function BackupReadinessPanel() {
         <article><strong>Monthly check</strong><p>Open the Drive folder monthly and confirm the newest database, uploads and config copies are present.</p></article>
       </div>
     </div>
+
+    <GoogleDriveStatusButton />
 
     <div className="backup-manual-notes">
       <h2>Google Drive integration status</h2>
@@ -4758,7 +4800,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v247';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v248';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
