@@ -3244,6 +3244,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'tools-overview' && <div className="panel list-panel">
           <h1>Tools overview</h1>
           <p className="muted">Use this page as the quick route map for the admin Tools section.</p>
+          <p className="muted"><strong>Open the most-used launch and safety tools quickly:</strong></p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, margin: '14px 0 18px' }}>
             <button type="button" onClick={() => setActiveTab('launch-checklist')}>Launch checklist</button>
             <button type="button" onClick={() => setActiveTab('system-check')}>System check</button>
@@ -3321,6 +3322,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Page Complete Note', 'Support Readiness now includes a clear top note saying the support page is a reference manual and admins should use the compact index first.'],
             ['Admin Tools Overview', 'Tools now has a dedicated Tools overview tab explaining which admin tool to open first for launch checks, system checks, support, backups and audit review.'],
             ['Tools Overview Shortcuts', 'Tools overview now includes quick shortcut buttons for Launch checklist, System check, Security Readiness, Backup Readiness, Support Readiness and Help guide.'],
+            ['Tools Shortcut Helper', 'Tools overview now includes a short helper line above the shortcut buttons so admins know these are the most-used launch and safety tools.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4384,7 +4386,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v213';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v214';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
