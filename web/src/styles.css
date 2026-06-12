@@ -6609,3 +6609,45 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v234 admin readability contrast */
+.admin-app .panel,
+.admin-app .subtle-panel,
+.admin-app .list-row,
+.admin-app .entry-row,
+.admin-app .backup-manual-notes,
+.admin-app .backup-readiness-grid article,
+.admin-app .backup-notes-grid article,
+.admin-app .security-warning-box,
+.admin-app .backup-warning-box,
+.admin-app .launch-warning-card,
+.admin-app .stat-card,
+.admin-app .tool-card {
+  color: #172033;
+}
+
+.admin-app .panel .muted,
+.admin-app .subtle-panel .muted,
+.admin-app .list-row p,
+.admin-app .entry-row p,
+.admin-app .backup-manual-notes p,
+.admin-app .backup-notes-grid article p,
+.admin-app .backup-readiness-grid article span,
+.admin-app .security-warning-box p,
+.admin-app .backup-warning-box p,
+.admin-app .launch-warning-card p,
+.admin-app .tool-card p,
+.admin-app small,
+.admin-app .small-muted {
+  color: #35425a;
+}
+
+.admin-app .backup-notes-grid article strong,
+.admin-app .backup-readiness-grid article strong,
+.admin-app .list-row strong,
+.admin-app .entry-row strong,
+.admin-app .subtle-panel h2,
+.admin-app .backup-manual-notes h2 {
+  color: #111827;
+}
