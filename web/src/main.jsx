@@ -3538,6 +3538,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Folder Inventory', 'Backup Readiness now includes a button to list the latest files already in the configured Google Drive backup folder.'],
             ['Google Drive Backup Pack', 'Backup Readiness now includes a one-click backup evidence pack upload: summary, capped database snapshot and uploads index.'],
             ['Google Drive Backup Health', 'Backup Readiness now includes a health check that scans the Drive backup folder for expected backup evidence file types.'],
+            ['Google Drive Latest Backup Report', 'Backup Readiness now includes a button to summarise the latest backup files by type from Google Drive.'],
+            ['Google Drive Restore Check Report', 'Backup Readiness now includes a button to upload a restore checklist/report JSON file to Google Drive.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3919,6 +3921,10 @@ function GoogleDriveStatusButton() {
   const [backupPackResult, setBackupPackResult] = useState(null);
   const [backupHealthLoading, setBackupHealthLoading] = useState(false);
   const [backupHealthResult, setBackupHealthResult] = useState(null);
+  const [latestReportLoading, setLatestReportLoading] = useState(false);
+  const [latestReportResult, setLatestReportResult] = useState(null);
+  const [restoreReportLoading, setRestoreReportLoading] = useState(false);
+  const [restoreReportResult, setRestoreReportResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4111,6 +4117,44 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkLatestBackupReport() {
+    setLatestReportLoading(true);
+    setError('');
+    setLatestReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/latest-backup-report`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Latest backup report failed (${res.status})`);
+      setLatestReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load Google Drive latest backup report.');
+    } finally {
+      setLatestReportLoading(false);
+    }
+  }
+
+  async function uploadRestoreCheckReport() {
+    setRestoreReportLoading(true);
+    setError('');
+    setRestoreReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/restore-check-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Restore check report upload failed (${res.status})`);
+      setRestoreReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive restore check report.');
+    } finally {
+      setRestoreReportLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4125,6 +4169,8 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkFolderInventory} disabled={inventoryLoading}>{inventoryLoading ? 'Checking folder...' : 'Check Drive folder inventory'}</button>
       <button type="button" onClick={uploadBackupPack} disabled={backupPackLoading}>{backupPackLoading ? 'Uploading pack...' : 'Upload backup pack'}</button>
       <button type="button" onClick={checkBackupHealth} disabled={backupHealthLoading}>{backupHealthLoading ? 'Checking health...' : 'Check backup health'}</button>
+      <button type="button" onClick={checkLatestBackupReport} disabled={latestReportLoading}>{latestReportLoading ? 'Loading report...' : 'Check latest backup report'}</button>
+      <button type="button" onClick={uploadRestoreCheckReport} disabled={restoreReportLoading}>{restoreReportLoading ? 'Uploading restore report...' : 'Upload restore check report'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4186,6 +4232,18 @@ function GoogleDriveStatusButton() {
       <article><strong>Files checked</strong><p>{backupHealthResult.file_count_checked ?? 0}</p></article>
       <article><strong>Missing types</strong><p>{(backupHealthResult.missing_types || []).join(', ') || 'None'}</p></article>
       <article><strong>Latest file</strong><p>{backupHealthResult.latest_file?.name || 'No file returned'}</p></article>
+    </div>}
+    {latestReportResult && <div className="backup-notes-grid">
+      <article><strong>Latest report</strong><p>{latestReportResult.report?.ready ? 'Looks ready' : 'Needs attention'}</p></article>
+      <article><strong>Files checked</strong><p>{latestReportResult.report?.file_count_checked ?? 0}</p></article>
+      <article><strong>Missing types</strong><p>{(latestReportResult.report?.missing_types || []).join(', ') || 'None'}</p></article>
+      <article><strong>Latest file</strong><p>{latestReportResult.report?.latest_file?.name || 'No file returned'}</p></article>
+    </div>}
+    {restoreReportResult && <div className="backup-notes-grid">
+      <article><strong>Restore report</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{restoreReportResult.file?.name || 'Created restore report'}</p></article>
+      <article><strong>Ready</strong><p>{restoreReportResult.ready ? 'Yes' : 'Needs attention'}</p></article>
+      <article><strong>Local uploads</strong><p>{restoreReportResult.local_upload_file_count ?? 0} files</p></article>
     </div>}
   </div>;
 }
@@ -5062,7 +5120,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v254';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v255';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
