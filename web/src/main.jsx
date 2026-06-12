@@ -3570,6 +3570,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Automation Control Centre', 'Admin now has a safe automation overview panel with quick links, status tiles and refreshable system signals.'],
             ['Automation Safety Warnings', 'Automation now highlights common launch risks such as payment hardening, email setup and backup checks without running risky actions automatically.'],
             ['Live Activity Safe Zone', 'The public Live Activity next draw card now keeps the date and time inside the card on desktop and mobile.'],
+            ['Live Activity Font Polish', 'The public Live Activity next draw card now uses smaller, cleaner date/time text so it does not look squeezed.'],
+            ['Automation Timeline', 'Automation Control Centre now shows a small recent activity timeline for refreshes, checks and admin navigation actions without changing live data.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5745,7 +5747,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v267';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v268';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6431,6 +6433,154 @@ setTimeout(safeZoneLiveActivityV267, 250);
 setTimeout(safeZoneLiveActivityV267, 900);
 window.addEventListener('hashchange', safeZoneLiveActivityV267);
 window.addEventListener('popstate', safeZoneLiveActivityV267);
+
+if (!document.getElementById('prizetown-live-font-automation-timeline-v268')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-live-font-automation-timeline-v268';
+  style.textContent = `
+    .live-activity-next-draw-date,
+    .next-draw-polished-date,
+    .next-draw-safe-value-v267 {
+      min-height: 34px !important;
+      padding: 5px 7px !important;
+      gap: 1px !important;
+      line-height: 1.05 !important;
+    }
+
+    .next-draw-safe-date-v267 {
+      font-size: clamp(.86rem, 1.1vw, 1.02rem) !important;
+      line-height: 1.02 !important;
+      letter-spacing: -0.015em !important;
+    }
+
+    .next-draw-safe-time-v267 {
+      font-size: clamp(.76rem, .95vw, .9rem) !important;
+      line-height: 1.02 !important;
+      opacity: .9 !important;
+    }
+
+    .live-activity-next-draw-card,
+    .next-draw-polished-card {
+      min-width: 0 !important;
+    }
+
+    .automation-timeline-v268 {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.14);
+    }
+
+    .automation-timeline-v268 h3 {
+      margin: 0 0 9px;
+      font-size: 1rem;
+    }
+
+    .automation-timeline-list-v268 {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .automation-timeline-list-v268 li {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 9px 10px;
+      border-radius: 13px;
+      background: rgba(0,0,0,.14);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .automation-timeline-time-v268 {
+      font-weight: 900;
+      opacity: .82;
+      font-size: .82rem;
+      white-space: nowrap;
+    }
+
+    .automation-timeline-text-v268 {
+      line-height: 1.35;
+      opacity: .94;
+    }
+
+    @media (max-width: 560px) {
+      .automation-timeline-list-v268 li {
+        grid-template-columns: 1fr;
+        gap: 3px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const automationTimelineV268 = {
+  events: []
+};
+
+const addAutomationEventV268 = (text) => {
+  const now = new Date();
+  const stamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  automationTimelineV268.events.unshift({ stamp, text });
+  automationTimelineV268.events = automationTimelineV268.events.slice(0, 6);
+  renderAutomationTimelineV268();
+};
+
+const renderAutomationTimelineV268 = () => {
+  const centre = document.getElementById('prizetown-automation-centre-v266');
+  if (!centre) return;
+
+  let panel = centre.querySelector('.automation-timeline-v268');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.className = 'automation-timeline-v268';
+    centre.appendChild(panel);
+  }
+
+  const events = automationTimelineV268.events.length
+    ? automationTimelineV268.events
+    : [{ stamp: '--:--', text: 'Timeline ready. Refresh Automation Control Centre to record the next admin check.' }];
+
+  panel.innerHTML = `
+    <h3>Automation timeline</h3>
+    <ul class="automation-timeline-list-v268">
+      ${events.map((event) => `<li><span class="automation-timeline-time-v268">${event.stamp}</span><span class="automation-timeline-text-v268">${event.text}</span></li>`).join('')}
+    </ul>
+  `;
+};
+
+const hookAutomationTimelineV268 = () => {
+  const centre = document.getElementById('prizetown-automation-centre-v266');
+  if (!centre) return;
+
+  renderAutomationTimelineV268();
+
+  centre.querySelectorAll('button').forEach((button) => {
+    if (button.dataset.timelineHookV268 === '1') return;
+    button.dataset.timelineHookV268 = '1';
+    button.addEventListener('click', () => {
+      const label = (button.textContent || 'Automation action').trim();
+      if (label.toLowerCase().includes('refresh')) addAutomationEventV268('Automation status refreshed.');
+      else if (label.toLowerCase().includes('draw')) addAutomationEventV268('Draw automation shortcut opened or checked.');
+      else if (label.toLowerCase().includes('backup')) addAutomationEventV268('Backup readiness shortcut opened.');
+      else if (label.toLowerCase().includes('launch')) addAutomationEventV268('Launch Centre shortcut opened.');
+      else if (label.toLowerCase().includes('system')) addAutomationEventV268('System Check shortcut opened.');
+      else addAutomationEventV268(label + ' clicked.');
+    });
+  });
+};
+
+const watchAutomationTimelineV268 = () => {
+  hookAutomationTimelineV268();
+  setTimeout(hookAutomationTimelineV268, 350);
+  setTimeout(hookAutomationTimelineV268, 1000);
+};
+
+watchAutomationTimelineV268();
+window.addEventListener('hashchange', watchAutomationTimelineV268);
+window.addEventListener('popstate', watchAutomationTimelineV268);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
