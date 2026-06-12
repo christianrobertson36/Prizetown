@@ -3540,6 +3540,9 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Backup Health', 'Backup Readiness now includes a health check that scans the Drive backup folder for expected backup evidence file types.'],
             ['Google Drive Latest Backup Report', 'Backup Readiness now includes a button to summarise the latest backup files by type from Google Drive.'],
             ['Google Drive Restore Check Report', 'Backup Readiness now includes a button to upload a restore checklist/report JSON file to Google Drive.'],
+            ['Google Drive Backup Timeline', 'Backup Readiness now includes a button to list recent backup files in timeline form.'],
+            ['Google Drive Readiness Score', 'Backup Readiness now includes a simple score based on backup evidence files and local uploads visibility.'],
+            ['Google Drive Backup Audit Report', 'Backup Readiness now includes a button to upload a combined audit report with timeline and readiness evidence.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3925,6 +3928,12 @@ function GoogleDriveStatusButton() {
   const [latestReportResult, setLatestReportResult] = useState(null);
   const [restoreReportLoading, setRestoreReportLoading] = useState(false);
   const [restoreReportResult, setRestoreReportResult] = useState(null);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineResult, setTimelineResult] = useState(null);
+  const [readinessScoreLoading, setReadinessScoreLoading] = useState(false);
+  const [readinessScoreResult, setReadinessScoreResult] = useState(null);
+  const [auditReportLoading, setAuditReportLoading] = useState(false);
+  const [auditReportResult, setAuditReportResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -4155,6 +4164,63 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function checkBackupTimeline() {
+    setTimelineLoading(true);
+    setError('');
+    setTimelineResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-timeline`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Backup timeline failed (${res.status})`);
+      setTimelineResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load Google Drive backup timeline.');
+    } finally {
+      setTimelineLoading(false);
+    }
+  }
+
+  async function checkReadinessScore() {
+    setReadinessScoreLoading(true);
+    setError('');
+    setReadinessScoreResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/readiness-score`, { headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Readiness score failed (${res.status})`);
+      setReadinessScoreResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not load Google Drive readiness score.');
+    } finally {
+      setReadinessScoreLoading(false);
+    }
+  }
+
+  async function uploadBackupAuditReport() {
+    setAuditReportLoading(true);
+    setError('');
+    setAuditReportResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/backup-audit-report`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Backup audit report upload failed (${res.status})`);
+      setAuditReportResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not upload Google Drive backup audit report.');
+    } finally {
+      setAuditReportLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
@@ -4171,6 +4237,9 @@ function GoogleDriveStatusButton() {
       <button type="button" onClick={checkBackupHealth} disabled={backupHealthLoading}>{backupHealthLoading ? 'Checking health...' : 'Check backup health'}</button>
       <button type="button" onClick={checkLatestBackupReport} disabled={latestReportLoading}>{latestReportLoading ? 'Loading report...' : 'Check latest backup report'}</button>
       <button type="button" onClick={uploadRestoreCheckReport} disabled={restoreReportLoading}>{restoreReportLoading ? 'Uploading restore report...' : 'Upload restore check report'}</button>
+      <button type="button" onClick={checkBackupTimeline} disabled={timelineLoading}>{timelineLoading ? 'Loading timeline...' : 'Check backup timeline'}</button>
+      <button type="button" onClick={checkReadinessScore} disabled={readinessScoreLoading}>{readinessScoreLoading ? 'Scoring...' : 'Check readiness score'}</button>
+      <button type="button" onClick={uploadBackupAuditReport} disabled={auditReportLoading}>{auditReportLoading ? 'Uploading audit...' : 'Upload audit report'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -4244,6 +4313,24 @@ function GoogleDriveStatusButton() {
       <article><strong>File name</strong><p>{restoreReportResult.file?.name || 'Created restore report'}</p></article>
       <article><strong>Ready</strong><p>{restoreReportResult.ready ? 'Yes' : 'Needs attention'}</p></article>
       <article><strong>Local uploads</strong><p>{restoreReportResult.local_upload_file_count ?? 0} files</p></article>
+    </div>}
+    {timelineResult && <div className="backup-notes-grid">
+      <article><strong>Backup timeline</strong><p>Loaded successfully</p></article>
+      <article><strong>Files listed</strong><p>{timelineResult.file_count ?? 0}</p></article>
+      <article><strong>Latest type counts</strong><p>{Object.entries(timelineResult.by_type || {}).map(([k, v]) => `${k}: ${v}`).join(', ') || 'None'}</p></article>
+      <article><strong>Latest file</strong><p>{timelineResult.timeline?.[0]?.name || 'No file returned'}</p></article>
+    </div>}
+    {readinessScoreResult && <div className="backup-notes-grid">
+      <article><strong>Readiness score</strong><p>{readinessScoreResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Status</strong><p>{readinessScoreResult.readiness?.status || 'Unknown'}</p></article>
+      <article><strong>Missing types</strong><p>{(readinessScoreResult.readiness?.missing_types || []).join(', ') || 'None'}</p></article>
+      <article><strong>Local uploads</strong><p>{readinessScoreResult.readiness?.upload_file_count ?? 0} files</p></article>
+    </div>}
+    {auditReportResult && <div className="backup-notes-grid">
+      <article><strong>Audit report</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{auditReportResult.file?.name || 'Created audit report'}</p></article>
+      <article><strong>Score</strong><p>{auditReportResult.readiness?.score ?? 0}/100</p></article>
+      <article><strong>Timeline files</strong><p>{auditReportResult.timeline_count ?? 0}</p></article>
     </div>}
   </div>;
 }
@@ -5120,7 +5207,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v255';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v256';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
