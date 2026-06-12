@@ -3577,6 +3577,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Automation Panel Size', 'Automation Control Centre is displayed as a compact admin helper so it does not dominate the top of the dashboard.'],
             ['Floating Automation Panel Disabled', 'The experimental injected Automation Control Centre panel is disabled so it cannot appear above the public header. Automation controls remain available in their normal admin sections.'],
             ['Payment Readiness Centre', 'Admin now has a payment launch-readiness panel showing why live payments should wait until provider keys, webhooks, idempotency and paid-order checks are complete.'],
+            ['Security Readiness Centre', 'Admin now has a launch security checklist covering admin credentials, secrets, HTTPS, uploads, rate limits, backups and audit logging before public launch.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5752,7 +5753,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v272';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v273';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6966,6 +6967,239 @@ setTimeout(mountPaymentReadinessV272, 300);
 setTimeout(mountPaymentReadinessV272, 1000);
 window.addEventListener('hashchange', mountPaymentReadinessV272);
 window.addEventListener('popstate', mountPaymentReadinessV272);
+
+if (!document.getElementById('prizetown-security-readiness-v273')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-security-readiness-v273';
+  style.textContent = `
+    .security-readiness-v273 {
+      width: min(980px, calc(100% - 24px));
+      margin: 12px auto 18px;
+      padding: 15px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(59,130,246,.16), rgba(255,255,255,.06));
+      border: 1px solid rgba(96,165,250,.35);
+      box-shadow: 0 18px 45px rgba(0,0,0,.15);
+    }
+
+    .security-readiness-v273 header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 11px;
+    }
+
+    .security-readiness-v273 h2 {
+      margin: 0 0 4px;
+      font-size: clamp(1.12rem, 1.65vw, 1.5rem);
+    }
+
+    .security-readiness-v273 p {
+      margin: 0;
+      opacity: .88;
+      line-height: 1.45;
+    }
+
+    .security-status-pill-v273 {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: .82rem;
+      background: rgba(251,191,36,.18);
+      border: 1px solid rgba(251,191,36,.45);
+      white-space: nowrap;
+    }
+
+    .security-grid-v273 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+      margin: 12px 0;
+    }
+
+    .security-grid-v273 article {
+      padding: 10px 11px;
+      border-radius: 15px;
+      background: rgba(0,0,0,.15);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .security-grid-v273 strong {
+      display: block;
+      font-size: .78rem;
+      opacity: .75;
+      margin-bottom: 5px;
+    }
+
+    .security-grid-v273 span {
+      display: block;
+      font-weight: 900;
+      font-size: .95rem;
+      line-height: 1.2;
+    }
+
+    .security-checks-v273 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .security-checks-v273 div {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 9px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      line-height: 1.34;
+      font-size: .9rem;
+    }
+
+    .security-checks-v273 b {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .security-actions-v273 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .security-actions-v273 button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+    }
+
+    .security-actions-v273 button.secondary {
+      background: rgba(255,255,255,.12);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    @media (max-width: 880px) {
+      .security-grid-v273 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .security-checks-v273 {
+        grid-template-columns: 1fr;
+      }
+
+      .security-readiness-v273 header {
+        display: grid;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .security-grid-v273 {
+        grid-template-columns: 1fr;
+      }
+
+      .security-actions-v273 button {
+        flex: 1 1 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const isAdminSecurityPageV273 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+const mountSecurityReadinessV273 = () => {
+  if (!isAdminSecurityPageV273()) {
+    document.getElementById('prizetown-security-readiness-panel-v273')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-security-readiness-panel-v273');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-security-readiness-panel-v273';
+    panel.className = 'security-readiness-v273';
+
+    const paymentPanel = document.getElementById('prizetown-payment-readiness-panel-v272');
+    if (paymentPanel && paymentPanel.parentElement === target) {
+      paymentPanel.insertAdjacentElement('afterend', panel);
+    } else {
+      target.insertBefore(panel, target.firstChild);
+    }
+  }
+
+  panel.innerHTML = `
+    <header>
+      <div>
+        <h2>Security readiness centre</h2>
+        <p>Public launch reminder: harden admin access, secrets, uploads, rate limits, HTTPS and backups before taking real users or payments.</p>
+      </div>
+      <span class="security-status-pill-v273">Needs hardening before launch</span>
+    </header>
+
+    <div class="security-grid-v273">
+      <article><strong>Admin login</strong><span>Change defaults</span></article>
+      <article><strong>JWT / secrets</strong><span>Use strong values</span></article>
+      <article><strong>Uploads</strong><span>Limit and verify</span></article>
+      <article><strong>Rate limits</strong><span>Required</span></article>
+    </div>
+
+    <div class="security-checks-v273">
+      <div><span>⚠</span><span><b>Admin credentials must be changed.</b> Default demo login details should not be used for public launch.</span></div>
+      <div><span>⚠</span><span><b>JWT_SECRET must be long and private.</b> Never use placeholder secrets on public deployments.</span></div>
+      <div><span>⚠</span><span><b>Uploads need hard limits.</b> Confirm file size, file type, random names and safe public serving before launch.</span></div>
+      <div><span>⚠</span><span><b>Rate limits and lockouts matter.</b> Login, checkout, free entry, upload and contact routes should be protected from abuse.</span></div>
+      <div><span>✅</span><span><b>HTTPS and backups are launch gates.</b> Keep public traffic on HTTPS and verify database/uploads restore before launch.</span></div>
+      <div><span>✅</span><span><b>This panel is guidance only.</b> It does not change auth, passwords, secrets or route behaviour.</span></div>
+    </div>
+
+    <div class="security-actions-v273">
+      <button type="button" data-security-action="system">Open System Check</button>
+      <button type="button" class="secondary" data-security-action="launch">Open Launch Centre</button>
+      <button type="button" class="secondary" data-security-action="backup">Open Backup Readiness</button>
+      <button type="button" class="secondary" data-security-action="hide">Hide for this session</button>
+    </div>
+  `;
+
+  panel.querySelector('[data-security-action="hide"]')?.addEventListener('click', () => panel.remove());
+  panel.querySelector('[data-security-action="system"]')?.addEventListener('click', () => clickSecurityAdminThingV273(['system check', 'tools']));
+  panel.querySelector('[data-security-action="launch"]')?.addEventListener('click', () => clickSecurityAdminThingV273(['launch centre', 'launch']));
+  panel.querySelector('[data-security-action="backup"]')?.addEventListener('click', () => clickSecurityAdminThingV273(['backup readiness', 'google drive live status', 'backup']));
+};
+
+const clickSecurityAdminThingV273 = (labels) => {
+  const buttons = Array.from(document.querySelectorAll('button, a'));
+  const target = buttons.find((button) => {
+    const text = (button.textContent || '').trim().toLowerCase();
+    return labels.some((label) => text.includes(label));
+  });
+  if (target) {
+    target.click();
+    return true;
+  }
+  alert('Could not find that admin shortcut on this view.');
+  return false;
+};
+
+mountSecurityReadinessV273();
+setTimeout(mountSecurityReadinessV273, 300);
+setTimeout(mountSecurityReadinessV273, 1000);
+window.addEventListener('hashchange', mountSecurityReadinessV273);
+window.addEventListener('popstate', mountSecurityReadinessV273);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
