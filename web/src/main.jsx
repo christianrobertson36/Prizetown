@@ -1837,7 +1837,7 @@ function DrawControlRoom({ competitions = [], setPage, setMessage, reload }) {
       <button type="button" className="secondary" onClick={() => window.open('/draw-broadcast', 'prizetown_draw_broadcast')}>Open OBS window</button>
       <button type="button" className="secondary" onClick={() => copyUrl('/draw-broadcast')}>Copy OBS URL</button>
       <button type="button" className="secondary" onClick={() => copyUrl('/draw-broadcast?transparent=1')}>Copy transparent overlay URL</button>
-      <button type="button" className="primary" onClick={runDueDraws}>Find due auto draw button</button>
+      <button type="button" className="primary" onClick={runDueDraws}>Run due auto draws now</button>
     </div>
     <div className="draw-control-summary">
       <article><strong>{rows.length}</strong><span>Draw-related competitions</span></article>
@@ -3212,7 +3212,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <div className="panel auto-draw-note">
             <h1>Scheduled Auto Draws</h1><p className="muted"><strong>This is separate from quick test spins.</strong> Test ticket loads below do not trigger scheduled or official draw records.</p>
             <p className="muted">For each competition, set a draw date/time and enable auto draw in Add/Edit Competition. When the competition is sold out or closed and the draw time arrives, Prizetown safely records the winner once and updates the OBS broadcast screen.</p>
-            <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Find due auto draw button</button>
+            <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Run due auto draws now</button>
           </div>
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} settings={settingsForm} />
           <BroadcastMenuPanel setPage={setPage} settings={settingsForm} />
@@ -3573,6 +3573,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Live Activity Font Polish', 'The public Live Activity next draw card now uses smaller, cleaner date/time text so it does not look squeezed.'],
             ['Automation Timeline', 'Automation Control Centre now shows a small recent activity timeline for refreshes, checks and admin navigation actions without changing live data.'],
             ['Automation Panel Placement', 'Automation Control Centre is scoped to the admin content area so it does not appear above the public navigation/header.'],
+            ['Automation Wording Polish', 'Automation buttons now use clearer wording: real draw controls keep the Run due auto draws label, while the overview uses safer shortcut wording.'],
+            ['Automation Panel Size', 'Automation Control Centre is displayed as a compact admin helper so it does not dominate the top of the dashboard.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5748,7 +5750,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v269';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v270';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6266,7 +6268,7 @@ const renderAutomationCentreV266 = () => {
       </div>
       <div class="automation-actions-v266">
         <button type="button" data-action="refresh">Refresh status</button>
-        <button type="button" data-action="due-draws">Find due auto draw button</button>
+        <button type="button" data-action="due-draws">Open due draw controls</button>
       </div>
     </header>
 
@@ -6293,7 +6295,7 @@ const renderAutomationCentreV266 = () => {
   panel.querySelector('[data-action="refresh"]')?.addEventListener('click', fetchAutomationCentreV266);
   panel.querySelector('[data-action="due-draws"]')?.addEventListener('click', () => {
     const ok = clickAdminThingV266(['run due auto draws now', 'run due auto draws']);
-    if (!ok) alert('Could not find the existing Run due auto draws button on this admin view.');
+    if (!ok) alert('Could not find the existing due auto draw controls on this admin view.');
   });
   panel.querySelector('[data-action="draw-room"]')?.addEventListener('click', () => clickAdminThingV266(['draw control room', 'draws']));
   panel.querySelector('[data-action="backup"]')?.addEventListener('click', () => clickAdminThingV266(['backup readiness', 'google drive live status', 'backup']));
@@ -6618,6 +6620,108 @@ setTimeout(fixAutomationPanelPlacementV269, 250);
 setTimeout(fixAutomationPanelPlacementV269, 1000);
 window.addEventListener('hashchange', fixAutomationPanelPlacementV269);
 window.addEventListener('popstate', fixAutomationPanelPlacementV269);
+
+if (!document.getElementById('prizetown-automation-compact-v270')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-automation-compact-v270';
+  style.textContent = `
+    .automation-centre-v266 {
+      width: min(920px, calc(100% - 24px)) !important;
+      margin: 12px auto 16px !important;
+      padding: 13px 14px !important;
+      border-radius: 18px !important;
+    }
+
+    .automation-centre-v266 header {
+      margin-bottom: 8px !important;
+    }
+
+    .automation-centre-v266 h2 {
+      font-size: clamp(1.08rem, 1.5vw, 1.35rem) !important;
+      margin-bottom: 3px !important;
+    }
+
+    .automation-centre-v266 p {
+      font-size: .88rem !important;
+    }
+
+    .automation-grid-v266 {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+      margin: 9px 0 !important;
+    }
+
+    .automation-tile-v266 {
+      padding: 9px 10px !important;
+      border-radius: 13px !important;
+    }
+
+    .automation-tile-v266 strong {
+      font-size: .78rem !important;
+      margin-bottom: 3px !important;
+    }
+
+    .automation-tile-v266 span {
+      font-size: 1rem !important;
+    }
+
+    .automation-warning-list-v266 {
+      gap: 6px !important;
+      margin: 8px 0 !important;
+    }
+
+    .automation-warning-v266,
+    .automation-ok-v266 {
+      padding: 8px 10px !important;
+      border-radius: 12px !important;
+      font-size: .84rem !important;
+    }
+
+    .automation-actions-v266 {
+      gap: 7px !important;
+      margin-top: 8px !important;
+    }
+
+    .automation-actions-v266 button {
+      min-height: 32px !important;
+      padding: 6px 9px !important;
+      font-size: .82rem !important;
+    }
+
+    .automation-timeline-v268 {
+      margin-top: 9px !important;
+      padding-top: 9px !important;
+    }
+
+    .automation-timeline-v268 h3 {
+      font-size: .9rem !important;
+      margin-bottom: 6px !important;
+    }
+
+    .automation-timeline-list-v268 li {
+      padding: 7px 9px !important;
+      border-radius: 11px !important;
+      font-size: .82rem !important;
+    }
+
+    @media (max-width: 850px) {
+      .automation-grid-v266 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .automation-grid-v266 {
+        grid-template-columns: 1fr !important;
+      }
+
+      .automation-actions-v266 button {
+        flex: 1 1 100% !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
