@@ -3362,6 +3362,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Admin Launch Centre', 'Tools now includes a Launch centre tab with fast links to launch checks, system checks, safety readiness, support, draws, orders and winners.'],
             ['Launch Centre Daily Flow', 'Launch centre now includes a compact daily admin flow so admins know what to check first when opening Prizetown.'],
             ['Launch Centre Emergency Route', 'Launch centre now includes an emergency route for checking system health, support, backups and audit logs before changing live settings.'],
+            ['Arnold Error Pages', 'Static public pages are available at /404.html, /maintenance.html and /offline.html using the Arnold server-rack artwork for friendly error, maintenance and offline states.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4425,7 +4426,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v218';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v219';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
