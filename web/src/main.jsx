@@ -3246,6 +3246,10 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         {activeTab === 'error-pages' && <div className="panel list-panel">
           <h1>Error pages</h1>
           <p className="muted">Preview the friendly Arnold pages used for 404, maintenance and offline states. Direct .html URLs are currently caught by the app fallback, so the previews below are shown safely inside admin.</p>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Routing note</h2>
+            <p className="muted">Admin previews work here now. Real public use of <code>/404.html</code>, <code>/maintenance.html</code> and <code>/offline.html</code> still needs a future hosting, nginx/Traefik routing rule or maintenance-mode switch so those URLs are served before the React app fallback.</p>
+          </div>
           <div className="backup-notes-grid">
             <article>
               <strong>404 page</strong>
@@ -3429,6 +3433,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Launch Centre Error Page Shortcuts', 'Launch centre now links directly to Error pages from the main shortcut row and emergency route so Arnold fallback pages are easier to find.'],
             ['Error Pages Usage Notes', 'Error pages now explains when to use the 404, maintenance and offline Arnold fallback pages.'],
             ['Error Page Inline Previews', 'Error pages now shows the Arnold 404, maintenance and offline previews directly inside admin because direct .html URLs are caught by the app fallback.'],
+            ['Error Page Routing Note', 'Error pages now explains that admin previews work, but real public .html fallback pages need future hosting, nginx/Traefik routing or a maintenance-mode switch.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4492,7 +4497,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v223';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v224';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
