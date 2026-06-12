@@ -3586,6 +3586,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Security Event Log', 'Admin can now review recent in-memory security events such as blocked origins, rate-limit blocks and blocked uploads.'],
             ['Security Events Viewer', 'Admin now has a compact viewer for recent blocked origins, upload blocks and login rate-limit security events.'],
             ['Email Readiness Tools', 'Admin now has email readiness status, template preview and a safe test-email sender before automatic customer emails are enabled.'],
+            ['Manual Email Workflow Centre', 'Admin can preview and copy approved email wording while automatic payment/customer emails stay disabled until webhook safety is ready.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5761,7 +5762,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v281';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v282';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7596,6 +7597,149 @@ setTimeout(mountEmailReadinessV281, 700);
 setTimeout(mountEmailReadinessV281, 1700);
 window.addEventListener('hashchange', mountEmailReadinessV281);
 window.addEventListener('popstate', mountEmailReadinessV281);
+
+
+if (!document.getElementById('prizetown-email-workflow-v282-style')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-email-workflow-v282-style';
+  style.textContent = `
+    #prizetown-email-workflow-v282 {
+      width: min(980px, calc(100% - 24px));
+      margin: 18px auto 28px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(59,130,246,.3);
+      background: rgba(15,23,42,.72);
+      color: #f8fafc;
+      box-shadow: 0 18px 45px rgba(0,0,0,.16);
+    }
+    #prizetown-email-workflow-v282 h2 { margin: 0 0 4px; font-size: 1.18rem; }
+    #prizetown-email-workflow-v282 p { margin: 0 0 10px; opacity: .84; line-height: 1.4; }
+    .email-workflow-grid-v282 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .email-workflow-grid-v282 button, .email-workflow-actions-v282 button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+    }
+    .email-workflow-actions-v282 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .email-workflow-preview-v282 {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.22);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: .88rem;
+    }
+    @media (max-width: 760px) {
+      .email-workflow-grid-v282 { grid-template-columns: 1fr; }
+      .email-workflow-actions-v282 button { flex: 1 1 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const isAdminEmailWorkflowPageV282 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+async function apiFetchEmailWorkflowV282(path, options = {}) {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || '';
+  const headers = Object.assign({}, options.headers || {}, token ? { Authorization: 'Bearer ' + token } : {});
+  if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const response = await fetch(path, Object.assign({}, options, { headers }));
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || ('Request failed: ' + response.status));
+  return data;
+}
+
+async function previewManualEmailV282(panel, templateKey) {
+  const output = panel.querySelector('[data-email-workflow-output]');
+  if (!output) return;
+  output.textContent = 'Loading preview...';
+  try {
+    const data = await apiFetchEmailWorkflowV282('/admin/email/manual-preview', {
+      method: 'POST',
+      body: JSON.stringify({
+        template_key: templateKey,
+        values: {
+          name: 'Customer',
+          competition: 'Example competition',
+          reference: 'PT-EXAMPLE-001',
+          message: 'Example admin alert message.'
+        }
+      })
+    });
+    const email = data.email || {};
+    output.textContent = 'Template: ' + (email.label || templateKey) + '\nWarning: ' + (email.warning || '') + '\n\nSubject: ' + (email.subject || '') + '\n\n' + (email.text || '');
+  } catch (err) {
+    output.textContent = 'Preview failed.\n' + err.message;
+  }
+}
+
+async function copyManualEmailV282(panel) {
+  const output = panel.querySelector('[data-email-workflow-output]');
+  if (!output) return;
+  try {
+    await navigator.clipboard.writeText(output.textContent || '');
+    output.textContent = (output.textContent || '') + '\n\nCopied to clipboard.';
+  } catch (_err) {
+    output.textContent = (output.textContent || '') + '\n\nCopy failed. Select the text and copy manually.';
+  }
+}
+
+function mountEmailWorkflowV282() {
+  if (!isAdminEmailWorkflowPageV282()) {
+    document.getElementById('prizetown-email-workflow-v282')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-email-workflow-v282');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-email-workflow-v282';
+    panel.innerHTML = `
+      <h2>Manual email workflow centre</h2>
+      <p>Preview and copy approved email wording. Automatic customer emails stay disabled until payment webhooks are safe.</p>
+      <div class="email-workflow-grid-v282">
+        <button type="button" data-template="order_confirmation">Preview order email</button>
+        <button type="button" data-template="winner_notification">Preview winner email</button>
+        <button type="button" data-template="support_reply">Preview support reply</button>
+        <button type="button" data-template="admin_alert">Preview admin alert</button>
+      </div>
+      <div class="email-workflow-actions-v282">
+        <button type="button" data-copy-email-workflow>Copy preview text</button>
+      </div>
+      <div class="email-workflow-preview-v282" data-email-workflow-output>Choose a template to preview.</div>
+    `;
+    target.appendChild(panel);
+    panel.querySelectorAll('[data-template]').forEach((button) => {
+      button.addEventListener('click', () => previewManualEmailV282(panel, button.getAttribute('data-template')));
+    });
+    panel.querySelector('[data-copy-email-workflow]')?.addEventListener('click', () => copyManualEmailV282(panel));
+  }
+}
+
+mountEmailWorkflowV282();
+setTimeout(mountEmailWorkflowV282, 800);
+setTimeout(mountEmailWorkflowV282, 1800);
+window.addEventListener('hashchange', mountEmailWorkflowV282);
+window.addEventListener('popstate', mountEmailWorkflowV282);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
