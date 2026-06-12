@@ -3281,6 +3281,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <button type="button" onClick={() => setActiveTab('draw-control-room')}>Draw Control Room</button>
             <button type="button" onClick={() => setActiveTab('orders')}>Orders</button>
             <button type="button" onClick={() => setActiveTab('winners')}>Winners</button>
+            <button type="button" onClick={() => setActiveTab('error-pages')}>Error pages</button>
           </div>
           <div className="backup-notes-grid">
             <article><strong>Before launch</strong><p>Start with Launch checklist, then confirm System check, Security Readiness and Backup Readiness.</p></article>
@@ -3299,7 +3300,12 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
               <button type="button" onClick={() => setActiveTab('support-readiness')}>Support Readiness</button>
               <button type="button" onClick={() => setActiveTab('backup-readiness')}>Backup Readiness</button>
               <button type="button" onClick={() => setActiveTab('audit-log')}>Audit log</button>
+              <button type="button" onClick={() => setActiveTab('error-pages')}>Error pages</button>
             </div>
+          </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>Visitor fallback pages</h2>
+            <p className="muted">Use Error pages to preview the Arnold 404, maintenance and offline pages before linking them from hosting, redirects or future maintenance controls.</p>
           </div>
         </div>}
 
@@ -3391,6 +3397,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Launch Centre Emergency Route', 'Launch centre now includes an emergency route for checking system health, support, backups and audit logs before changing live settings.'],
             ['Arnold Error Pages', 'Static public pages are available at /404.html, /maintenance.html and /offline.html using the Arnold server-rack artwork for friendly error, maintenance and offline states.'],
             ['Error Pages Admin Preview', 'Tools now includes an Error pages tab so admins can quickly open and check the Arnold 404, maintenance and offline pages.'],
+            ['Launch Centre Error Page Shortcuts', 'Launch centre now links directly to Error pages from the main shortcut row and emergency route so Arnold fallback pages are easier to find.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4454,7 +4461,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v220';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v221';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
