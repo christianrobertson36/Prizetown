@@ -3520,6 +3520,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Restore Drill Checklist', 'Backup Readiness now includes a safe restore drill checklist for testing backup confidence without changing live data first.'],
             ['Backup Schedule Guide', 'Backup Readiness now includes simple daily, weekly, before-update and before-launch backup schedule guidance.'],
             ['Backup Command Notes', 'Backup Readiness now includes simple notes for what to record before updates, including health, image tags, database path, uploads path and YAML copy.'],
+            ['Backup Readiness Summary', 'Backup Readiness now includes a quick summary of the minimum proof needed before risky updates.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3967,6 +3968,18 @@ function BackupReadinessPanel() {
         <article><strong>Uploads location</strong><p>Record the uploads volume path so competition images and attachments are not missed.</p></article>
         <article><strong>YAML/compose copy</strong><p>Save the current TrueNAS custom app YAML or compose settings before editing them.</p></article>
         <article><strong>After update</strong><p>Record the new health version, then check admin pages, public homepage, orders, entries and winners.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Backup readiness summary</h2>
+      <p className="muted">Before risky updates, these five things should be true.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Stable version known</strong><p>The current working API and web tags are written down.</p></article>
+        <article><strong>Database protected</strong><p>A recent database backup or dump exists and its location is recorded.</p></article>
+        <article><strong>Uploads protected</strong><p>The uploads/images folder path is known and copied or snapshotted.</p></article>
+        <article><strong>Config protected</strong><p>The current TrueNAS YAML or compose settings are saved somewhere safe.</p></article>
+        <article><strong>Rollback route known</strong><p>You know which tags to restore and which checks prove the app is healthy again.</p></article>
       </div>
     </div>
 
@@ -4654,7 +4667,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v239';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v240';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
