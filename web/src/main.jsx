@@ -1837,7 +1837,7 @@ function DrawControlRoom({ competitions = [], setPage, setMessage, reload }) {
       <button type="button" className="secondary" onClick={() => window.open('/draw-broadcast', 'prizetown_draw_broadcast')}>Open OBS window</button>
       <button type="button" className="secondary" onClick={() => copyUrl('/draw-broadcast')}>Copy OBS URL</button>
       <button type="button" className="secondary" onClick={() => copyUrl('/draw-broadcast?transparent=1')}>Copy transparent overlay URL</button>
-      <button type="button" className="primary" onClick={runDueDraws}>Run due auto draws now</button>
+      <button type="button" className="primary" onClick={runDueDraws}>Find due auto draw button</button>
     </div>
     <div className="draw-control-summary">
       <article><strong>{rows.length}</strong><span>Draw-related competitions</span></article>
@@ -3212,7 +3212,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <div className="panel auto-draw-note">
             <h1>Scheduled Auto Draws</h1><p className="muted"><strong>This is separate from quick test spins.</strong> Test ticket loads below do not trigger scheduled or official draw records.</p>
             <p className="muted">For each competition, set a draw date/time and enable auto draw in Add/Edit Competition. When the competition is sold out or closed and the draw time arrives, Prizetown safely records the winner once and updates the OBS broadcast screen.</p>
-            <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Run due auto draws now</button>
+            <button type="button" className="secondary" onClick={async () => { const r = await api('/admin/draw/run-due-auto', { method: 'POST' }); setMessage(`Auto draw check complete: ${safeArray(r.completed).length} completed.`); reload(); }}>Find due auto draw button</button>
           </div>
           <BuiltInDrawWheel competitions={competitions} setMessage={setMessage} settings={settingsForm} />
           <BroadcastMenuPanel setPage={setPage} settings={settingsForm} />
@@ -3572,6 +3572,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Live Activity Safe Zone', 'The public Live Activity next draw card now keeps the date and time inside the card on desktop and mobile.'],
             ['Live Activity Font Polish', 'The public Live Activity next draw card now uses smaller, cleaner date/time text so it does not look squeezed.'],
             ['Automation Timeline', 'Automation Control Centre now shows a small recent activity timeline for refreshes, checks and admin navigation actions without changing live data.'],
+            ['Automation Panel Placement', 'Automation Control Centre is scoped to the admin content area so it does not appear above the public navigation/header.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5747,7 +5748,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v268';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v269';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6192,7 +6193,7 @@ const automationCentreV266State = {
 const isAdminPageV266 = () => window.location.pathname.toLowerCase().includes('/admin');
 
 const findAdminTargetV266 = () => {
-  return document.querySelector('main.admin, .admin-page, .admin-shell, main, #root');
+  return document.querySelector('main.admin, .admin-page, .admin-shell, main');
 };
 
 const getAdminTokenV266 = () => {
@@ -6249,11 +6250,7 @@ const renderAutomationCentreV266 = () => {
     panel = document.createElement('section');
     panel.id = 'prizetown-automation-centre-v266';
     panel.className = 'automation-centre-v266';
-    if (target.id === 'root' && target.parentNode) {
-      target.parentNode.insertBefore(panel, target);
-    } else {
-      target.insertBefore(panel, target.firstChild);
-    }
+    target.insertBefore(panel, target.firstChild);
   }
 
   const data = automationCentreV266State.lastData;
@@ -6269,7 +6266,7 @@ const renderAutomationCentreV266 = () => {
       </div>
       <div class="automation-actions-v266">
         <button type="button" data-action="refresh">Refresh status</button>
-        <button type="button" data-action="due-draws">Run due auto draws now</button>
+        <button type="button" data-action="due-draws">Find due auto draw button</button>
       </div>
     </header>
 
@@ -6581,6 +6578,46 @@ const watchAutomationTimelineV268 = () => {
 watchAutomationTimelineV268();
 window.addEventListener('hashchange', watchAutomationTimelineV268);
 window.addEventListener('popstate', watchAutomationTimelineV268);
+
+if (!document.getElementById('prizetown-automation-placement-fix-v269')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-automation-placement-fix-v269';
+  style.textContent = `
+    body > .automation-centre-v266 {
+      display: none !important;
+    }
+
+    main .automation-centre-v266,
+    .admin-page .automation-centre-v266,
+    .admin-shell .automation-centre-v266 {
+      display: block !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const fixAutomationPanelPlacementV269 = () => {
+  const root = document.getElementById('root');
+  const panels = Array.from(document.querySelectorAll('#prizetown-automation-centre-v266'));
+
+  panels.forEach((panel) => {
+    if (panel.parentElement === document.body || (root && panel.nextElementSibling === root)) {
+      panel.remove();
+    }
+  });
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  const panel = document.getElementById('prizetown-automation-centre-v266');
+  if (target && panel && !target.contains(panel)) {
+    target.insertBefore(panel, target.firstChild);
+  }
+};
+
+fixAutomationPanelPlacementV269();
+setTimeout(fixAutomationPanelPlacementV269, 250);
+setTimeout(fixAutomationPanelPlacementV269, 1000);
+window.addEventListener('hashchange', fixAutomationPanelPlacementV269);
+window.addEventListener('popstate', fixAutomationPanelPlacementV269);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
