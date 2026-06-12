@@ -3513,6 +3513,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Public Recovery Quick Links', 'Error pages now includes quick links to the public homepage, My entries, Winners and Support for post-maintenance checks.'],
             ['Customer Message Checklist', 'Error pages now includes a customer-facing message checklist for clear, calm maintenance/offline wording.'],
             ['Backup Recovery Flow', 'Backup Readiness now includes a before, rollback and after-recovery flow for safer updates and restores.'],
+            ['Backup Rollback Checklist', 'Backup Readiness now includes rollback steps for pausing changes, using fixed image tags, checking health, checking data and recording the outcome.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3899,6 +3900,18 @@ function BackupReadinessPanel() {
         <article><strong>Before changes</strong><p>Confirm the latest known good app version, database backup location and upload folder path before risky updates.</p></article>
         <article><strong>If something breaks</strong><p>Rollback to the last stable fixed image tags first, then check API health and System check before making more changes.</p></article>
         <article><strong>After recovery</strong><p>Check public homepage, checkout, Orders, Winners, Support and Audit log so the site is safe for visitors again.</p></article>
+      </div>
+    </div>
+
+    <div className="backup-manual-notes">
+      <h2>Rollback checklist</h2>
+      <p className="muted">Use this when a new deploy, setting change or restore attempt causes problems.</p>
+      <div className="backup-notes-grid">
+        <article><strong>1. Pause changes</strong><p>Stop applying new patches until the current issue is understood.</p></article>
+        <article><strong>2. Use fixed tags</strong><p>Switch TrueNAS back to the last confirmed stable API and web image tags.</p></article>
+        <article><strong>3. Check health</strong><p>Run the API health check, then open System check in admin.</p></article>
+        <article><strong>4. Check data</strong><p>Confirm competitions, orders, entries, winners and uploads still appear.</p></article>
+        <article><strong>5. Record outcome</strong><p>Write down which version was rolled back from, which version restored service, and what still needs fixing.</p></article>
       </div>
     </div>
 
@@ -4586,7 +4599,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v232';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v233';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
