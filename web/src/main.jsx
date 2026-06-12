@@ -3292,6 +3292,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Daily Review', 'Support Readiness now includes a daily review checklist for checking new orders, support messages, failed payments, free entries, winner follow-ups and audit notes.'],
             ['Support Issue Log Guidance', 'Support Readiness now includes simple guidance for recording customer issues, follow-ups, escalations and outcomes during launch.'],
             ['Support Response Safety', 'Support Readiness now includes response safety reminders so admins avoid sharing private data, promising outcomes too early or replying before records are checked.'],
+            ['Support Launch Sign-off', 'Support Readiness now includes a final support sign-off checklist before wider public marketing or paid competition launch.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3892,6 +3893,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support launch sign-off</h2>
+      <p className="muted">Final support checks before wider marketing, live draws or real paid competitions.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Support owner confirmed</strong><p>One person is responsible for checking messages daily and escalating issues.</p></article>
+        <article><strong>Support email tested</strong><p>Support email is visible, monitored and tested from the public site/legal pages.</p></article>
+        <article><strong>Order lookup ready</strong><p>Admins know how to find orders, customers, ticket numbers, entries and public entry lists.</p></article>
+        <article><strong>Winner process ready</strong><p>Admins know how to verify winner proof, contact winners and record fulfilment notes.</p></article>
+        <article><strong>Escalation path ready</strong><p>Refunds, chargebacks, complaints, identity/privacy and legal issues have a clear pause-and-escalate route.</p></article>
+        <article><strong>Backup admin ready</strong><p>A trusted backup admin can follow the Help Guide, Support Readiness and Backup Readiness panels.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4292,7 +4306,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v206';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v207';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
