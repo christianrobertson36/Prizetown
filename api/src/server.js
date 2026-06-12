@@ -536,7 +536,7 @@ async function initDb() {
   }
 }
 
-app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v182' }));
+app.get('/health', (_req, res) => res.json({ ok: true, app: 'Prizetown API', version: 'v183' }));
 app.get('/admin/system-check', auth('admin'), async (_req, res) => {
   const checks = [];
   const warnings = [];
@@ -619,7 +619,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     add('warning', 'Live draw broadcast state', err.message);
   }
 
-  add('ok', 'API version', 'Prizetown API is running.', { version: 'v182' });
+  add('ok', 'API version', 'Prizetown API is running.', { version: 'v183' });
   add('ok', 'Configured public API URL', process.env.PUBLIC_API_URL || 'Not set.');
   add(resendApiKey ? 'ok' : 'warning', 'Transactional email', resendApiKey ? `Configured from ${emailFrom} with reply-to ${emailReplyTo}.` : 'RESEND_API_KEY is not configured yet.');
   add('ok', 'Configured upload directory', uploadDir);
@@ -637,7 +637,7 @@ app.get('/admin/system-check', auth('admin'), async (_req, res) => {
     ok: errors.length === 0,
     generated_at: new Date().toISOString(),
     app: 'Prizetown',
-    version: 'v182',
+    version: 'v183',
     totals: {
       competitions: competitionCount,
       orders: orderCount,
@@ -1948,14 +1948,31 @@ app.get('/admin/draw-results', auth('admin'), async (_req, res) => {
 
 app.get('/winners', async (_req, res) => {
   const result = await query(`
-    SELECT w.*, c.title AS competition_title
+    SELECT
+      w.*,
+      c.title AS competition_title,
+      c.draw_at,
+      c.max_tickets,
+      d.ticket_number,
+      d.draw_method,
+      d.notes AS draw_notes,
+      d.created_at AS draw_recorded_at,
+      COALESCE(eligible.eligible_count, 0) AS eligible_count,
+      'Europe/London' AS server_time_zone,
+      'Prizetown server' AS time_source
     FROM winners w
     JOIN competitions c ON c.id = w.competition_id
-    ORDER BY w.announced_at DESC
+    LEFT JOIN draw_results d ON d.competition_id = w.competition_id
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int AS eligible_count
+      FROM entries e
+      WHERE e.competition_id = w.competition_id
+        AND e.payment_status IN ('paid','free','paid_test','free_manual')
+    ) eligible ON TRUE
+    ORDER BY COALESCE(d.created_at, w.announced_at) DESC
   `);
   res.json(result.rows);
 });
-
 
 
 app.get('/admin/instant-wins', auth('admin'), async (_req, res) => {
@@ -2042,7 +2059,7 @@ app.delete('/admin/instant-wins/:id', auth('admin'), async (req, res) => {
 });
 
 initDb()
-  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v182 trusted draw time sync)`)))
+  .then(() => app.listen(port, () => console.log(`Prizetown API running on ${port} (v183 public winner proof)`)))
   .catch((err) => {
     console.error('Failed to start API', err);
     process.exit(1);

@@ -3257,6 +3257,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Draw Intro & Sounds', 'Use Final draw to upload intro, spin and winner sounds. The intro screen identifies the competition, postcode zone and draw mode before the spinner starts, which helps when running several automatic draws one after another.'],
             ['Draw Test Lab', 'Use Draws > Test Lab to generate fake sample tickets and run a safe test intro, spin and winner reveal on the broadcast screen. It can also queue multiple same-day fake competitions to test OBS, sounds and back-to-back draw performance. It does not create real orders, entries or winners.'],
             ['Trusted Draw Time', 'The live draw broadcast uses Prizetown server time in the Europe/London timezone, not the viewer device clock. The footer shows the time source and sync age so viewers can see the clock is server-backed.'],
+            ['Public Winner Proof', 'The public Winners page shows final draw proof details including winning ticket number, eligible entry count, draw method, recorded time and trusted server-time source where available.'],
             ['Instant Wins', 'Use Instant wins to manage instant-win prizes and winning ticket numbers. Check instant-win setup before making a competition active.'],
             ['Customers', 'Use Customers for read-only customer lookup, search and CSV export. Useful for support checks and customer history.'],
             ['Postcode Tools', 'Use Postcode Zones to create local areas, then Assign Postcodes to link competitions to selected zones. If postcode mode is off, competitions behave more like national competitions.'],
@@ -3683,6 +3684,7 @@ function EntryLists({ competitions }) {
   </main>;
 }
 
+
 function Winners({ winners, instantWinners }) {
   const finalWinners = safeArray(winners);
   const instantRows = safeArray(instantWinners);
@@ -3690,11 +3692,33 @@ function Winners({ winners, instantWinners }) {
   const latestFinal = finalWinners[0];
   const latestInstant = instantRows[0];
 
+  function methodLabel(value = '') {
+    return String(value || 'official_final_draw').replaceAll('_', ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+  }
+
+  function proofText(w) {
+    return [
+      'Prizetown public draw proof',
+      'Competition: ' + (w.competition_title || w.prize_title || 'Competition'),
+      'Winner: ' + (w.winner_name || 'Customer'),
+      'Winning ticket: #' + (w.ticket_number || 'Pending proof'),
+      'Eligible entries: ' + (w.eligible_count || 'Recorded by Prizetown'),
+      'Draw method: ' + methodLabel(w.draw_method),
+      'Draw time: ' + (w.draw_at ? fmtDate(w.draw_at) : 'Published result'),
+      'Recorded: ' + (w.draw_recorded_at ? fmtDate(w.draw_recorded_at) : fmtDate(w.announced_at)),
+      'Time source: ' + (w.time_source || 'Prizetown server') + ' - ' + (w.server_time_zone || 'Europe/London')
+    ].join(String.fromCharCode(10));
+  }
+
+  function copyProof(w) {
+    navigator.clipboard?.writeText(proofText(w));
+  }
+
   return <main className="winners-page">
     <section className="winners-hero panel">
-      <p className="eyebrow"><Trophy size={16} /> Winners & results</p>
-      <h1>Real tickets. Real draws. Clear results.</h1>
-      <p>Every winner shown here comes from a recorded ticket number, instant-win claim or final draw result. This page is built to give customers confidence before they enter.</p>
+      <p className="eyebrow"><Trophy size={16} /> Winners & public proof</p>
+      <h1>Real tickets. Real draws. Clear public proof.</h1>
+      <p>Final draw results show the winning ticket number, draw method, eligible entry count, recorded time and trusted server-time source where available.</p>
       <div className="winner-proof-grid">
         <article><strong>{totalWinners}</strong><span>Total winner records</span></article>
         <article><strong>{instantRows.length}</strong><span>Instant wins claimed</span></article>
@@ -3717,7 +3741,7 @@ function Winners({ winners, instantWinners }) {
           <div className="winner-result-icon"><Zap size={26} /></div>
           <div>
             <p className="winner-kicker">Instant win</p>
-            <h3>{w.winner_name || 'Customer'}</h3>
+            <h3>{w.winner_name || w.customer_name || 'Customer'}</h3>
             <p>Won <strong>{w.prize_title || 'Instant prize'}</strong></p>
             <div className="winner-meta">
               <span>{w.competition_title || 'Competition'}</span>
@@ -3734,20 +3758,25 @@ function Winners({ winners, instantWinners }) {
           <p className="eyebrow"><Trophy size={16} /> Final draws</p>
           <h2>Final draw winners</h2>
         </div>
-        <span className="muted">Final draw winners are saved after the official draw is completed.</span>
+        <span className="muted">Each proof card is based on the saved final draw record.</span>
       </div>
-      {finalWinners.length === 0 && <div className="panel empty-winners"><h3>No final draw winners announced yet</h3><p>When a competition closes and the final draw is run, the result will be shown here.</p></div>}
+      {finalWinners.length === 0 && <div className="panel empty-winners"><h3>No final draw winners announced yet</h3><p>When a competition closes and the final draw is run, the result and proof details will be shown here.</p></div>}
       <div className="winner-card-grid">
-        {finalWinners.map(w => <article className="winner-result-card final" key={w.id}>
+        {finalWinners.map(w => <article className="winner-result-card final public-proof-card" key={w.id}>
           {w.image_url ? <img src={imageUrl(w.image_url)} alt="" /> : <div className="winner-result-icon"><Trophy size={26} /></div>}
           <div>
-            <p className="winner-kicker">Final draw winner</p>
+            <p className="winner-kicker">Official final draw</p>
             <h3>{w.winner_name || 'Winner'}</h3>
-            <p>{w.prize_title || 'Prize winner'}</p>
-            <div className="winner-meta">
-              <span>{w.competition_title || 'Competition'}</span>
-              {w.ticket_number && <span>Ticket #{w.ticket_number}</span>}
+            <p>{w.prize_title || w.competition_title || 'Prize winner'}</p>
+            <div className="winner-proof-details">
+              <span><strong>Winning ticket</strong>#{w.ticket_number || 'Pending'}</span>
+              <span><strong>Eligible entries</strong>{w.eligible_count || 'Recorded'}</span>
+              <span><strong>Draw method</strong>{methodLabel(w.draw_method)}</span>
+              <span><strong>Draw time</strong>{w.draw_at ? fmtDate(w.draw_at) : 'Published result'}</span>
+              <span><strong>Recorded</strong>{w.draw_recorded_at ? fmtDate(w.draw_recorded_at) : fmtDate(w.announced_at)}</span>
+              <span><strong>Time source</strong>{w.time_source || 'Prizetown server'} - {w.server_time_zone || 'Europe/London'}</span>
             </div>
+            <button type="button" className="secondary" onClick={() => copyProof(w)}>Copy proof summary</button>
           </div>
         </article>)}
       </div>
@@ -3756,15 +3785,16 @@ function Winners({ winners, instantWinners }) {
     <section className="winner-trust-panel panel">
       <h2>How Prizetown publishes results</h2>
       <div className="winner-trust-grid">
-        <article><strong>Ticket number shown</strong><span>Winning ticket numbers are displayed where available.</span></article>
-        <article><strong>Draw record saved</strong><span>Final draw results are stored for transparency.</span></article>
-        <article><strong>Winner privacy respected</strong><span>Names may be shown as full name, first name or customer label depending on settings and verification.</span></article>
+        <article><strong>Winning ticket shown</strong><span>Final draw results show the saved winning ticket number.</span></article>
+        <article><strong>Eligible count shown</strong><span>Customers can see how many eligible entries were in the draw where available.</span></article>
+        <article><strong>Server time source</strong><span>Draw proof uses Prizetown server records and Europe/London time.</span></article>
+        <article><strong>Public result history</strong><span>Winner records remain visible after competitions finish.</span></article>
       </div>
     </section>
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v98';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v183';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
@@ -3772,6 +3802,3 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
-
-
-
