@@ -3122,6 +3122,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         ['help-guide', 'Help guide', ListChecks],
         ['social-integrations', 'Social Integrations', ListChecks],
         ['security-readiness', 'Security Readiness', Shield],
+        ['backup-readiness', 'Backup Readiness', Shield],
         ['system-check', 'System check', Shield],
         ['email-test', 'Email test', Shield],
         ['audit', 'Audit log', ListChecks]
@@ -3272,6 +3273,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Audit Log', 'Use Audit log to review important admin/system actions. Useful for checking what changed and when.'],
             ['Security Reminder', 'Before real payments, change default admin credentials, use a strong JWT secret, protect admin access, verify payment webhooks, keep database backups and test restore.'],
             ['Security Readiness', 'Use Security Readiness to track launch hardening work such as admin password, JWT secret, admin-only access, rate limiting, upload checks, backups, HTTPS and Cloudflare protection.'],
+            ['Backup Readiness', 'Use Backup Readiness to track the backup plan before launch: TrueNAS snapshots, PostgreSQL database dumps, uploads backup, Google Drive/off-site copy, saved compose/YAML and a tested restore.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3281,6 +3283,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
         </div>}
 
         {activeTab === 'security-readiness' && <SecurityReadinessPanel />}
+
+        {activeTab === 'backup-readiness' && <BackupReadinessPanel />}
 
         {activeTab === 'system-check' && <SystemCheckPanel setMessage={setMessage} />}
 
@@ -3624,6 +3628,43 @@ function LaunchChecklistPanel({ competitions, settingsForm, modulePostcodes, mod
         </div>)}
       </section>)}
     </div>
+  </div>;
+}
+
+
+function BackupReadinessPanel() {
+  const checks = [
+    ['TrueNAS local snapshot', false, 'Set up a local TrueNAS snapshot or backup for the Prizetown app dataset before launch.'],
+    ['PostgreSQL database dump', false, 'Schedule a regular pg_dump of the Prizetown database so orders, entries, winners and settings can be restored.'],
+    ['Uploads folder backup', false, 'Include uploaded images/files from the uploads volume in the backup plan.'],
+    ['Google Drive off-site copy', false, 'Copy database dumps, uploads backup and release notes to Google Drive or another off-site location.'],
+    ['Compose/YAML saved', false, 'Keep the current compose/YAML, image tags and important environment notes with the backup set.'],
+    ['Restore test completed', false, 'Test restoring to a safe temporary location before trusting backups for real-money launch.'],
+    ['Before-payment backup', false, 'Take a fresh backup before enabling any real payment provider or running paid public competitions.']
+  ];
+
+  return <div className="panel list-panel backup-readiness-panel">
+    <div className="draw-room-head">
+      <div>
+        <h1>Backup Readiness</h1>
+        <p className="muted">Use this to plan safe Prizetown backups. This panel is a checklist only and does not create backups yet.</p>
+      </div>
+    </div>
+
+    <div className="backup-readiness-grid">
+      <article><strong>1. Local</strong><span>TrueNAS snapshot/backup</span></article>
+      <article><strong>2. Off-site</strong><span>Google Drive copy</span></article>
+      <article><strong>3. Restore</strong><span>Test before launch</span></article>
+    </div>
+
+    <div className="backup-warning-box">
+      <strong>Recommended backup rule</strong>
+      <p>Keep at least one local TrueNAS backup and one off-site Google Drive copy. A backup is only trusted after a successful restore test.</p>
+    </div>
+
+    {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
+      <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
+    </div>)}
   </div>;
 }
 
@@ -4021,7 +4062,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v188';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v189';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
