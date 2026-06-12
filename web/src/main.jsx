@@ -3578,6 +3578,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Floating Automation Panel Disabled', 'The experimental injected Automation Control Centre panel is disabled so it cannot appear above the public header. Automation controls remain available in their normal admin sections.'],
             ['Payment Readiness Centre', 'Admin now has a payment launch-readiness panel showing why live payments should wait until provider keys, webhooks, idempotency and paid-order checks are complete.'],
             ['Security Readiness Centre', 'Admin now has a launch security checklist covering admin credentials, secrets, HTTPS, uploads, rate limits, backups and audit logging before public launch.'],
+            ['Floating Readiness Panels Disabled', 'The experimental injected Payment and Security readiness panels are disabled so they cannot appear above the public header. They should be re-added later as proper Admin Tools sections.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5753,7 +5754,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v273';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v274';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -6892,7 +6893,7 @@ if (!document.getElementById('prizetown-payment-readiness-v272')) {
   document.head.appendChild(style);
 }
 
-const isAdminPaymentPageV272 = () => window.location.pathname.toLowerCase().includes('/admin');
+const isAdminPaymentPageV272 = () => false; // v274: disabled injected floating payment readiness panel
 
 const mountPaymentReadinessV272 = () => {
   if (!isAdminPaymentPageV272()) {
@@ -6962,11 +6963,11 @@ const clickPaymentAdminThingV272 = (labels) => {
   return false;
 };
 
-mountPaymentReadinessV272();
-setTimeout(mountPaymentReadinessV272, 300);
-setTimeout(mountPaymentReadinessV272, 1000);
-window.addEventListener('hashchange', mountPaymentReadinessV272);
-window.addEventListener('popstate', mountPaymentReadinessV272);
+// v274 disabled: mountPaymentReadinessV272();
+// v274 disabled: setTimeout(mountPaymentReadinessV272, 300);
+// v274 disabled: setTimeout(mountPaymentReadinessV272, 1000);
+// v274 disabled: window.addEventListener('hashchange', mountPaymentReadinessV272);
+// v274 disabled: window.addEventListener('popstate', mountPaymentReadinessV272);
 
 if (!document.getElementById('prizetown-security-readiness-v273')) {
   const style = document.createElement('style');
@@ -7117,7 +7118,7 @@ if (!document.getElementById('prizetown-security-readiness-v273')) {
   document.head.appendChild(style);
 }
 
-const isAdminSecurityPageV273 = () => window.location.pathname.toLowerCase().includes('/admin');
+const isAdminSecurityPageV273 = () => false; // v274: disabled injected floating security readiness panel
 
 const mountSecurityReadinessV273 = () => {
   if (!isAdminSecurityPageV273()) {
@@ -7195,11 +7196,36 @@ const clickSecurityAdminThingV273 = (labels) => {
   return false;
 };
 
-mountSecurityReadinessV273();
-setTimeout(mountSecurityReadinessV273, 300);
-setTimeout(mountSecurityReadinessV273, 1000);
-window.addEventListener('hashchange', mountSecurityReadinessV273);
-window.addEventListener('popstate', mountSecurityReadinessV273);
+// v274 disabled: mountSecurityReadinessV273();
+// v274 disabled: setTimeout(mountSecurityReadinessV273, 300);
+// v274 disabled: setTimeout(mountSecurityReadinessV273, 1000);
+// v274 disabled: window.addEventListener('hashchange', mountSecurityReadinessV273);
+// v274 disabled: window.addEventListener('popstate', mountSecurityReadinessV273);
+
+if (!document.getElementById('prizetown-disable-floating-readiness-v274')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-disable-floating-readiness-v274';
+  style.textContent = `
+    #prizetown-payment-readiness-panel-v272,
+    #prizetown-security-readiness-panel-v273,
+    .payment-readiness-v272,
+    .security-readiness-v273 {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const removeFloatingReadinessV274 = () => {
+  document.querySelectorAll('#prizetown-payment-readiness-panel-v272, #prizetown-security-readiness-panel-v273, .payment-readiness-v272, .security-readiness-v273').forEach((el) => el.remove());
+};
+
+removeFloatingReadinessV274();
+setTimeout(removeFloatingReadinessV274, 100);
+setTimeout(removeFloatingReadinessV274, 500);
+setTimeout(removeFloatingReadinessV274, 1500);
+window.addEventListener('hashchange', removeFloatingReadinessV274);
+window.addEventListener('popstate', removeFloatingReadinessV274);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
