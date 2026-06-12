@@ -3290,6 +3290,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Contact Visibility', 'Support Readiness now includes checks for making the support email and customer help routes easy to find before launch.'],
             ['Support Escalation Checklist', 'Support Readiness now includes clear escalation triggers for refunds, chargebacks, winner disputes, identity checks, legal complaints and data/privacy issues.'],
             ['Support Daily Review', 'Support Readiness now includes a daily review checklist for checking new orders, support messages, failed payments, free entries, winner follow-ups and audit notes.'],
+            ['Support Issue Log Guidance', 'Support Readiness now includes simple guidance for recording customer issues, follow-ups, escalations and outcomes during launch.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3864,6 +3865,19 @@ function SupportReadinessPanel() {
       </div>
     </div>
 
+    <div className="backup-manual-notes">
+      <h2>Support issue log guidance</h2>
+      <p className="muted">Use this as a simple record-keeping habit until a full support ticket system is added.</p>
+      <div className="backup-notes-grid">
+        <article><strong>Customer reference</strong><p>Record customer name/email, order ID, ticket number or competition title where relevant.</p></article>
+        <article><strong>Issue type</strong><p>Mark whether it is order, ticket, free-entry, winner, refund, payment, complaint or technical support.</p></article>
+        <article><strong>Evidence checked</strong><p>Note which records were checked before replying: orders, entries, winners, draw proof, payment status or legal text.</p></article>
+        <article><strong>Reply sent</strong><p>Record the date/time and a short summary of what was sent back to the customer.</p></article>
+        <article><strong>Follow-up owner</strong><p>Assign who owns the next step and when it should be checked again.</p></article>
+        <article><strong>Final outcome</strong><p>Close with a clear outcome such as answered, refunded, escalated, fulfilled, duplicate, invalid or awaiting customer.</p></article>
+      </div>
+    </div>
+
     {checks.map(([title, ok, help]) => <div className="list-row entry-row" key={title}>
       <div><strong>{ok ? '✅' : '⚠️'} {title}</strong><p>{help}</p></div>
     </div>)}
@@ -4264,7 +4278,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v204';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v205';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
