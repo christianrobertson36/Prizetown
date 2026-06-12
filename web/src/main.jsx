@@ -3119,6 +3119,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     {
       title: 'Tools',
       items: [
+        ['tools-overview', 'Tools overview', ListChecks],
         ['help-guide', 'Help guide', ListChecks],
         ['social-integrations', 'Social Integrations', ListChecks],
         ['security-readiness', 'Security Readiness', Shield],
@@ -3240,6 +3241,19 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
 
         {activeTab === 'payment-readiness' && <PaymentReadinessPanel orders={orders} />}
 
+        {activeTab === 'tools-overview' && <div className="panel list-panel">
+          <h1>Tools overview</h1>
+          <p className="muted">Use this page as the quick route map for the admin Tools section.</p>
+          <div className="backup-notes-grid">
+            <article><strong>Start before launch</strong><p>Open Launch checklist first, then System check, Security Readiness, Backup Readiness and Support Readiness.</p></article>
+            <article><strong>Check app health</strong><p>Use System check for API version, email setup, uploads path, environment notes and key warnings.</p></article>
+            <article><strong>Handle customer support</strong><p>Use Support Readiness for customer messages, missing tickets, winner handling, refunds, complaints and daily support checks.</p></article>
+            <article><strong>Protect data</strong><p>Use Backup Readiness before launch and after major changes so database, uploads, compose/YAML and restore notes are covered.</p></article>
+            <article><strong>Explain admin areas</strong><p>Use Help guide as the plain-English manual for what each admin tab does and what new features mean.</p></article>
+            <article><strong>Review changes</strong><p>Use Audit log when checking what changed, who handled support/draw actions or when something needs reviewing.</p></article>
+          </div>
+        </div>}
+
         {activeTab === 'help-guide' && <div className="panel list-panel help-guide-panel">
           <h1>Admin Help Guide</h1>
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
@@ -3297,6 +3311,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Support Readiness Sections', 'Support Readiness now includes a quick section guide so admins can understand the support page without reading every card first.'],
             ['Support Compact Index', 'Support Readiness now includes a compact index that tells admins which support checklist to use for common customer situations.'],
             ['Support Page Complete Note', 'Support Readiness now includes a clear top note saying the support page is a reference manual and admins should use the compact index first.'],
+            ['Admin Tools Overview', 'Tools now has a dedicated Tools overview tab explaining which admin tool to open first for launch checks, system checks, support, backups and audit review.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4360,7 +4375,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v211';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v212';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
