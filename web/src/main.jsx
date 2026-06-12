@@ -3267,6 +3267,14 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             <h2>Artwork</h2>
             <p className="muted">These pages use the Arnold server-rack artwork at <code>/arnold-server-repair-404.png</code>.</p>
           </div>
+          <div className="panel subtle-panel" style={{ marginTop: 16 }}>
+            <h2>When to use each page</h2>
+            <ul className="muted">
+              <li><strong>404:</strong> use for broken, missing or old links.</li>
+              <li><strong>Maintenance:</strong> use when updates are planned and temporary.</li>
+              <li><strong>Offline:</strong> use when the site/API connection is unexpectedly unavailable.</li>
+            </ul>
+          </div>
         </div>}
 
         {activeTab === 'launch-centre' && <div className="panel list-panel">
@@ -3398,6 +3406,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Arnold Error Pages', 'Static public pages are available at /404.html, /maintenance.html and /offline.html using the Arnold server-rack artwork for friendly error, maintenance and offline states.'],
             ['Error Pages Admin Preview', 'Tools now includes an Error pages tab so admins can quickly open and check the Arnold 404, maintenance and offline pages.'],
             ['Launch Centre Error Page Shortcuts', 'Launch centre now links directly to Error pages from the main shortcut row and emergency route so Arnold fallback pages are easier to find.'],
+            ['Error Pages Usage Notes', 'Error pages now explains when to use the 404, maintenance and offline Arnold fallback pages.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -4461,7 +4470,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v221';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v222';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
