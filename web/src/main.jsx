@@ -3585,6 +3585,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['CORS Origin Allowlist', 'The API now has a configurable browser-origin allowlist so only approved public, admin and local testing origins can call it from browsers.'],
             ['Security Event Log', 'Admin can now review recent in-memory security events such as blocked origins, rate-limit blocks and blocked uploads.'],
             ['Security Events Viewer', 'Admin now has a compact viewer for recent blocked origins, upload blocks and login rate-limit security events.'],
+            ['Email Readiness Tools', 'Admin now has email readiness status, template preview and a safe test-email sender before automatic customer emails are enabled.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -5760,7 +5761,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v280';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v281';
 if (!document.getElementById('prizetown-admin-nav-polish-v263')) {
   const style = document.createElement('style');
   style.id = 'prizetown-admin-nav-polish-v263';
@@ -7410,6 +7411,191 @@ setTimeout(mountSecurityEventsViewerV280, 500);
 setTimeout(mountSecurityEventsViewerV280, 1500);
 window.addEventListener('hashchange', mountSecurityEventsViewerV280);
 window.addEventListener('popstate', mountSecurityEventsViewerV280);
+
+
+if (!document.getElementById('prizetown-email-readiness-v281-style')) {
+  const style = document.createElement('style');
+  style.id = 'prizetown-email-readiness-v281-style';
+  style.textContent = `
+    #prizetown-email-readiness-v281 {
+      width: min(980px, calc(100% - 24px));
+      margin: 18px auto 28px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(34,197,94,.28);
+      background: rgba(15,23,42,.72);
+      color: #f8fafc;
+      box-shadow: 0 18px 45px rgba(0,0,0,.16);
+    }
+    #prizetown-email-readiness-v281 header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    #prizetown-email-readiness-v281 h2 { margin: 0 0 4px; font-size: 1.18rem; }
+    #prizetown-email-readiness-v281 p { margin: 0; opacity: .84; line-height: 1.4; }
+    .email-readiness-status-v281 {
+      display: inline-flex;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(34,197,94,.16);
+      border: 1px solid rgba(74,222,128,.34);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .email-readiness-actions-v281 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .email-readiness-actions-v281 button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+    }
+    .email-readiness-grid-v281 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .email-readiness-card-v281 {
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      font-size: .9rem;
+      line-height: 1.35;
+    }
+    .email-readiness-card-v281 b {
+      display: block;
+      color: #bbf7d0;
+      margin-bottom: 3px;
+    }
+    .email-readiness-output-v281 {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.22);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: .88rem;
+    }
+    @media (max-width: 760px) {
+      #prizetown-email-readiness-v281 header { display: grid; }
+      .email-readiness-grid-v281 { grid-template-columns: 1fr; }
+      .email-readiness-actions-v281 button { flex: 1 1 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const isAdminEmailReadinessPageV281 = () => window.location.pathname.toLowerCase().includes('/admin');
+
+async function apiFetchEmailV281(path, options = {}) {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || '';
+  const headers = Object.assign({}, options.headers || {}, token ? { Authorization: 'Bearer ' + token } : {});
+  if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const response = await fetch(path, Object.assign({}, options, { headers }));
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || ('Request failed: ' + response.status));
+  return data;
+}
+
+async function loadEmailReadinessV281(panel) {
+  const status = panel.querySelector('[data-email-status]');
+  const grid = panel.querySelector('[data-email-grid]');
+  const output = panel.querySelector('[data-email-output]');
+  if (!status || !grid || !output) return;
+
+  status.textContent = 'Loading...';
+  output.textContent = 'Loading email readiness...';
+
+  try {
+    const data = await apiFetchEmailV281('/admin/email/status');
+    const readiness = data.readiness || {};
+    status.textContent = readiness.configured ? 'Configured' : 'Needs setup';
+
+    grid.innerHTML = [
+      ['Provider', readiness.provider || 'Resend'],
+      ['API key', readiness.resend_api_key_configured ? 'Configured' : 'Missing'],
+      ['From address', readiness.email_from || 'Missing'],
+      ['Reply-to', readiness.email_reply_to || 'Missing'],
+      ['Order template', data.templates?.order_confirmation?.subject || 'Ready'],
+      ['Winner template', data.templates?.winner_notification?.subject || 'Ready']
+    ].map((item) => '<div class="email-readiness-card-v281"><b>' + item[0] + '</b>' + item[1] + '</div>').join('');
+
+    output.textContent = (readiness.recommended_next_steps || []).map((step, index) => (index + 1) + '. ' + step).join('\n');
+  } catch (err) {
+    status.textContent = 'Error';
+    output.textContent = 'Could not load email readiness. Check admin login and API v281 deployment.\n' + err.message;
+  }
+}
+
+async function sendTestEmailV281(panel) {
+  const output = panel.querySelector('[data-email-output]');
+  if (!output) return;
+  output.textContent = 'Sending test email...';
+
+  try {
+    const data = await apiFetchEmailV281('/admin/email/test', {
+      method: 'POST',
+      body: JSON.stringify({})
+    });
+    output.textContent = 'Test email sent.\nTo: ' + data.to + '\nProvider response: ' + JSON.stringify(data.provider || {}, null, 2);
+  } catch (err) {
+    output.textContent = 'Test email failed.\n' + err.message + '\n\nCheck RESEND_API_KEY, EMAIL_FROM and verified sender domain.';
+  }
+}
+
+function mountEmailReadinessV281() {
+  if (!isAdminEmailReadinessPageV281()) {
+    document.getElementById('prizetown-email-readiness-v281')?.remove();
+    return;
+  }
+
+  const target = document.querySelector('main.admin, .admin-page, .admin-shell, main');
+  if (!target) return;
+
+  let panel = document.getElementById('prizetown-email-readiness-v281');
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.id = 'prizetown-email-readiness-v281';
+    panel.innerHTML = `
+      <header>
+        <div>
+          <h2>Email readiness</h2>
+          <p>Check provider setup, preview basic templates and send a safe admin test email before enabling automatic customer emails.</p>
+        </div>
+        <span class="email-readiness-status-v281" data-email-status>Not loaded</span>
+      </header>
+      <div class="email-readiness-actions-v281">
+        <button type="button" data-email-refresh>Refresh email status</button>
+        <button type="button" data-email-test>Send admin test email</button>
+      </div>
+      <div class="email-readiness-grid-v281" data-email-grid></div>
+      <div class="email-readiness-output-v281" data-email-output>Click refresh to load email readiness.</div>
+    `;
+
+    target.appendChild(panel);
+    panel.querySelector('[data-email-refresh]')?.addEventListener('click', () => loadEmailReadinessV281(panel));
+    panel.querySelector('[data-email-test]')?.addEventListener('click', () => sendTestEmailV281(panel));
+    setTimeout(() => loadEmailReadinessV281(panel), 300);
+  }
+}
+
+mountEmailReadinessV281();
+setTimeout(mountEmailReadinessV281, 700);
+setTimeout(mountEmailReadinessV281, 1700);
+window.addEventListener('hashchange', mountEmailReadinessV281);
+window.addEventListener('popstate', mountEmailReadinessV281);
 
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
