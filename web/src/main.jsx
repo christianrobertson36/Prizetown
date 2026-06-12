@@ -3529,6 +3529,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Google Drive Backup Guide', 'Backup Readiness now includes Google Drive folder, naming, sharing and upload guidance for off-site backup copies.'],
             ['Google Drive Status Integration', 'Backup Readiness now has a backend Google Drive status endpoint that checks folder and credential environment configuration without exposing secrets.'],
             ['Google Drive Status Button', 'Backup Readiness now includes an admin button to check Google Drive folder and credential configuration from the UI.'],
+            ['Google Drive Test Upload', 'Backup Readiness now includes an admin-only test upload button to prove Google Drive folder and credentials can create files.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3892,6 +3893,8 @@ function LaunchChecklistPanel({ competitions, settingsForm, modulePostcodes, mod
 function GoogleDriveStatusButton() {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState(null);
   const [error, setError] = useState('');
 
   async function checkStatus() {
@@ -3912,11 +3915,31 @@ function GoogleDriveStatusButton() {
     }
   }
 
+  async function runTestUpload() {
+    setTestLoading(true);
+    setError('');
+    setTestResult(null);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('prizetown_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${apiBase}/admin/google-drive/test-upload`, { method: 'POST', headers });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error((data && data.error) || `Test upload failed (${res.status})`);
+      setTestResult(data);
+    } catch (err) {
+      setError(err.message || 'Could not run Google Drive test upload.');
+    } finally {
+      setTestLoading(false);
+    }
+  }
+
   return <div className="backup-manual-notes">
     <h2>Google Drive live status</h2>
     <p className="muted">Check whether the API can see the Google Drive folder and credentials environment settings. Secret values are never shown.</p>
     <div className="admin-actions">
       <button type="button" onClick={checkStatus} disabled={loading}>{loading ? 'Checking...' : 'Check Google Drive status'}</button>
+      <button type="button" onClick={runTestUpload} disabled={testLoading}>{testLoading ? 'Uploading...' : 'Run test upload'}</button>
     </div>
     {error && <p className="notice error">{error}</p>}
     {status && <div className="backup-notes-grid">
@@ -3924,6 +3947,12 @@ function GoogleDriveStatusButton() {
       <article><strong>Folder ID</strong><p>{status.folder_id_configured ? 'Configured' : 'Missing'}</p></article>
       <article><strong>Credentials</strong><p>{status.credentials_configured ? 'Configured' : 'Missing'}</p></article>
       <article><strong>Credential source</strong><p>{status.credential_source || 'Not set'}</p></article>
+    </div>}
+    {testResult && <div className="backup-notes-grid">
+      <article><strong>Test upload</strong><p>Uploaded successfully</p></article>
+      <article><strong>File name</strong><p>{testResult.file?.name || 'Created test file'}</p></article>
+      <article><strong>Drive file ID</strong><p>{testResult.file?.id || 'Not returned'}</p></article>
+      <article><strong>Next step</strong><p>Confirm the file appears in Google Drive, then delete the test file if you do not need it.</p></article>
     </div>}
   </div>;
 }
@@ -4800,7 +4829,7 @@ function Winners({ winners, instantWinners }) {
   </main>;
 }
 
-window.__PRIZETOWN_BUILD__ = 'Prizetown web build v248';
+window.__PRIZETOWN_BUILD__ = 'Prizetown web build v249';
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><App /></AppErrorBoundary>);
 
 if ('serviceWorker' in navigator) {
