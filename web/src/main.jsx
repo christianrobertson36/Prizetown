@@ -470,6 +470,10 @@ function App() {
   async function loadAdminData() { if (user?.role !== 'admin') return; const [rows, orderRows, auditRows, iw, zones, assignments] = await Promise.all([api('/admin/entries'), api('/admin/orders'), api('/admin/audit-logs'), api('/admin/instant-wins'), api('/admin/postcode-zones'), api('/admin/competition-postcode-assignments')]); setAdminEntries(rows); setAdminOrders(orderRows); setAdminAudit(auditRows); setAdminInstantWins(iw); setAdminPostcodeZones(zones); setAdminPostcodeAssignments(assignments); }
   useEffect(() => { load().catch(err => setMessage(err.message)); }, []);
   useEffect(() => {
+    document.body.classList.toggle('prizetown-admin-route', page === 'admin' && user?.role === 'admin');
+    return () => document.body.classList.remove('prizetown-admin-route');
+  }, [page, user?.role]);
+  useEffect(() => {
     if (!settings.favicon_url) return;
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {
@@ -2784,7 +2788,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v300';
+  const adminVersion = 'v301';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3578,6 +3582,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['True Fullscreen Admin', 'Admin now applies a dedicated admin route class so the dashboard can use the full browser width instead of being constrained by the public website wrapper.'],
             ['Admin Full Screen Width', 'Admin now breaks out of the normal public page width and shows a clear version banner at the top of the admin menu.'],
             ['Full Width Admin Layout', 'Admin now uses more of the available screen width and shows the current version number at the top of the admin menu so admins can confirm which build is running.'],
             ['Compact Admin Menu', 'The admin menu groups are collapsed by default so admins start from the Admin Home control centre instead of scrolling through one long list. Open a group only when needed.'],

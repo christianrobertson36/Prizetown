@@ -7799,3 +7799,72 @@ body:not(.broadcast-body) .footer-pre-cta {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* v301 true fullscreen admin route */
+body.prizetown-admin-route {
+  overflow-x: hidden;
+}
+
+body.prizetown-admin-route #root {
+  width: 100vw !important;
+  max-width: none !important;
+}
+
+body.prizetown-admin-route main,
+body.prizetown-admin-route .main,
+body.prizetown-admin-route .page,
+body.prizetown-admin-route .admin-main {
+  width: 100vw !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+body.prizetown-admin-route .admin-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  transform: none !important;
+  grid-template-columns: minmax(260px, 330px) minmax(0, 1fr) !important;
+}
+
+body.prizetown-admin-route .admin-menu {
+  max-width: 330px !important;
+}
+
+body.prizetown-admin-route .admin-content {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+body.prizetown-admin-route .admin-home-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+}
+
+@media (min-width: 1600px) {
+  body.prizetown-admin-route .admin-home-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body.prizetown-admin-route main,
+  body.prizetown-admin-route .main,
+  body.prizetown-admin-route .page,
+  body.prizetown-admin-route .admin-main {
+    padding-left: .75rem !important;
+    padding-right: .75rem !important;
+  }
+
+  body.prizetown-admin-route .admin-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.prizetown-admin-route .admin-menu {
+    max-width: none !important;
+  }
+}
