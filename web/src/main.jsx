@@ -485,7 +485,7 @@ function App() {
   const active = competitions.filter(c => c.status === 'active');
   const homepageCompetitions = active.length > 0 ? active : competitions;
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  function closeMobileMenuAppV287() { setMobileMenuOpen(false); }
+  function closeMobileMenuAppV288() { setMobileMenuOpen(false); }
 
   if (page === 'draw-broadcast') {
     return <DrawBroadcastPage setPage={setPage} />;
@@ -500,12 +500,12 @@ function App() {
 
   return <div style={brandStyle(settings)}>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track">{welcomeMarqueeLoop.map((item, index) => <span key={index}>{item}</span>)}</div></div>
-    <header className="topbar"><button className="brand logo-brand" onClick={() => { closeMobileMenuAppV287(); setPage('home'); }}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><button type="button" className="mobile-menu-toggle" aria-expanded={mobileMenuOpen} aria-controls="main-nav" onClick={() => setMobileMenuOpen(open => !open)}><span>☰</span><strong>Menu</strong></button><nav id="main-nav" className={mobileMenuOpen ? 'open' : ''}>
-      <button type="button" onClick={() => { closeMobileMenuAppV287(); setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => { closeMobileMenuAppV287(); setPage('how-it-works'); }}>How it works</button><button onClick={() => { closeMobileMenuAppV287(); setPage('about'); }}>About</button><button onClick={() => { closeMobileMenuAppV287(); setPage('fair-draws'); }}>Fair draws</button><button onClick={() => { closeMobileMenuAppV287(); setPage('entry-lists'); }}>Entry Lists</button><button onClick={() => { closeMobileMenuAppV287(); setPage('winners'); }}>Winners</button><button onClick={() => { closeMobileMenuAppV287(); setPage('terms'); }}>Terms</button>
-      {user && <button onClick={() => { closeMobileMenuAppV287(); setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
-      <button onClick={() => { closeMobileMenuAppV287(); setPage('cart'); }}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
-      {user?.role === 'admin' && <button onClick={() => { closeMobileMenuAppV287(); setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
-      {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => { closeMobileMenuAppV287(); setPage('login'); }}><User size={16} /> Login</button>}
+    <header className="topbar"><button className="brand logo-brand" onClick={() => { closeMobileMenuAppV288(); setPage('home'); }}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><button type="button" className="mobile-menu-toggle" aria-expanded={mobileMenuOpen} aria-controls="main-nav" onClick={() => setMobileMenuOpen(open => !open)}><span>☰</span><strong>Menu</strong></button><nav id="main-nav" className={mobileMenuOpen ? 'open mobile-nav-open' : 'mobile-nav-closed'}>
+      <button type="button" onClick={() => { closeMobileMenuAppV288(); setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => { closeMobileMenuAppV288(); setPage('how-it-works'); }}>How it works</button><button onClick={() => { closeMobileMenuAppV288(); setPage('about'); }}>About</button><button onClick={() => { closeMobileMenuAppV288(); setPage('fair-draws'); }}>Fair draws</button><button onClick={() => { closeMobileMenuAppV288(); setPage('entry-lists'); }}>Entry Lists</button><button onClick={() => { closeMobileMenuAppV288(); setPage('winners'); }}>Winners</button><button onClick={() => { closeMobileMenuAppV288(); setPage('terms'); }}>Terms</button>
+      {user && <button onClick={() => { closeMobileMenuAppV288(); setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
+      <button onClick={() => { closeMobileMenuAppV288(); setPage('cart'); }}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
+      {user?.role === 'admin' && <button onClick={() => { closeMobileMenuAppV288(); setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
+      {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => { closeMobileMenuAppV288(); setPage('login'); }}><User size={16} /> Login</button>}
     </nav></header>
     {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
     {featureEnabled(settings, 'module_cookie_legal_enabled') && !cookieChoice && <CookieConsent settings={settings} setPage={setPage} onChoice={saveCookieChoice} showPrefs={showCookiePrefs} setShowPrefs={setShowCookiePrefs} />}
@@ -3607,6 +3607,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Manual Email Sender UI', 'Admin can now fill a recipient/template form, preview the message and send only after typing SEND_EMAIL.'],
             ['Injected Admin Panels Disabled', 'Security/email admin panels that were mounting in the wrong place have been hidden until they are rebuilt as proper admin menu sections.'],
             ['Mobile Menu and Ticket Slider', 'The public site now uses a compact burger menu on mobile and competition details use a ticket quantity slider with plus/minus controls instead of relying on preset quantity buttons.'],
+            ['Mobile Burger Menu v288', 'On mobile, the public navigation is hidden until customers tap the Menu button. The Live Draws link is also available from the burger menu.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
