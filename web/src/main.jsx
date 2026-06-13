@@ -881,34 +881,24 @@ return <main>
     </section>
 
 
-    <section className="highlife-showcase">
-      <div className="highlife-lead">
-        <p className="eyebrow"><Sparkles size={16} /> Become a bug hunter</p>
-        <h2>Help test Prizetown before launch</h2>
-        <p>Find bugs, report issues and help us polish the site before launch. We are looking for testers on mobile, tablet and desktop — useful confirmed bug reports can earn manual free ticket credits. Bug-hunter rewards are manual during testing only.</p>
-        <div className="highlife-points">
-          <span>Mobile bugs</span>
+    <section className="highlife-showcase arnold-bug-hunt-showcase">
+      <div className="highlife-lead arnold-bug-hunt-copy">
+        <p className="eyebrow"><Sparkles size={16} /> Pre-launch bug hunt</p>
+        <h2>Arnold needs bug hunters</h2>
+        <p className="arnold-bug-hunt-subhead">Help test Prizetown before launch.</p>
+        <p>Find bugs, report issues and help us polish the site before launch. We are looking for testers on mobile, tablet and desktop — useful confirmed bug reports can earn manual free ticket credits during testing.</p>
+        <div className="highlife-points arnold-bug-hunt-points">
+          <span>Mobile checks</span>
           <span>Broken buttons</span>
-          <span>Checkout flow</span>
-          <span>Free ticket credits</span>
+          <span>Checkout tests</span>
+          <span>Tester credits</span>
         </div>
+        <div className="arnold-bug-hunt-note">Send clear steps, screenshots and device details to help us fix issues faster.</div>
       </div>
-      <div className="highlife-grid">
-        <article className="highlife-card feature">
-          <img src="/arnold-rooftop-celebration.png" alt="Arnold celebrating a winner on a luxury rooftop" />
-          <div><strong>Winner night</strong><span>Big reveal energy for draws and results</span></div>
-        </article>
-        <article className="highlife-card">
-          <img src="/arnold-supercar-nightlife.png" alt="Arnold beside a luxury car" />
-          <div><strong>Dream cars</strong><span>Hero visuals for car competitions</span></div>
-        </article>
-        <article className="highlife-card">
-          <img src="/arnold-yacht-golden-hour.png" alt="Arnold on a luxury yacht" />
-          <div><strong>Luxury lifestyle</strong><span>VIP prizes, experiences and cash vibes</span></div>
-        </article>
-        <article className="highlife-card">
-          <img src="/arnold-private-jet.png" alt="Arnold in a private jet" />
-          <div><strong>Premium travel</strong><span>High-end campaign imagery</span></div>
+      <div className="highlife-grid arnold-bug-hunt-visual">
+        <article className="highlife-card feature arnold-bug-hunt-card">
+          <img src="/arnold_bug_hunter_left_panel_v291.png" alt="Arnold bug-hunter advert" />
+          <div><strong>Spot issues early</strong><span>Try the site, report what broke, and help shape the launch version.</span></div>
         </article>
       </div>
     </section>
