@@ -2758,7 +2758,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const empty = { title: '', slug: '', description: '', question: '', answer: '', free_entry_text: '', rules_text: '', closes_at: '', min_age: 18, age_restricted: true, ticket_price_pence: 199, max_tickets: 100, max_per_user: 10, draw_at: '', status: 'draft', image_url: '', postcode_mode: 'all', prize_cost_pence: 0, marketing_budget_pence: 0, other_buffer_pence: 0, payment_fee_percent: 4, vat_enabled: false, auto_draw_enabled: false };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('admin-home');
   const [emailStatus, setEmailStatus] = useState(null);
   const [emailTo, setEmailTo] = useState('christian.robertson36@gmail.com');
   const [emailSending, setEmailSending] = useState(false);
@@ -3144,6 +3144,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
     {
       title: 'Core',
       items: [
+        ['admin-home', 'Admin home', ListChecks],
         ['overview', 'Overview', ClipboardList],
         ['test-tools', 'Test tools', Sparkles],
         ['launch-checklist', 'Launch checklist', Shield],
@@ -3224,6 +3225,64 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       </aside>
 
       <section className="admin-content">
+        {activeTab === 'admin-home' && <div className="panel admin-home-panel">
+          <div className="admin-home-hero">
+            <div>
+              <p className="eyebrow"><ListChecks size={16} /> Admin Control Centre</p>
+              <h1>What do you want to manage?</h1>
+              <p className="muted">Use these big shortcuts instead of scrolling through the full admin menu. Existing admin tools are unchanged.</p>
+            </div>
+            <div className="admin-home-stats">
+              <div><strong>{competitions.length}</strong><span>Competitions</span></div>
+              <div><strong>{orders.length}</strong><span>Orders</span></div>
+              <div><strong>{customerRows.length}</strong><span>Customers</span></div>
+              <div><strong>{money(revenue)}</strong><span>Order value</span></div>
+            </div>
+          </div>
+
+          <div className="admin-home-grid">
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('competitions')}>
+              <strong>Competitions</strong>
+              <span>Create, edit and manage prize competitions, ticket limits, images and statuses.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('orders-entries')}>
+              <strong>Orders & Customers</strong>
+              <span>Check orders, ticket numbers, entries, customer history and CSV exports.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('draw-control')}>
+              <strong>Draws & Winners</strong>
+              <span>Prepare live draws, test the broadcast, review winner proof and manage instant wins.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('launch-centre')}>
+              <strong>Launch & Safety</strong>
+              <span>Open launch checks, system checks, payment readiness, support and backup guidance.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('social-integrations')}>
+              <strong>Marketing</strong>
+              <span>Manage social links, homepage wording, ticker, branding and pre-launch tester messaging.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('site-settings')}>
+              <strong>Settings & Legal</strong>
+              <span>Update site settings, modules, legal text, footer wording and public content.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('security-readiness')}>
+              <strong>Security</strong>
+              <span>Review security readiness, system warnings, audit log and security event notes.</span>
+            </button>
+            <button type="button" className="admin-home-tile" onClick={() => openAdminTab('help-guide')}>
+              <strong>Help Guide</strong>
+              <span>Open the plain-English admin manual for what each area is for.</span>
+            </button>
+          </div>
+
+          <div className="admin-home-shortcuts">
+            <button type="button" onClick={() => openAdminTab('competition-form')}>Add competition</button>
+            <button type="button" onClick={() => openAdminTab('launch-checklist')}>Launch checklist</button>
+            <button type="button" onClick={() => openAdminTab('system-check')}>System check</button>
+            <button type="button" onClick={() => openAdminTab('support-readiness')}>Support readiness</button>
+            <button type="button" onClick={() => openAdminTab('audit')}>Audit log</button>
+          </div>
+        </div>}
         {activeTab === 'test-tools' && <div className="panel list-panel"><h1>Test tools</h1><p className="muted">Use these while building and testing Prizetown. Starter competitions use the built-in demo poster images and can be removed later.</p><div className="admin-split"><div className="panel"><h2>Sample competitions</h2><p className="muted">Adds Cash Blast, Tech Bundle, Luxury Night Away and Family Fun Hamper sample competitions.</p><button type="button" className="primary full" onClick={seedDemo}>Add starter sample competitions</button><button type="button" className="danger full" onClick={removeStarterCompetitions}>Remove starter sample competitions</button></div><div className="panel"><h2>What this tests</h2><p>Poster strip, competition detail pages, basket, checkout, ticket allocation and draw preview.</p><p className="muted">After adding samples, open the homepage and check the scrolling poster strip.</p></div></div></div>}
 
         {activeTab === 'overview' && <section className="panel launch-warning-card">
@@ -3514,6 +3573,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Admin Home', 'Admin now opens to a control-centre landing page with large shortcut tiles for competitions, orders, draws, launch checks, marketing, settings, security and the Help Guide. The existing admin menu still works underneath.'],
             ['Admin Quick Start', 'Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.'],
             ['Common Admin Jobs', 'Create a competition: Competitions → Add competition. Check sales: Orders & entries. Add postal/free entries: Free entries. Change homepage text: Site settings. Change logo/colours: Branding. Check launch safety: Launch checklist and System check.'],
             ['Common Troubleshooting', 'Text not changing: save in Site settings, then refresh the homepage. Email issue: use Email test. Draw issue: check Final draw and Automation status. Admin access issue: use the Tailscale admin URL, not public /admin.'],
