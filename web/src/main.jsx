@@ -819,6 +819,12 @@ return <main>
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
     </section>}
 
+    <section className="highlife-showcase arnold-bug-hunt-showcase arnold-bug-hunt-image-only">
+      <article className="arnold-bug-hunt-wide-card">
+        <img src="/arnold_bug_hunter_left_panel_v291.png" alt="Arnold bug-hunter pre-launch advert" />
+      </article>
+    </section>
+
     {wheelDemoEnabled && (
       <>
       <section className="wheel-of-luck-section panel"><div className="wheel-of-luck-copy">
@@ -864,13 +870,6 @@ return <main>
       <article>
         <strong>3. Reveal</strong>
         <span>The winning ticket and winner name are shown clearly.</span>
-      </article>
-    </section>
-
-
-    <section className="highlife-showcase arnold-bug-hunt-showcase arnold-bug-hunt-image-only">
-      <article className="arnold-bug-hunt-wide-card">
-        <img src="/arnold_bug_hunter_left_panel_v291.png" alt="Arnold bug-hunter pre-launch advert" />
       </article>
     </section>
       </>
