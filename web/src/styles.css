@@ -7636,3 +7636,88 @@ body:not(.broadcast-body) .footer-pre-cta {
 .admin-menu-group .admin-tabs {
   padding: 0 .65rem .7rem;
 }
+
+
+/* v299 full width admin layout */
+.admin-shell,
+.admin-layout,
+.admin-dashboard,
+.admin-page {
+  width: min(100%, 1920px) !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr) !important;
+  gap: 1.1rem !important;
+  align-items: start;
+}
+
+.admin-content {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0;
+}
+
+.admin-content > .panel,
+.admin-content .list-panel,
+.admin-content form.panel,
+.admin-home-panel {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.admin-content .admin-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.admin-content .form-grid,
+.admin-content .backup-notes-grid,
+.admin-content .launch-checklist-groups {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.admin-home-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+}
+
+.admin-version-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: .25rem 0 .55rem;
+  padding: .28rem .55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(250,204,21,.28);
+  background: rgba(250,204,21,.1);
+  color: rgba(255,255,255,.9);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+@media (min-width: 1400px) {
+  .admin-layout {
+    grid-template-columns: 300px minmax(0, 1fr) !important;
+  }
+
+  .admin-content .admin-split {
+    grid-template-columns: repeat(2, minmax(360px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-menu {
+    position: static !important;
+  }
+
+  .admin-content .admin-split {
+    grid-template-columns: 1fr;
+  }
+}

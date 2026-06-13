@@ -2784,6 +2784,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
+  const adminVersion = 'v299';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3212,7 +3213,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   return <main className="admin-main">
     <section className="admin-shell">
       <aside className="admin-menu panel">
-        <h2>Admin</h2><p className="muted">Grouped controls keep the dashboard easier to manage.</p>
+        <h2>Admin</h2><div className="admin-version-badge">Version {adminVersion}</div><p className="muted">Grouped controls keep the dashboard easier to manage.</p>
         <div className="admin-menu-groups">
           {menuGroups.map(group => <details className="admin-menu-group" key={group.title} open={group.title === 'Core'}>
             <summary>{group.title}</summary>
@@ -3573,6 +3574,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Full Width Admin Layout', 'Admin now uses more of the available screen width and shows the current version number at the top of the admin menu so admins can confirm which build is running.'],
             ['Compact Admin Menu', 'The admin menu groups are collapsed by default so admins start from the Admin Home control centre instead of scrolling through one long list. Open a group only when needed.'],
             ['Admin Home', 'Admin now opens to a control-centre landing page with large shortcut tiles for competitions, orders, draws, launch checks, marketing, settings, security and the Help Guide. The existing admin menu still works underneath.'],
             ['Admin Quick Start', 'Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.'],
