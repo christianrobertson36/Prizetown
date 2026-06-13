@@ -828,11 +828,7 @@ return <main>
         <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>Winners</button>
       </div>
     </section>
-
-    {featureEnabled(settings, 'module_prelaunch_testers_enabled') && <PreLaunchTesterProgramme settings={settings} />}
-
-
-        <section className="homepage-bug-hunter-v306 panel">
+<section className="homepage-bug-hunter-v306 panel">
       <div className="homepage-bug-hunter-copy-v306">
         <p className="eyebrow"><Sparkles size={16} /> Pre-launch testing</p>
         <h2>Become a Prizetown bug hunter</h2>
@@ -2881,7 +2877,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v307';
+  const adminVersion = 'v308';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3675,6 +3671,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Removed Pre-launch Tester Section', 'The homepage Arnold bug-hunter/tester signup section has been removed from the public homepage.'],
             ['Removed Homepage Arnold Welcome', 'The small homepage Arnold welcome host card has been removed while keeping Arnold available for draw and broadcast features.'],
             ['Bug Bounty Signup Button', 'The homepage bug-hunter heading now uses a clear click-here button that jumps visitors to the bug bounty/tester signup form.'],
             ['Admin View Adjuster', 'Admin now includes a view adjuster in the admin menu so each browser can change text size, button size, panel spacing and contrast without another code patch.'],
