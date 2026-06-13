@@ -8426,3 +8426,28 @@ body.admin-contrast-maximum-v305.prizetown-admin-route .admin-tabs button {
     min-height: 320px;
   }
 }
+
+
+/* v307 bug bounty signup button cleanup */
+.bug-bounty-heading-v307 {
+  display: grid;
+  gap: .9rem;
+  align-items: start;
+}
+
+.bug-bounty-heading-v307 h2 {
+  margin: 0;
+}
+
+.bug-bounty-heading-v307 button {
+  width: fit-content;
+  min-height: 48px;
+  padding: .9rem 1.15rem;
+  font-weight: 950;
+}
+
+@media (max-width: 700px) {
+  .bug-bounty-heading-v307 button {
+    width: 100%;
+  }
+}

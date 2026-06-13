@@ -632,7 +632,10 @@ function PreLaunchTesterProgramme({ settings = {} }) {
   return <section className="prelaunch-tester-section panel" id="prelaunch-testers">
     <div className="prelaunch-copy">
       <p className="eyebrow"><Sparkles size={16} /> Arnold needs bug hunters</p>
-      <h2>Find bugs before launch and earn free ticket credits.</h2>
+      <div className="bug-bounty-heading-v307">
+          <h2>Help test Prizetown before launch.</h2>
+          <button type="button" className="primary" onClick={() => document.getElementById('bug-bounty-signup-form-v307')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Click here to access the bug bounty signup form</button>
+        </div>
       <p>Arnold is building a small pre-launch bug-hunter team. Test the site on mobile, tablet or desktop, report anything broken or confusing, and useful confirmed bugs can earn manual free ticket credits.</p>
       <div className="prelaunch-reward-grid">
         <article><strong>Small bug</strong><span>Typos, layout issues or confusing text.</span><em>Small credit thank-you</em></article>
@@ -643,7 +646,7 @@ function PreLaunchTesterProgramme({ settings = {} }) {
     </div>
 
     <div className="prelaunch-actions">
-      <form className="prelaunch-form" onSubmit={openTesterEmail}>
+      <form id="bug-bounty-signup-form-v307" className="prelaunch-form" onSubmit={openTesterEmail}>
         <h3>Join the tester list</h3>
         <label>Name<input value={testerName} onChange={e => setTesterName(e.target.value)} placeholder="Your name" /></label>
         <label>Email<input type="email" value={testerEmail} onChange={e => setTesterEmail(e.target.value)} placeholder="you@example.com" /></label>
@@ -828,9 +831,6 @@ return <main>
 
     {featureEnabled(settings, 'module_prelaunch_testers_enabled') && <PreLaunchTesterProgramme settings={settings} />}
 
-    {arnoldEnabled && <section className="homepage-arnold panel">
-      <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
-    </section>}
 
         <section className="homepage-bug-hunter-v306 panel">
       <div className="homepage-bug-hunter-copy-v306">
@@ -2881,7 +2881,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v306';
+  const adminVersion = 'v307';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3675,6 +3675,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Removed Homepage Arnold Welcome', 'The small homepage Arnold welcome host card has been removed while keeping Arnold available for draw and broadcast features.'],
+            ['Bug Bounty Signup Button', 'The homepage bug-hunter heading now uses a clear click-here button that jumps visitors to the bug bounty/tester signup form.'],
             ['Admin View Adjuster', 'Admin now includes a view adjuster in the admin menu so each browser can change text size, button size, panel spacing and contrast without another code patch.'],
             ['Admin High Contrast Mode', 'Admin panels, buttons, helper text and menu items now use stronger contrast so the dashboard is easier to read on dark screens.'],
             ['Admin Readability', 'Admin text, buttons, menu items, form fields and table spacing have been enlarged so the dashboard is easier to read and use on desktop and touch screens.'],
