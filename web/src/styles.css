@@ -8494,3 +8494,47 @@ body.admin-contrast-maximum-v305.prizetown-admin-route .admin-tabs button {
     width: 100%;
   }
 }
+
+
+/* v310 forced visible bug bounty signup */
+.bug-bounty-signup-v310 {
+  margin-top: 1rem;
+}
+
+.bug-bounty-open-v310 {
+  width: fit-content;
+  min-height: 52px;
+  padding: .95rem 1.2rem;
+  font-weight: 950;
+  box-shadow: 0 0 0 3px rgba(250,204,21,.18);
+}
+
+.bug-bounty-form-v310 {
+  display: grid;
+  gap: .85rem;
+  margin-top: .9rem;
+  border-color: rgba(250,204,21,.4);
+  background: rgba(15,23,42,.9);
+}
+
+.bug-bounty-form-v310 h3,
+.bug-bounty-form-v310 p {
+  margin: 0;
+}
+
+.bug-bounty-form-v310 label {
+  display: grid;
+  gap: .35rem;
+  font-weight: 850;
+}
+
+.bug-bounty-form-v310 input,
+.bug-bounty-form-v310 textarea {
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .bug-bounty-open-v310 {
+    width: 100%;
+  }
+}

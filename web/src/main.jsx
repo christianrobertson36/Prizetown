@@ -582,7 +582,8 @@ function ArnoldBroadcastHost({ mode = 'idle', winner }) {
 }
 
 
-function BugBountySignupV309() {
+
+function BugBountySignupV310() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -603,17 +604,15 @@ function BugBountySignupV309() {
     window.location.href = 'mailto:admin@prizetown.local?subject=' + subject + '&body=' + body;
   }
 
-  return <div className="bug-bounty-signup-v309" id="bug-bounty-signup-v309">
-    {!open && <button type="button" className="primary bug-bounty-open-v309" onClick={() => setOpen(true)}>
-      Click here to join the bug bounty signup
-    </button>}
+  return <div className="bug-bounty-signup-v310" id="bug-bounty-signup-v310">
+    <button type="button" className="primary bug-bounty-open-v310" onClick={() => setOpen(!open)}>
+      {open ? 'Hide bug bounty signup form' : 'Click here to join the bug bounty signup'}
+    </button>
 
-    {open && <form className="bug-bounty-form-v309 panel" onSubmit={sendBugBountySignup}>
-      <div>
-        <p className="eyebrow"><Sparkles size={16} /> Bug bounty signup</p>
-        <h3>Join the Prizetown bug hunter list</h3>
-        <p className="muted">Leave your details, what you can test, and any useful info so we can build a stronger pre-launch customer list.</p>
-      </div>
+    {open && <form className="bug-bounty-form-v310 panel" onSubmit={sendBugBountySignup}>
+      <p className="eyebrow"><Sparkles size={16} /> Bug bounty signup</p>
+      <h3>Join the Prizetown bug hunter list</h3>
+      <p className="muted">Leave your details, what you can test, and any useful info so we can build a stronger pre-launch customer list.</p>
       <label>Name<input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required /></label>
       <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required /></label>
       <label>Postcode / town<input value={postcode} onChange={e => setPostcode(e.target.value)} placeholder="e.g. BB1 / Blackburn" /></label>
@@ -887,6 +886,7 @@ return <main>
           <span>Checkout flow issues</span>
           <span>Free ticket credit rewards</span>
         </div>
+        <BugBountySignupV310 />
       </div>
       <div className="homepage-bug-hunter-image-wrap-v306">
         <img src="/arnold_bug_hunter_bugcounty_v306.png" alt="Arnold bug hunter pre-launch advert" className="homepage-bug-hunter-image-v306" />
@@ -2919,7 +2919,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v309';
+  const adminVersion = 'v310';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3713,6 +3713,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Forced Bug Bounty Signup Button', 'The homepage bug-hunter advert now shows a direct visible signup button under the reward points and opens a compact customer/tester capture form.'],
             ['Bug Bounty Signup Capture', 'The homepage bug-hunter advert now has a click-here signup button and compact bug bounty form to capture tester/customer details.'],
             ['Removed Pre-launch Tester Section', 'The homepage Arnold bug-hunter/tester signup section has been removed from the public homepage.'],
             ['Removed Homepage Arnold Welcome', 'The small homepage Arnold welcome host card has been removed while keeping Arnold available for draw and broadcast features.'],
