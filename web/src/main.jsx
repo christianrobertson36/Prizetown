@@ -832,10 +832,27 @@ return <main>
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
     </section>}
 
-    <section className="highlife-showcase arnold-bug-hunt-showcase arnold-bug-hunt-image-only">
-      <article className="arnold-bug-hunt-wide-card">
-        <img src="/arnold_bug_hunter_left_panel_v291.png" alt="Arnold bug-hunter pre-launch advert" />
-      </article>
+        <section className="homepage-bug-hunter-v306 panel">
+      <div className="homepage-bug-hunter-copy-v306">
+        <p className="eyebrow"><Sparkles size={16} /> Pre-launch testing</p>
+        <h2>Become a Prizetown bug hunter</h2>
+        <p>
+          Help test Prizetown before public launch. Try the site on mobile, tablet and desktop,
+          spot broken buttons or awkward flows, and help us polish the experience before launch.
+        </p>
+        <p>
+          Useful confirmed bug reports can earn free ticket credits as a thank-you during testing.
+        </p>
+        <div className="homepage-bug-hunter-points-v306">
+          <span>Mobile + desktop testing</span>
+          <span>Broken buttons</span>
+          <span>Checkout flow issues</span>
+          <span>Free ticket credit rewards</span>
+        </div>
+      </div>
+      <div className="homepage-bug-hunter-image-wrap-v306">
+        <img src="/arnold_bug_hunter_bugcounty_v306.png" alt="Arnold bug hunter pre-launch advert" className="homepage-bug-hunter-image-v306" />
+      </div>
     </section>
 
     {wheelDemoEnabled && (
@@ -2864,7 +2881,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v305';
+  const adminVersion = 'v306';
 
   function openAdminTab(key) {
     setActiveTab(key);
