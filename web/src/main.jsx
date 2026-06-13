@@ -868,26 +868,10 @@ return <main>
     </section>
 
 
-    <section className="highlife-showcase arnold-bug-hunt-showcase">
-      <div className="highlife-lead arnold-bug-hunt-copy">
-        <p className="eyebrow"><Sparkles size={16} /> Pre-launch bug hunt</p>
-        <h2>Arnold needs bug hunters</h2>
-        <p className="arnold-bug-hunt-subhead">Help test Prizetown before launch.</p>
-        <p>Find bugs, report issues and help us polish the site before launch. We are looking for testers on mobile, tablet and desktop — useful confirmed bug reports can earn manual free ticket credits during testing.</p>
-        <div className="highlife-points arnold-bug-hunt-points">
-          <span>Mobile checks</span>
-          <span>Broken buttons</span>
-          <span>Checkout tests</span>
-          <span>Tester credits</span>
-        </div>
-        <div className="arnold-bug-hunt-note">Send clear steps, screenshots and device details to help us fix issues faster.</div>
-      </div>
-      <div className="highlife-grid arnold-bug-hunt-visual">
-        <article className="highlife-card feature arnold-bug-hunt-card">
-          <img src="/arnold_bug_hunter_left_panel_v291.png" alt="Arnold bug-hunter advert" />
-          <div><strong>Spot issues early</strong><span>Try the site, report what broke, and help shape the launch version.</span></div>
-        </article>
-      </div>
+    <section className="highlife-showcase arnold-bug-hunt-showcase arnold-bug-hunt-image-only">
+      <article className="arnold-bug-hunt-wide-card">
+        <img src="/arnold_bug_hunter_left_panel_v291.png" alt="Arnold bug-hunter pre-launch advert" />
+      </article>
     </section>
       </>
     )}

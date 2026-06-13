@@ -7480,3 +7480,32 @@ body:not(.broadcast-body) .footer-pre-cta {
 }
 
 
+
+
+/* v294 large Arnold bug hunter advert */
+.arnold-bug-hunt-image-only {
+  display: block !important;
+  margin: 1.25rem 0 0;
+}
+
+.arnold-bug-hunt-wide-card {
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(250,204,21,.24);
+  background: rgba(8,11,24,.94);
+  box-shadow: 0 22px 55px rgba(0,0,0,.28);
+}
+
+.arnold-bug-hunt-wide-card img {
+  width: 100%;
+  display: block;
+  max-height: 720px;
+  object-fit: cover;
+  object-position: center top;
+}
+
+@media (max-width: 760px) {
+  .arnold-bug-hunt-wide-card img {
+    max-height: none;
+  }
+}
