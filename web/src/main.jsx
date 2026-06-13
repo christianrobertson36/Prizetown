@@ -582,6 +582,48 @@ function ArnoldBroadcastHost({ mode = 'idle', winner }) {
 }
 
 
+function BugBountySignupV309() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [postcode, setPostcode] = useState('');
+  const [testing, setTesting] = useState('');
+  const [details, setDetails] = useState('');
+
+  function sendBugBountySignup(e) {
+    e.preventDefault();
+    const subject = encodeURIComponent('Prizetown bug bounty signup');
+    const body = encodeURIComponent(
+      'Name: ' + name + '\n' +
+      'Email: ' + email + '\n' +
+      'Postcode / town: ' + postcode + '\n' +
+      'What they can test: ' + testing + '\n\n' +
+      'Relevant details / audience notes:\n' + details
+    );
+    window.location.href = 'mailto:admin@prizetown.local?subject=' + subject + '&body=' + body;
+  }
+
+  return <div className="bug-bounty-signup-v309" id="bug-bounty-signup-v309">
+    {!open && <button type="button" className="primary bug-bounty-open-v309" onClick={() => setOpen(true)}>
+      Click here to join the bug bounty signup
+    </button>}
+
+    {open && <form className="bug-bounty-form-v309 panel" onSubmit={sendBugBountySignup}>
+      <div>
+        <p className="eyebrow"><Sparkles size={16} /> Bug bounty signup</p>
+        <h3>Join the Prizetown bug hunter list</h3>
+        <p className="muted">Leave your details, what you can test, and any useful info so we can build a stronger pre-launch customer list.</p>
+      </div>
+      <label>Name<input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required /></label>
+      <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required /></label>
+      <label>Postcode / town<input value={postcode} onChange={e => setPostcode(e.target.value)} placeholder="e.g. BB1 / Blackburn" /></label>
+      <label>What can you test?<textarea rows={3} value={testing} onChange={e => setTesting(e.target.value)} placeholder="Mobile, iPhone, Android, checkout flow, account signup, etc." /></label>
+      <label>Relevant details<textarea rows={4} value={details} onChange={e => setDetails(e.target.value)} placeholder="Tell us what prizes you like, what competitions you would enter, and anything that helps us improve Prizetown." /></label>
+      <button type="submit" className="primary full">Send bug bounty signup</button>
+    </form>}
+  </div>;
+}
+
 function PreLaunchTesterProgramme({ settings = {} }) {
   const supportEmail = settings.support_email || 'support@prizetown.local';
   const [testerName, setTesterName] = useState('');
@@ -2877,7 +2919,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v308';
+  const adminVersion = 'v309';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3671,6 +3713,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Bug Bounty Signup Capture', 'The homepage bug-hunter advert now has a click-here signup button and compact bug bounty form to capture tester/customer details.'],
             ['Removed Pre-launch Tester Section', 'The homepage Arnold bug-hunter/tester signup section has been removed from the public homepage.'],
             ['Removed Homepage Arnold Welcome', 'The small homepage Arnold welcome host card has been removed while keeping Arnold available for draw and broadcast features.'],
             ['Bug Bounty Signup Button', 'The homepage bug-hunter heading now uses a clear click-here button that jumps visitors to the bug bounty/tester signup form.'],
