@@ -617,19 +617,6 @@ function PreLaunchTesterProgramme({ settings = {} }) {
   }
 
   return <section className="prelaunch-tester-section panel" id="prelaunch-testers">
-    <div className="arnold-tester-ad" aria-label="Arnold bug hunter advert">
-      <div className="arnold-tester-badge">BUG HUNTERS WANTED</div>
-      <div className="arnold-tester-hero" aria-hidden="true">
-        <div className="arnold-tester-glow"></div>
-        <div className="arnold-tester-head"></div>
-        <div className="arnold-tester-body"></div>
-        <div className="arnold-tester-ticket">FREE<br />CREDITS</div>
-      </div>
-      <div className="arnold-tester-copy">
-        <strong>Arnold wants your sharp eyes.</strong>
-        <span>Find bugs, send screenshots, earn manual tester rewards.</span>
-      </div>
-    </div>{/* Arnold tester visual v291 repair */}
     <div className="prelaunch-copy">
       <p className="eyebrow"><Sparkles size={16} /> Arnold needs bug hunters</p>
       <h2>Find bugs before launch and earn free ticket credits.</h2>
