@@ -363,7 +363,8 @@ If a competition is cancelled, Prizetown may refund eligible paid entries or off
   module_arnold_enabled: 'true',
   module_wheel_demo_enabled: 'true',
   module_profit_planner_enabled: 'true',
-  module_cookie_legal_enabled: 'true'
+  module_cookie_legal_enabled: 'true',
+  module_prelaunch_testers_enabled: 'true'
 };
 
 function featureEnabled(settings, key) {
@@ -567,6 +568,87 @@ function ArnoldBroadcastHost({ mode = 'idle', winner }) {
   </div>;
 }
 
+
+function PreLaunchTesterProgramme({ settings = {} }) {
+  const supportEmail = settings.support_email || 'support@prizetown.local';
+  const [testerName, setTesterName] = useState('');
+  const [testerEmail, setTesterEmail] = useState('');
+  const [testerPostcode, setTesterPostcode] = useState('');
+  const [testerNotes, setTesterNotes] = useState('');
+  const [bugNotes, setBugNotes] = useState('');
+
+  function openTesterEmail(event) {
+    event.preventDefault();
+    const subject = encodeURIComponent('Prizetown pre-launch tester signup');
+    const body = encodeURIComponent([
+      'I would like to help test Prizetown before launch.',
+      '',
+      'Name: ' + testerName,
+      'Email: ' + testerEmail,
+      'Postcode/town: ' + testerPostcode,
+      '',
+      'What I can help test:',
+      testerNotes || 'General site testing',
+      '',
+      'I understand tester rewards/free ticket credits are manually reviewed and only apply to useful, genuine bug reports before public launch.'
+    ].join('\n'));
+    window.location.href = 'mailto:' + supportEmail + '?subject=' + subject + '&body=' + body;
+  }
+
+  function openBugEmail(event) {
+    event.preventDefault();
+    const subject = encodeURIComponent('Prizetown bug report from pre-launch tester');
+    const body = encodeURIComponent([
+      'Bug report:',
+      '',
+      bugNotes || 'Describe what happened, what page you were on, your device/browser and steps to repeat it.',
+      '',
+      'Helpful details:',
+      '- Page/link:',
+      '- Device:',
+      '- Browser:',
+      '- What I expected:',
+      '- What happened instead:',
+      '- Screenshot/video attached if possible:',
+      '',
+      'Reward note: free ticket credits are manually reviewed for genuine, useful bugs found before launch.'
+    ].join('\n'));
+    window.location.href = 'mailto:' + supportEmail + '?subject=' + subject + '&body=' + body;
+  }
+
+  return <section className="prelaunch-tester-section panel" id="prelaunch-testers">
+    <div className="prelaunch-copy">
+      <p className="eyebrow"><Sparkles size={16} /> Pre-launch testers wanted</p>
+      <h2>Help test Prizetown before launch and earn free ticket credits.</h2>
+      <p>We are inviting early testers to try the site, find bugs and help make Prizetown smoother before public launch. Useful confirmed bug reports can earn manual free ticket credits as a thank-you.</p>
+      <div className="prelaunch-reward-grid">
+        <article><strong>Small bug</strong><span>Typos, layout issues or confusing text.</span><em>Small credit thank-you</em></article>
+        <article><strong>Useful bug</strong><span>Broken buttons, mobile issues or checkout confusion.</span><em>Better credit reward</em></article>
+        <article><strong>Serious bug</strong><span>Security, account, basket or entry-list problems.</span><em>Priority reward review</em></article>
+      </div>
+      <p className="muted small-help">Credits are manual and discretionary during testing. No cash alternative. Duplicate, spam or already-known reports may not qualify.</p>
+    </div>
+
+    <div className="prelaunch-actions">
+      <form className="prelaunch-form" onSubmit={openTesterEmail}>
+        <h3>Join the tester list</h3>
+        <label>Name<input value={testerName} onChange={e => setTesterName(e.target.value)} placeholder="Your name" /></label>
+        <label>Email<input type="email" value={testerEmail} onChange={e => setTesterEmail(e.target.value)} placeholder="you@example.com" /></label>
+        <label>Postcode / town<input value={testerPostcode} onChange={e => setTesterPostcode(e.target.value)} placeholder="e.g. BB1 / Blackburn" /></label>
+        <label>What can you test?<textarea rows={3} value={testerNotes} onChange={e => setTesterNotes(e.target.value)} placeholder="Mobile, iPhone, Android, checkout flow, account signup, etc." /></label>
+        <button type="submit" className="primary full">Sign up as tester</button>
+      </form>
+
+      <form className="prelaunch-form bug-form" onSubmit={openBugEmail}>
+        <h3>Found a bug?</h3>
+        <p className="muted">Send what happened, where it happened, and how to repeat it. Screenshots or screen recordings help.</p>
+        <label>Bug details<textarea rows={7} value={bugNotes} onChange={e => setBugNotes(e.target.value)} placeholder="Example: On iPhone Safari, the menu covers the page after tapping..." /></label>
+        <button type="submit" className="secondary full">Report a bug</button>
+      </form>
+    </div>
+  </section>;
+}
+
 function Home({ settings, resetCookieChoice, competitions, instantWinners, user, setPage, cart, saveCart, setMessage, selected, setSelected }) {
   function openCompetition(c) {
     setSelected(c);
@@ -730,6 +812,8 @@ return <main>
         <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>Winners</button>
       </div>
     </section>
+
+    {featureEnabled(settings, 'module_prelaunch_testers_enabled') && <PreLaunchTesterProgramme settings={settings} />}
 
     {arnoldEnabled && <section className="homepage-arnold panel">
       <ArnoldHost stage="welcome" caption="I’m Arnold Blackndeckka, your Prizetown host. I’ll keep an eye on the draws, winners and big-ticket moments." />
@@ -3609,6 +3693,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Mobile Menu and Ticket Slider', 'The public site now uses a compact burger menu on mobile and competition details use a ticket quantity slider with plus/minus controls instead of relying on preset quantity buttons.'],
             ['Mobile Burger Menu v288', 'On mobile, the public navigation is hidden until customers tap the Menu button. The Live Draws link is also available from the burger menu.'],
             ['Homepage Duplicate Cleanup', 'The public homepage has been simplified by hiding repeated promo/trust sections so customers reach competitions faster. The sections are only hidden with CSS and can be restored later.'],
+            ['Pre-launch Tester Programme', 'The homepage invites early users to sign up as testers and report bugs by email. Bug rewards/free ticket credits are manual and should be reviewed before any real credit logic is added.'],
+            ['Pre-launch Tester Module Toggle', 'The tester signup section is controlled by the module_prelaunch_testers_enabled setting so it can be switched off after launch or when not needed.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
