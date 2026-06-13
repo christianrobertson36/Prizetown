@@ -6872,3 +6872,27 @@ body.broadcast-body .broadcast-page .trusted-wheel-result {
     overflow: visible !important;
   }
 }
+
+
+/* v289 homepage duplicate cleanup
+   These sections repeated similar trust/how-it-works/save-app messages already shown in the hero, footer and legal pages.
+   They are hidden visually, not deleted, so they can be restored later if needed. */
+body:not(.broadcast-body) .start-here-strip,
+body:not(.broadcast-body) .community-proof-section,
+body:not(.broadcast-body) .pwa-install-strip,
+body:not(.broadcast-body) .footer-pre-cta {
+  display: none !important;
+}
+
+/* Keep the hero trust row useful but reduce repeated button clutter on small screens. */
+@media (max-width: 760px) {
+  body:not(.broadcast-body) .launch-trust-strip {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: .45rem !important;
+  }
+
+  body:not(.broadcast-body) .launch-trust-strip span {
+    display: none !important;
+  }
+}

@@ -3608,6 +3608,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Injected Admin Panels Disabled', 'Security/email admin panels that were mounting in the wrong place have been hidden until they are rebuilt as proper admin menu sections.'],
             ['Mobile Menu and Ticket Slider', 'The public site now uses a compact burger menu on mobile and competition details use a ticket quantity slider with plus/minus controls instead of relying on preset quantity buttons.'],
             ['Mobile Burger Menu v288', 'On mobile, the public navigation is hidden until customers tap the Menu button. The Live Draws link is also available from the burger menu.'],
+            ['Homepage Duplicate Cleanup', 'The public homepage has been simplified by hiding repeated promo/trust sections so customers reach competitions faster. The sections are only hidden with CSS and can be restored later.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
