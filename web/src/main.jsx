@@ -3214,7 +3214,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
       <aside className="admin-menu panel">
         <h2>Admin</h2><p className="muted">Grouped controls keep the dashboard easier to manage.</p>
         <div className="admin-menu-groups">
-          {menuGroups.map(group => <details className="admin-menu-group" key={group.title} open>
+          {menuGroups.map(group => <details className="admin-menu-group" key={group.title} open={group.title === 'Core'}>
             <summary>{group.title}</summary>
             <div className="admin-tabs">
               {group.items.map(([key, label, Icon]) => <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => openAdminTab(key)}><Icon size={17} /> {label}</button>)}
@@ -3573,6 +3573,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Compact Admin Menu', 'The admin menu groups are collapsed by default so admins start from the Admin Home control centre instead of scrolling through one long list. Open a group only when needed.'],
             ['Admin Home', 'Admin now opens to a control-centre landing page with large shortcut tiles for competitions, orders, draws, launch checks, marketing, settings, security and the Help Guide. The existing admin menu still works underneath.'],
             ['Admin Quick Start', 'Recommended order: check Overview, open Launch checklist, review Competitions, check Orders & entries, confirm Legal Text and Site settings, then use System check before launch.'],
             ['Common Admin Jobs', 'Create a competition: Competitions → Add competition. Check sales: Orders & entries. Add postal/free entries: Free entries. Change homepage text: Site settings. Change logo/colours: Branding. Check launch safety: Launch checklist and System check.'],

@@ -7600,3 +7600,39 @@ body:not(.broadcast-body) .footer-pre-cta {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v298 compact admin menu */
+.admin-menu-group {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .9rem;
+  background: rgba(255,255,255,.035);
+  margin-bottom: .55rem;
+  overflow: hidden;
+}
+
+.admin-menu-group summary {
+  cursor: pointer;
+  padding: .75rem .85rem;
+  font-weight: 800;
+  color: rgba(255,255,255,.9);
+  list-style: none;
+}
+
+.admin-menu-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-menu-group summary::after {
+  content: '+';
+  float: right;
+  color: rgba(250,204,21,.9);
+}
+
+.admin-menu-group[open] summary::after {
+  content: '-';
+}
+
+.admin-menu-group .admin-tabs {
+  padding: 0 .65rem .7rem;
+}
