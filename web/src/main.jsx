@@ -15,6 +15,8 @@ import { Gift, Trophy, User, Shield, LogOut, Plus, Trash2, Pencil, Ticket, Spark
 import { api, imageUrl } from './api';
 import './styles.css';
 
+function closeMobileMenu() {}
+
 function money(pence) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format((pence || 0) / 100);
 }
@@ -431,6 +433,8 @@ function App() {
   const [message, setMessage] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('prizetown_cart') || '[]'));
   const [selected, setSelected] = useState(null);
+  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cookieChoice, setCookieChoice] = useState(() => localStorage.getItem('prizetown_cookie_choice') || '');
   const [showCookiePrefs, setShowCookiePrefs] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(() => localStorage.getItem('prizetown_legal_disclaimer_v1') === 'accepted');
@@ -481,6 +485,7 @@ function App() {
   const active = competitions.filter(c => c.status === 'active');
   const homepageCompetitions = active.length > 0 ? active : competitions;
   const cartCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  function closeMobileMenuAppV287() { setMobileMenuOpen(false); }
 
   if (page === 'draw-broadcast') {
     return <DrawBroadcastPage setPage={setPage} />;
@@ -495,12 +500,12 @@ function App() {
 
   return <div style={brandStyle(settings)}>
     <div className="welcome-marquee" aria-label="Welcome message"><div className="marquee-track">{welcomeMarqueeLoop.map((item, index) => <span key={index}>{item}</span>)}</div></div>
-    <header className="topbar"><button className="brand logo-brand" onClick={() => setPage('home')}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><nav>
-      <button type="button" onClick={() => { setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => setPage('how-it-works')}>How it works</button><button onClick={() => setPage('about')}>About</button><button onClick={() => setPage('fair-draws')}>Fair draws</button><button onClick={() => setPage('entry-lists')}>Entry Lists</button><button onClick={() => setPage('winners')}>Winners</button><button onClick={() => setPage('terms')}>Terms</button>
-      {user && <button onClick={() => { setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
-      <button onClick={() => setPage('cart')}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
-      {user?.role === 'admin' && <button onClick={() => { setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
-      {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => setPage('login')}><User size={16} /> Login</button>}
+    <header className="topbar"><button className="brand logo-brand" onClick={() => { closeMobileMenuAppV287(); setPage('home'); }}><img src={siteLogo(settings)} alt={settings.site_name || 'Prizetown'} /><span>{settings.site_name || 'Prizetown'}</span></button><button type="button" className="mobile-menu-toggle" aria-expanded={mobileMenuOpen} aria-controls="main-nav" onClick={() => setMobileMenuOpen(open => !open)}><span>☰</span><strong>Menu</strong></button><nav id="main-nav" className={mobileMenuOpen ? 'open' : ''}>
+      <button type="button" onClick={() => { closeMobileMenuAppV287(); setPage('home'); setTimeout(() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>Competitions</button><button onClick={() => { closeMobileMenuAppV287(); setPage('how-it-works'); }}>How it works</button><button onClick={() => { closeMobileMenuAppV287(); setPage('about'); }}>About</button><button onClick={() => { closeMobileMenuAppV287(); setPage('fair-draws'); }}>Fair draws</button><button onClick={() => { closeMobileMenuAppV287(); setPage('entry-lists'); }}>Entry Lists</button><button onClick={() => { closeMobileMenuAppV287(); setPage('winners'); }}>Winners</button><button onClick={() => { closeMobileMenuAppV287(); setPage('terms'); }}>Terms</button>
+      {user && <button onClick={() => { closeMobileMenuAppV287(); setPage('account'); loadAccount().catch(err => setMessage(err.message)); }}><ClipboardList size={16} /> My entries</button>}
+      <button onClick={() => { closeMobileMenuAppV287(); setPage('cart'); }}><ShoppingCart size={16} /> Basket {cartCount > 0 ? `(${cartCount})` : ''}</button>
+      {user?.role === 'admin' && <button onClick={() => { closeMobileMenuAppV287(); setPage('admin'); loadAdminData().catch(err => setMessage(err.message)); }}><Shield size={16} /> Admin</button>}
+      {user ? <button onClick={logout}><LogOut size={16} /> Logout</button> : <button onClick={() => { closeMobileMenuAppV287(); setPage('login'); }}><User size={16} /> Login</button>}
     </nav></header>
     {message && <div className="notice">{message}<button onClick={() => setMessage('')}>Dismiss</button></div>}
     {featureEnabled(settings, 'module_cookie_legal_enabled') && !cookieChoice && <CookieConsent settings={settings} setPage={setPage} onChoice={saveCookieChoice} showPrefs={showCookiePrefs} setShowPrefs={setShowCookiePrefs} />}
@@ -655,7 +660,7 @@ return <main>
         <p className="eyebrow"><Sparkles size={16} /> {homepageEyebrow}</p>
         <h1>{homepageTitle}</h1>
         <p>{homepageText}</p>
-        {!user && <button className="primary" onClick={() => setPage('login')}>Create account / login</button>}
+        {!user && <button className="primary" onClick={() => { setPage('login'); }}>Create account / login</button>}
 
         {postcodesEnabled && <div className="postcode-hero-note">
           <strong>Your postcode unlocks your local prize board.</strong>
@@ -693,9 +698,9 @@ return <main>
           </div>
 
           <div className="launch-trust-strip" aria-label="Launch trust badges">
-            <button type="button" onClick={() => setPage('how-it-works')}>How it works</button><button type="button" onClick={() => setPage('about')}>About Prizetown</button><button type="button" onClick={() => setPage('fair-draws')}>Fair draws</button>
-            <button type="button" onClick={() => setPage('entry-lists')}>Public entry lists</button>
-            <button type="button" onClick={() => setPage('winners')}>Winners & results</button><a className="live-draw-hero-button" href="/draw-broadcast">Watch live draws</a>
+            <button type="button" onClick={() => { setPage('how-it-works'); }}>How it works</button><button type="button" onClick={() => { setPage('about'); }}>About Prizetown</button><button type="button" onClick={() => { setPage('fair-draws'); }}>Fair draws</button>
+            <button type="button" onClick={() => { setPage('entry-lists'); }}>Public entry lists</button>
+            <button type="button" onClick={() => { setPage('winners'); }}>Winners & results</button><a className="live-draw-hero-button" href="/draw-broadcast">Watch live draws</a>
             <button type="button" onClick={() => setPage('free-entry')}>Free entry route</button>
             <span>18+ responsible entry</span><span>Built around public proof</span>
           </div>
@@ -720,9 +725,9 @@ return <main>
       </div>
       <div className="start-here-actions">
         <button type="button" className="primary" onClick={() => document.getElementById('competitions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Browse competitions</button>
-        <button type="button" className="secondary" onClick={() => setPage('how-it-works')}>How it works</button>
-        <button type="button" className="secondary" onClick={() => setPage('entry-lists')}>Entry lists</button>
-        <button type="button" className="secondary" onClick={() => setPage('winners')}>Winners</button>
+        <button type="button" className="secondary" onClick={() => { setPage('how-it-works'); }}>How it works</button>
+        <button type="button" className="secondary" onClick={() => { setPage('entry-lists'); }}>Entry lists</button>
+        <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>Winners</button>
       </div>
     </section>
 
@@ -819,8 +824,8 @@ return <main>
         <h2>Built for local prize nights, clear entries and fair draws.</h2>
         <p>Prizetown is designed around postcode-aware competitions, visible ticket numbers, public entry lists and winner results customers can check before and after each draw.</p>
         <div className="community-proof-actions">
-          <button type="button" className="primary" onClick={() => setPage('entry-lists')}>View entry lists</button>
-          <button type="button" className="secondary" onClick={() => setPage('winners')}>View winners</button>
+          <button type="button" className="primary" onClick={() => { setPage('entry-lists'); }}>View entry lists</button>
+          <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>View winners</button>
           <button type="button" className="secondary" onClick={() => setPage('free-entry')}>Free entry route</button>
         </div>
       </div>
@@ -872,7 +877,7 @@ return <main>
           <p className="eyebrow"><Zap size={16} /> Instant winner feed</p>
           <h2>Recent instant-win moments</h2>
         </div>
-        <button type="button" className="secondary" onClick={() => setPage('winners')}>View all winners</button>
+        <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>View all winners</button>
       </div>
 
       {instantWinnerTickerRows.length > 0 ? <div className="instant-winner-marquee" aria-label="Recent instant winners">
@@ -944,8 +949,8 @@ return <main>
         <h3>Transparency</h3>
         <p>Competition details, ticket limits, closing dates and draw information are shown clearly before entry.</p>
         <nav className="footer-links" aria-label="Footer legal links">
-          <button type="button" onClick={() => setPage('how-it-works')}>How it works</button>
-          <button type="button" onClick={() => setPage('terms')}>Terms</button>
+          <button type="button" onClick={() => { setPage('how-it-works'); }}>How it works</button>
+          <button type="button" onClick={() => { setPage('terms'); }}>Terms</button>
           <button type="button" onClick={() => setPage('privacy')}>Privacy</button>
           <button type="button" onClick={() => setPage('free-entry')}>Free entry</button>
           <button type="button" onClick={() => setPage('cookies')}>Cookies</button>
@@ -1000,7 +1005,10 @@ function CompetitionCard({ c, cart, saveCart, setMessage, setPage, setSelected }
 }
 
 function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
-  const [quantity, setQuantity] = useState(1); const [answer, setAnswer] = useState(''); const [instantWins, setInstantWins] = useState([]); const [entryList, setEntryList] = useState([]); const [localNotice, setLocalNotice] = useState('');
+  const [quantity, setQuantity] = useState(1); 
+  const ticketLimit = Math.max(1, Math.min(Number(c.max_per_user || 1), Math.max(1, Number(c.max_tickets || 1) - Number(c.entries_sold || 0))));
+  function setTicketQuantity(value) { setQuantity(Math.max(1, Math.min(ticketLimit, Number(value || 1)))); }
+  const [answer, setAnswer] = useState(''); const [instantWins, setInstantWins] = useState([]); const [entryList, setEntryList] = useState([]); const [localNotice, setLocalNotice] = useState('');
   const percent = Math.min(100, Math.round(((c.entries_sold || 0) / c.max_tickets) * 100)); const remaining = Math.max(0, c.max_tickets - (c.entries_sold || 0));
   useEffect(() => { api(`/competitions/${c.id}/instant-wins`).then(setInstantWins).catch(() => setInstantWins([])); api(`/competitions/${c.id}/entries`).then(setEntryList).catch(() => setEntryList([])); }, [c.id]);
   function add(qtyOverride) {
@@ -1046,7 +1054,16 @@ function CompetitionDetail({ c, cart, saveCart, setMessage, setPage, close }) {
     }
   }
 
-  return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button type="button" onClick={() => shareCompetition('native')}>Share</button><button type="button" onClick={() => shareCompetition('facebook')}>Facebook</button><button type="button" onClick={() => shareCompetition('instagram')}>Instagram</button><button type="button" onClick={() => shareCompetition('tiktok')}>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong>  -  {c.entries_sold || 0}/{c.max_tickets}  -  {remaining} tickets remaining  -  max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<div className="quick-picks"><button type="button" onClick={() => setQuantity(1)}>1 ticket</button><button type="button" onClick={() => setQuantity(5)}>5 tickets</button><button type="button" onClick={() => setQuantity(10)}>10 tickets</button><button type="button" onClick={() => setQuantity(25)}>25 tickets</button></div><p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => setPage('cart')}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'}  -  ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
+  return <section className="detail panel"><button className="link" onClick={close}>Close details</button><div className="detail-grid"><div><img className="detail-img" src={c.image_url ? imageUrl(c.image_url) : fallbackPosterUrl(c)} alt="" /><div className="share-row"><span>Share:</span><button type="button" onClick={() => shareCompetition('native')}>Share</button><button type="button" onClick={() => shareCompetition('facebook')}>Facebook</button><button type="button" onClick={() => shareCompetition('instagram')}>Instagram</button><button type="button" onClick={() => shareCompetition('tiktok')}>TikTok</button></div></div><div><h1>{c.title}</h1><p className="price-big">{money(c.ticket_price_pence)} Per Entry</p><div className="countdown"><div>{daysLeft(c.closes_at)}</div><small>Draw on {fmtDate(c.draw_at)}</small></div><div className="progress"><span style={{ width: `${percent}%` }} /></div><p><strong>{percent}% Sold</strong>  -  {c.entries_sold || 0}/{c.max_tickets}  -  {remaining} tickets remaining  -  max {c.max_per_user} per user</p>{c.question && <label>Entry question<input value={answer} onChange={e => setAnswer(e.target.value)} placeholder={c.question} /></label>}<p className="muted small-help">Choose how many tickets, then press Add to basket. If a competition is limited to 1 per user, admin can raise Max per user on the competition.</p><div className="two compact"><label>Tickets<input type="number" min="1" max={Math.min(c.max_per_user, remaining)} value={quantity} onChange={e => setTicketQuantity(e.target.value)} /></label><label>Total<input readOnly value={money((Number(quantity || 1)) * c.ticket_price_pence)} /></label></div>{localNotice && <p className="basket-notice">{localNotice}</p>}<div className="ticket-slider-card">
+          <div className="ticket-slider-head"><strong>Choose tickets</strong><span>{quantity} selected</span></div>
+          <div className="ticket-slider-control">
+            <button type="button" className="ticket-stepper" onClick={() => setTicketQuantity(quantity - 1)} disabled={quantity <= 1}>−</button>
+            <input className="ticket-range" type="range" min="1" max={ticketLimit} value={quantity} onChange={e => setTicketQuantity(e.target.value)} />
+            <button type="button" className="ticket-stepper" onClick={() => setTicketQuantity(quantity + 1)} disabled={quantity >= ticketLimit}>+</button>
+          </div>
+          <div className="ticket-slider-meta"><span>1 minimum</span><span>Max {ticketLimit}</span></div>
+        </div>
+        <button type="button" className="primary full" onClick={() => add()}><ShoppingCart size={16} /> Add to basket</button><button type="button" className="secondary full" onClick={() => { setPage('cart'); }}>Go to basket / Checkout</button></div></div><div className="detail-tabs"><details open><summary>Prize Description</summary><p>{c.description}</p></details><details open><summary>Instant Wins</summary>{instantWins.length === 0 ? <p className="muted">No instant wins on this competition.</p> : <div className="instant-grid">{instantWins.map(w => <div className={`instant-prize ${w.public_status}`} key={w.id}><strong>{w.prize_title}</strong><span>{w.prize_value_pence ? money(w.prize_value_pence) : 'Bonus'}</span><small>{w.public_status === 'claimed' ? `Won by ${w.winner_name || 'Customer'}  -  ticket #${w.winning_ticket_number}` : 'Available'}</small></div>)}</div>}<p className="muted">If any allocated ticket number matches a pre-set instant-win ticket, the prize is marked as won automatically.</p></details><details><summary>Entry List</summary>{entryList.length === 0 ? <p className="muted">No entries yet.</p> : <div className="entry-chip-list">{entryList.slice(0, 500).map(e => <span key={e.ticket_number}>#{e.ticket_number}</span>)}</div>}</details><details><summary>Free Entry Route</summary><p>{c.free_entry_text || 'Add free-entry text in admin before going public.'}</p></details><details><summary>Competition Rules</summary><p>{c.rules_text || 'Add competition rules in admin before going public.'}</p></details></div></section>;
 }
 
 function SocialLinks({ settings = {} }) {
@@ -1189,7 +1206,7 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
     </div>)}
     <div className="checkout-bar">
       <h2>Total: {money(total)}</h2>
-      <button className="secondary" onClick={() => setPage('home')}>Continue browsing</button>
+      <button className="secondary" onClick={() => { setPage('home'); }}>Continue browsing</button>
       <button className="secondary" onClick={clearBasket} disabled={cart.length === 0}>Clear basket</button>
       <div className="checkout-compliance">
         <label className="check-row important-check"><input type="checkbox" checked={ageConfirmed} onChange={e => { setAgeConfirmed(e.target.checked); setCheckoutError(''); }} /> <span>{settings.age_confirmation_text}</span></label>
@@ -1200,7 +1217,7 @@ function Cart({ settings, user, setPage, cart, saveCart, reload, reloadAccount, 
   </section></main>;
 }
 
-function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => setPage('login')}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number}  -  {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)}  -  {o.entry_count} entries  -  {o.status}</p></div></div>)}</div></section></main>; }
+function Account({ user, entries, orders, setPage, reload }) { if (!user) return <main className="narrow"><div className="panel"><h2>Please login</h2><button className="primary" onClick={() => { setPage('login'); }}>Login</button></div></main>; return <main><section className="admin-layout"><div className="panel list-panel"><div className="row"><h2>My entries</h2><button className="secondary" onClick={reload}>Refresh</button></div>{entries.length === 0 && <p className="muted">No entries yet.</p>}{entries.map(e => <div className="list-row entry-row" key={e.id}><div><strong>{e.competition_title}</strong><p>Ticket #{e.ticket_number}  -  {e.payment_status}</p></div></div>)}</div><div className="panel list-panel"><h2>My orders</h2>{orders.length === 0 && <p className="muted">No orders yet.</p>}{orders.map(o => <div className="list-row entry-row" key={o.id}><div><strong>Order #{o.id}</strong><p>{money(o.total_pence)}  -  {o.entry_count} entries  -  {o.status}</p></div></div>)}</div></section></main>; }
 
 
 
@@ -3589,6 +3606,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Manual Email Workflow Centre', 'Admin can preview and copy approved email wording while automatic payment/customer emails stay disabled until webhook safety is ready.'],
             ['Manual Email Sender UI', 'Admin can now fill a recipient/template form, preview the message and send only after typing SEND_EMAIL.'],
             ['Injected Admin Panels Disabled', 'Security/email admin panels that were mounting in the wrong place have been hidden until they are rebuilt as proper admin menu sections.'],
+            ['Mobile Menu and Ticket Slider', 'The public site now uses a compact burger menu on mobile and competition details use a ticket quantity slider with plus/minus controls instead of relying on preset quantity buttons.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
@@ -3848,7 +3866,7 @@ function LegalDisclaimer({ settings, setPage, onAccept }) {
         <span>{settings.popup_terms_label || defaultSettings.popup_terms_label}</span>
       </label>
       <div className="legal-modal-links">
-        <button type="button" className="footer-text-link" onClick={() => setPage('terms')}>Terms</button>
+        <button type="button" className="footer-text-link" onClick={() => { setPage('terms'); }}>Terms</button>
         <button type="button" className="footer-text-link" onClick={() => setPage('privacy')}>Privacy</button>
         <button type="button" className="footer-text-link" onClick={() => setPage('free-entry')}>Free entry</button>
         <button type="button" className="footer-text-link" onClick={() => setPage('cookies')}>Cookies</button>
@@ -5428,7 +5446,7 @@ function PaymentReadinessPanel({ orders = [] }) {
 function LegalPage({ title, text, settings, setPage }) {
   return <main className="legal-main">
     <section className="panel legal-panel">
-      <button type="button" className="link" onClick={() => setPage('home')}>Back to competitions</button>
+      <button type="button" className="link" onClick={() => { setPage('home'); }}>Back to competitions</button>
       <h1>{title}</h1>
       <div className="legal-copy">{String(text || '').split('\n').map((line, index) => line.trim() === '' ? <br key={index} /> : <p key={index}>{line}</p>)}</div>
       <div className="legal-contact">
@@ -5447,9 +5465,9 @@ function AboutPage({ setPage, settings }) {
       <h1>Postcode prize competitions built around trust, local excitement and clear public results.</h1>
       <p>{settings?.site_name || 'Prizetown'} is designed for UK prize competitions where customers can see how entries work, check public ticket lists, follow live draws and review winner proof after results are published.</p>
       <div className="trust-action-row">
-        <button type="button" className="primary" onClick={() => setPage('how-it-works')}>How it works</button>
-        <button type="button" className="secondary" onClick={() => setPage('fair-draws')}>Fair draws</button>
-        <button type="button" className="secondary" onClick={() => setPage('winners')}>Winner proof</button>
+        <button type="button" className="primary" onClick={() => { setPage('how-it-works'); }}>How it works</button>
+        <button type="button" className="secondary" onClick={() => { setPage('fair-draws'); }}>Fair draws</button>
+        <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>Winner proof</button>
       </div>
     </section>
 
@@ -5475,8 +5493,8 @@ function FairDrawsPage({ setPage }) {
       <h1>Clear entries, trusted timing and public winner proof.</h1>
       <p>Prizetown final draws are designed to be easy to explain: eligible entries are loaded, the live draw screen shows the draw, and the result can be published with proof details.</p>
       <div className="trust-action-row">
-        <button type="button" className="primary" onClick={() => setPage('entry-lists')}>View entry lists</button>
-        <button type="button" className="secondary" onClick={() => setPage('winners')}>View winners</button>
+        <button type="button" className="primary" onClick={() => { setPage('entry-lists'); }}>View entry lists</button>
+        <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>View winners</button>
         <button type="button" className="secondary" onClick={() => setPage('free-entry')}>Free entry route</button>
       </div>
     </section>
@@ -5512,9 +5530,9 @@ function HowItWorks({ setPage, settings }) {
       <h1>Clear steps from entry to winner reveal.</h1>
       <p>Prizetown is built to make competitions easy to understand: choose a prize, get ticket numbers, check entry lists and follow winners after instant wins or final draws.</p>
       <div className="how-actions">
-        <button type="button" className="primary" onClick={() => setPage('home')}>View competitions</button>
-        <button type="button" className="secondary" onClick={() => setPage('entry-lists')}>Check entry lists</button>
-        <button type="button" className="secondary" onClick={() => setPage('winners')}>View winners</button>
+        <button type="button" className="primary" onClick={() => { setPage('home'); }}>View competitions</button>
+        <button type="button" className="secondary" onClick={() => { setPage('entry-lists'); }}>Check entry lists</button>
+        <button type="button" className="secondary" onClick={() => { setPage('winners'); }}>View winners</button>
       </div>
     </section>
 
