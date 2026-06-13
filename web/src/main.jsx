@@ -2800,7 +2800,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v303';
+  const adminVersion = 'v304';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3594,6 +3594,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Admin High Contrast Mode', 'Admin panels, buttons, helper text and menu items now use stronger contrast so the dashboard is easier to read on dark screens.'],
             ['Admin Readability', 'Admin text, buttons, menu items, form fields and table spacing have been enlarged so the dashboard is easier to read and use on desktop and touch screens.'],
             ['True Fullscreen Admin', 'Admin now applies a dedicated admin route class so the dashboard can use the full browser width instead of being constrained by the public website wrapper.'],
             ['Admin Full Screen Width', 'Admin now breaks out of the normal public page width and shows a clear version banner at the top of the admin menu.'],

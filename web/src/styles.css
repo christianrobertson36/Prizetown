@@ -8116,3 +8116,133 @@ body.prizetown-admin-route .admin-version-hero strong {
     width: 100%;
   }
 }
+
+
+/* v304 admin high contrast readability */
+body.prizetown-admin-route {
+  color: #f8fafc !important;
+}
+
+body.prizetown-admin-route .panel,
+body.prizetown-admin-route .list-panel,
+body.prizetown-admin-route form.panel,
+body.prizetown-admin-route .admin-menu,
+body.prizetown-admin-route .admin-content .panel,
+body.prizetown-admin-route .admin-home-card,
+body.prizetown-admin-route .draw-control-card,
+body.prizetown-admin-route .draw-proof-card,
+body.prizetown-admin-route .spinner-style-card-v302 {
+  background: rgba(3, 7, 18, .92) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #f8fafc !important;
+}
+
+body.prizetown-admin-route .muted,
+body.prizetown-admin-route p,
+body.prizetown-admin-route small,
+body.prizetown-admin-route span,
+body.prizetown-admin-route li {
+  color: rgba(248,250,252,.9) !important;
+}
+
+body.prizetown-admin-route h1,
+body.prizetown-admin-route h2,
+body.prizetown-admin-route h3,
+body.prizetown-admin-route strong,
+body.prizetown-admin-route label,
+body.prizetown-admin-route summary {
+  color: #ffffff !important;
+}
+
+body.prizetown-admin-route .admin-menu-group {
+  background: rgba(15,23,42,.96) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+}
+
+body.prizetown-admin-route .admin-menu-group summary {
+  background: rgba(30,41,59,.95) !important;
+  color: #ffffff !important;
+  font-weight: 950 !important;
+}
+
+body.prizetown-admin-route .admin-tabs button,
+body.prizetown-admin-route .admin-menu button,
+body.prizetown-admin-route button.secondary,
+body.prizetown-admin-route .button.secondary,
+body.prizetown-admin-route .segmented-buttons button {
+  background: rgba(30,41,59,.98) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,.26) !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
+
+body.prizetown-admin-route .admin-tabs button:hover,
+body.prizetown-admin-route .admin-menu button:hover,
+body.prizetown-admin-route button.secondary:hover,
+body.prizetown-admin-route .button.secondary:hover,
+body.prizetown-admin-route .segmented-buttons button:hover {
+  background: rgba(51,65,85,1) !important;
+  border-color: rgba(250,204,21,.62) !important;
+}
+
+body.prizetown-admin-route .admin-tabs button.active,
+body.prizetown-admin-route .segmented-buttons button.primary,
+body.prizetown-admin-route button.primary,
+body.prizetown-admin-route .button.primary {
+  background: linear-gradient(135deg, #facc15, #fb923c) !important;
+  color: #050816 !important;
+  border-color: #fde047 !important;
+  font-weight: 950 !important;
+}
+
+body.prizetown-admin-route input,
+body.prizetown-admin-route select,
+body.prizetown-admin-route textarea {
+  background: rgba(2,6,23,.96) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,.3) !important;
+}
+
+body.prizetown-admin-route input::placeholder,
+body.prizetown-admin-route textarea::placeholder {
+  color: rgba(248,250,252,.62) !important;
+}
+
+body.prizetown-admin-route table,
+body.prizetown-admin-route .table,
+body.prizetown-admin-route .admin-table {
+  color: #f8fafc !important;
+}
+
+body.prizetown-admin-route th {
+  color: #ffffff !important;
+  background: rgba(30,41,59,.98) !important;
+  border-bottom: 1px solid rgba(255,255,255,.22) !important;
+}
+
+body.prizetown-admin-route td {
+  color: rgba(248,250,252,.92) !important;
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+body.prizetown-admin-route .notice,
+body.prizetown-admin-route .empty-state {
+  background: rgba(15,23,42,.96) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(250,204,21,.35) !important;
+}
+
+body.prizetown-admin-route .admin-version-hero {
+  background: linear-gradient(135deg, rgba(250,204,21,.28), rgba(249,115,22,.18), rgba(15,23,42,.96)) !important;
+  border-color: rgba(250,204,21,.68) !important;
+}
+
+body.prizetown-admin-route .admin-version-hero span {
+  color: #ffffff !important;
+}
+
+body.prizetown-admin-route .admin-version-hero strong {
+  color: #fde047 !important;
+  text-shadow: 0 2px 18px rgba(250,204,21,.35);
+}
