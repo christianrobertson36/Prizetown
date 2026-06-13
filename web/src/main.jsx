@@ -119,11 +119,20 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
   const isWinner = mode === 'winner' && winner;
   const segments = rows.length ? rows : Array.from({ length: 24 }, (_, i) => ({ label: `#${i + 1}`, from: i + 1, to: i + 1 }));
   const slice = 360 / Math.max(1, segments.length);
-  const colours = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'];
+  const spinnerColourSets = {
+    classic: ['#ef4444', '#f97316', '#facc15', '#22c55e', '#0ea5e9', '#2563eb', '#7c3aed', '#db2777'],
+    'ticket-squares': ['#fde047', '#fb923c', '#f97316', '#facc15', '#22c55e', '#38bdf8', '#a78bfa', '#f472b6'],
+    'neon-jackpot': ['#06b6d4', '#22d3ee', '#a855f7', '#ec4899', '#facc15', '#14b8a6', '#60a5fa', '#f0abfc'],
+    'golden-vault': ['#fbbf24', '#f59e0b', '#92400e', '#fde68a', '#ca8a04', '#78350f', '#facc15', '#fff7ed'],
+    'ticket-storm': ['#f97316', '#fb7185', '#38bdf8', '#22c55e', '#facc15', '#a78bfa', '#2dd4bf', '#f472b6'],
+    'spotlight-stage': ['#e5e7eb', '#94a3b8', '#38bdf8', '#6366f1', '#f8fafc', '#0f172a', '#fde047', '#cbd5e1']
+  };
+  const colours = spinnerColourSets[spinnerStyle] || spinnerColourSets.classic;
   const showLabels = showTicketLabels && segments.length <= 100;
   const useTicketSquares = spinnerStyle === 'ticket-squares';
   const ticketNumbers = segments.map(seg => Number(seg.ticket_number || seg.from || 0)).filter(Boolean);
   const [shuffleNumber, setShuffleNumber] = useState(ticketNumbers[0] || 1);
+  const spinnerStyleClass = 'trusted-wheel-style-' + String(spinnerStyle || 'classic').replace(/[^a-z0-9]+/g, '-');
 
   useEffect(() => {
     if (isWinner && winner?.ticket_number) {
@@ -141,7 +150,7 @@ function TrustedWheelDraw({ mode = 'idle', winner = null, tickets = [], rotation
     return () => clearInterval(timer);
   }, [isSpinning, isWinner, winner?.ticket_number, tickets.length]);
 
-  return <div className={`trusted-wheel-draw ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
+  return <div className={`trusted-wheel-draw ${spinnerStyleClass} ${isSpinning ? 'is-spinning' : ''} ${isWinner ? 'has-winner' : ''}`}>
     <div className="trusted-wheel-wrap">
       <div className="trusted-wheel-pointer" aria-label="Stop point"></div>
       <svg className="trusted-wheel-svg" viewBox="0 0 500 500" role="img" aria-label="Prizetown draw wheel">
@@ -1732,6 +1741,7 @@ function ModulesPanel({ settingsForm, setSettingsForm, saveSettings }) {
     ['module_live_draw_enabled', 'Live draw / OBS', 'Enable the built-in live draw wheel and OBS-ready broadcast screen.'],
     ['module_arnold_enabled', 'Arnold host', 'Show Arnold host mode on homepage, admin draw preview and live draw screen.'],
     ['module_wheel_demo_enabled', 'Wheel of Luck demo', 'Show the customer-facing demo wheel on the homepage.'],
+    ['module_spinner_preview_gallery_enabled', 'Spinner preview gallery', 'Show the spinner style gallery inside Final draw so draw styles can be compared and selected.'],
     ['module_profit_planner_enabled', 'Profit planner', 'Enable competition profit planning tools and margin warnings.'],
     ['module_cookie_legal_enabled', 'Cookie/legal popups', 'Enable cookie consent and first-visit legal disclaimer popups.']
   ];
@@ -1957,6 +1967,7 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   const [winnerSoundEnabled, setWinnerSoundEnabled] = useState(() => localStorage.getItem('prizetownWinnerSoundEnabled') !== 'false');
   const [introDurationSeconds, setIntroDurationSeconds] = useState(() => localStorage.getItem('prizetownIntroDurationSeconds') || '6');
   const arnoldModuleEnabled = featureEnabled(settings, 'module_arnold_enabled');
+  const spinnerPreviewGalleryEnabled = featureEnabled(settings, 'module_spinner_preview_gallery_enabled');
   const [showArnold, setShowArnold] = useState(() => {
     const saved = localStorage.getItem('prizetown_draw_show_arnold');
     return saved === null ? true : saved !== 'false';
@@ -2007,7 +2018,8 @@ function BuiltInDrawWheel({ competitions, setMessage, settings = {} }) {
   function setSpinnerStylePreset(next) {
     setSpinnerStyle(next);
     localStorage.setItem('prizetown_spinner_style', next);
-    setMessage(next === 'ticket-squares' ? 'Spinner style set to ticket squares. Renderer patch comes next.' : 'Spinner style set to classic.');
+    const label = ({ classic: 'Classic', 'ticket-squares': 'Ticket squares', 'neon-jackpot': 'Neon Jackpot Ring', 'golden-vault': 'Golden Prize Vault', 'ticket-storm': 'Ticket Storm', 'spotlight-stage': 'Spotlight Stage' })[next] || next;
+    setMessage('Spinner style set to ' + label + '. This style is used by the admin preview and live broadcast state.');
   }
 
   function createTestEntries(count = 100) {
@@ -2788,7 +2800,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v301';
+  const adminVersion = 'v302';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3745,6 +3757,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Arnold Bug Hunter Visual', 'The pre-launch tester module includes an Arnold-themed bug-hunter advert so the section feels intentional and not like placeholder space.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
+            ['Spinner Gallery in Final Draw', 'The spinner preview gallery now lives inside Draws > Final draw and can be switched on/off from Modules. The styles are selectable and feed the admin preview/live broadcast spinner state.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
             ['Spinner Preview Gallery', 'Admin now has four new draw-show spinner concepts to compare before choosing one to wire into the live broadcast draw.'],
             ['Visible Spinner Gallery', 'The spinner preview gallery now appears near the top of Admin so it is easy to find before choosing a live draw style.'],
@@ -8348,6 +8361,9 @@ if (!document.getElementById('prizetown-spinner-preview-gallery-v285-style')) {
 }
 
 function mountSpinnerPreviewGalleryV285() {
+  // v302-disable-floating-spinner-gallery: moved into Admin > Draws > Final draw.
+  document.getElementById('prizetown-spinner-preview-gallery-v285')?.remove();
+  return;
   const path = window.location.pathname.toLowerCase();
   const isAdminArea = path.includes('/admin');
 
