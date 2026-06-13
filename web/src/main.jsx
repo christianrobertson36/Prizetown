@@ -1734,6 +1734,70 @@ function StreamHelperPanel({ settingsForm, setSettingsForm, saveSettings, setMes
     </div>
   </form>;
 }
+
+function AdminViewAdjusterV305() {
+  const defaults = {
+    text: '1',
+    buttons: '1',
+    spacing: '1',
+    contrast: 'high'
+  };
+
+  const [view, setView] = useState(() => {
+    try {
+      return { ...defaults, ...(JSON.parse(localStorage.getItem('prizetown_admin_view_v305') || '{}')) };
+    } catch {
+      return defaults;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('prizetown_admin_view_v305', JSON.stringify(view));
+    document.body.style.setProperty('--admin-text-scale-v305', view.text);
+    document.body.style.setProperty('--admin-button-scale-v305', view.buttons);
+    document.body.style.setProperty('--admin-spacing-scale-v305', view.spacing);
+    document.body.classList.toggle('admin-contrast-maximum-v305', view.contrast === 'maximum');
+    document.body.classList.toggle('admin-contrast-high-v305', view.contrast !== 'maximum');
+  }, [view]);
+
+  function update(key, value) {
+    setView(current => ({ ...current, [key]: value }));
+  }
+
+  function reset() {
+    setView(defaults);
+  }
+
+  return <div className="admin-view-adjuster-v305">
+    <strong>Admin view adjuster</strong>
+    <p>Change admin readability here. Saved on this browser.</p>
+
+    <label>Text size
+      <input type="range" min="0.9" max="1.35" step="0.05" value={view.text} onChange={e => update('text', e.target.value)} />
+      <span>{Math.round(Number(view.text) * 100)}%</span>
+    </label>
+
+    <label>Button size
+      <input type="range" min="0.9" max="1.35" step="0.05" value={view.buttons} onChange={e => update('buttons', e.target.value)} />
+      <span>{Math.round(Number(view.buttons) * 100)}%</span>
+    </label>
+
+    <label>Panel spacing
+      <input type="range" min="0.85" max="1.35" step="0.05" value={view.spacing} onChange={e => update('spacing', e.target.value)} />
+      <span>{Math.round(Number(view.spacing) * 100)}%</span>
+    </label>
+
+    <label>Contrast
+      <select value={view.contrast} onChange={e => update('contrast', e.target.value)}>
+        <option value="high">High</option>
+        <option value="maximum">Maximum</option>
+      </select>
+    </label>
+
+    <button type="button" className="secondary" onClick={reset}>Reset admin view</button>
+  </div>;
+}
+
 function ModulesPanel({ settingsForm, setSettingsForm, saveSettings }) {
   const modules = [
     ['module_postcodes_enabled', 'Postcode competitions', 'Show postcode signup, postcode zones, and competition postcode assignment tools. Turn off for a simple national competition site.'],
@@ -2800,7 +2864,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
   const moduleWheelDemo = featureEnabled(settingsForm, 'module_wheel_demo_enabled');
   const moduleProfitPlanner = featureEnabled(settingsForm, 'module_profit_planner_enabled');
   const moduleCookieLegal = featureEnabled(settingsForm, 'module_cookie_legal_enabled');
-  const adminVersion = 'v304';
+  const adminVersion = 'v305';
 
   function openAdminTab(key) {
     setActiveTab(key);
@@ -3233,7 +3297,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <span>Admin build</span>
           <strong>{adminVersion}</strong>
         </div>
-        <h2>Admin</h2><p className="muted">Grouped controls keep the dashboard easier to manage.</p>
+        <h2>Admin</h2><p className="muted">Grouped controls keep the dashboard easier to manage.</p><AdminViewAdjusterV305 />
         <div className="admin-menu-groups">
           {menuGroups.map(group => <details className="admin-menu-group" key={group.title} open={group.title === 'Core'}>
             <summary>{group.title}</summary>
@@ -3594,6 +3658,7 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
           <p className="muted">Simple notes for anyone helping manage Prizetown. Update this guide whenever a new admin feature is added or changed.</p>
 
           {[
+            ['Admin View Adjuster', 'Admin now includes a view adjuster in the admin menu so each browser can change text size, button size, panel spacing and contrast without another code patch.'],
             ['Admin High Contrast Mode', 'Admin panels, buttons, helper text and menu items now use stronger contrast so the dashboard is easier to read on dark screens.'],
             ['Admin Readability', 'Admin text, buttons, menu items, form fields and table spacing have been enlarged so the dashboard is easier to read and use on desktop and touch screens.'],
             ['True Fullscreen Admin', 'Admin now applies a dedicated admin route class so the dashboard can use the full browser width instead of being constrained by the public website wrapper.'],

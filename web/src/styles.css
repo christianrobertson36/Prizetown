@@ -8246,3 +8246,113 @@ body.prizetown-admin-route .admin-version-hero strong {
   color: #fde047 !important;
   text-shadow: 0 2px 18px rgba(250,204,21,.35);
 }
+
+
+/* v305 admin view adjuster */
+body.prizetown-admin-route {
+  --admin-text-scale-v305: 1;
+  --admin-button-scale-v305: 1;
+  --admin-spacing-scale-v305: 1;
+}
+
+body.prizetown-admin-route .admin-content,
+body.prizetown-admin-route .admin-menu {
+  font-size: calc(1rem * var(--admin-text-scale-v305, 1)) !important;
+}
+
+body.prizetown-admin-route button,
+body.prizetown-admin-route .button,
+body.prizetown-admin-route input,
+body.prizetown-admin-route select,
+body.prizetown-admin-route textarea,
+body.prizetown-admin-route .admin-tabs button,
+body.prizetown-admin-route .segmented-buttons button {
+  font-size: calc(1rem * var(--admin-button-scale-v305, 1)) !important;
+  min-height: calc(48px * var(--admin-button-scale-v305, 1)) !important;
+  padding: calc(.82rem * var(--admin-button-scale-v305, 1)) calc(1rem * var(--admin-button-scale-v305, 1)) !important;
+}
+
+body.prizetown-admin-route .panel,
+body.prizetown-admin-route .list-panel,
+body.prizetown-admin-route form.panel,
+body.prizetown-admin-route .admin-home-card,
+body.prizetown-admin-route .draw-control-card,
+body.prizetown-admin-route .draw-proof-card,
+body.prizetown-admin-route .spinner-style-card-v302 {
+  padding: calc(1.15rem * var(--admin-spacing-scale-v305, 1)) !important;
+}
+
+body.prizetown-admin-route .admin-shell,
+body.prizetown-admin-route .admin-home-grid,
+body.prizetown-admin-route .form-grid,
+body.prizetown-admin-route .modules-grid,
+body.prizetown-admin-route .spinner-style-grid-v302 {
+  gap: calc(1rem * var(--admin-spacing-scale-v305, 1)) !important;
+}
+
+.admin-view-adjuster-v305 {
+  display: grid;
+  gap: .7rem;
+  margin: 1rem 0;
+  padding: .9rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(250,204,21,.35);
+  background: rgba(15,23,42,.96);
+}
+
+.admin-view-adjuster-v305 strong {
+  color: #fde047 !important;
+  font-size: 1rem;
+}
+
+.admin-view-adjuster-v305 p {
+  margin: 0;
+  color: rgba(248,250,252,.86) !important;
+  font-size: .92rem;
+  line-height: 1.4;
+}
+
+.admin-view-adjuster-v305 label {
+  display: grid;
+  gap: .3rem;
+  color: #ffffff !important;
+  font-weight: 850;
+}
+
+.admin-view-adjuster-v305 input[type="range"] {
+  width: 100%;
+  min-height: 28px !important;
+  padding: 0 !important;
+}
+
+.admin-view-adjuster-v305 span {
+  color: #fde047 !important;
+  font-weight: 900;
+  font-size: .9rem;
+}
+
+body.admin-contrast-maximum-v305.prizetown-admin-route .panel,
+body.admin-contrast-maximum-v305.prizetown-admin-route .list-panel,
+body.admin-contrast-maximum-v305.prizetown-admin-route form.panel,
+body.admin-contrast-maximum-v305.prizetown-admin-route .admin-menu,
+body.admin-contrast-maximum-v305.prizetown-admin-route .admin-home-card,
+body.admin-contrast-maximum-v305.prizetown-admin-route .draw-control-card,
+body.admin-contrast-maximum-v305.prizetown-admin-route .draw-proof-card {
+  background: #020617 !important;
+  border-color: rgba(255,255,255,.38) !important;
+}
+
+body.admin-contrast-maximum-v305.prizetown-admin-route .muted,
+body.admin-contrast-maximum-v305.prizetown-admin-route p,
+body.admin-contrast-maximum-v305.prizetown-admin-route small,
+body.admin-contrast-maximum-v305.prizetown-admin-route li {
+  color: #f8fafc !important;
+}
+
+body.admin-contrast-maximum-v305.prizetown-admin-route button.secondary,
+body.admin-contrast-maximum-v305.prizetown-admin-route .button.secondary,
+body.admin-contrast-maximum-v305.prizetown-admin-route .admin-tabs button {
+  background: #1e293b !important;
+  border-color: rgba(255,255,255,.42) !important;
+  color: #ffffff !important;
+}
