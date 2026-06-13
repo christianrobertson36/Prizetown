@@ -6992,3 +6992,376 @@ body:not(.broadcast-body) .footer-pre-cta {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v291 bug hunter advert polish */
+.pick-poster-strip {
+  align-items: center !important;
+  gap: 1rem !important;
+}
+
+.pick-poster-strip > * {
+  min-width: 0;
+}
+
+.pick-poster-strip h2,
+.pick-poster-strip h3 {
+  margin-bottom: .5rem !important;
+}
+
+.pick-poster-strip p {
+  max-width: 62ch;
+}
+
+.pick-poster-strip img,
+.pick-poster-strip .poster-image,
+.pick-poster-strip .poster-visual,
+.pick-poster-strip .promo-image,
+.pick-poster-strip .promo-visual {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 1.2rem;
+}
+
+.pick-poster-strip .panel,
+.pick-poster-strip .card,
+.pick-poster-strip .promo-copy,
+.pick-poster-strip .poster-copy {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.pick-poster-strip span,
+.pick-poster-strip .chip,
+.pick-poster-strip .pill,
+.pick-poster-strip .tag {
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .pick-poster-strip {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pick-poster-strip img,
+  .pick-poster-strip .poster-image,
+  .pick-poster-strip .poster-visual,
+  .pick-poster-strip .promo-image,
+  .pick-poster-strip .promo-visual {
+    max-height: 240px;
+  }
+}
+
+
+/* v291 arnold bug hunter advert */
+.pick-poster-strip {
+  align-items: center !important;
+  gap: 1rem !important;
+}
+
+.arnold-bug-hunter-visual {
+  min-width: 0;
+}
+
+.arnold-bug-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(250,204,21,.25);
+  background:
+    radial-gradient(circle at top left, rgba(250,204,21,.24), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(59,130,246,.20), transparent 32%),
+    linear-gradient(160deg, rgba(18,24,48,.98), rgba(10,13,28,.98));
+  padding: 1rem;
+  min-height: 320px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .9rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,.28);
+}
+
+.arnold-bug-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: #facc15;
+  color: #111827;
+  font-weight: 900;
+  letter-spacing: .04em;
+  padding: .45rem .8rem;
+}
+
+.arnold-bug-figure {
+  position: relative;
+  height: 180px;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+}
+
+.arnold-bug-head {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 74px;
+  height: 74px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f4d0a4, #d8a46c);
+  box-shadow: inset 0 -8px 0 rgba(0,0,0,.08);
+}
+
+.arnold-bug-head::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 10px;
+  height: 18px;
+  border-radius: 18px 18px 8px 8px;
+  background: #111827;
+}
+
+.arnold-bug-body {
+  position: absolute;
+  left: 50%;
+  top: 80px;
+  width: 120px;
+  height: 88px;
+  transform: translateX(-50%);
+  border-radius: 20px 20px 18px 18px;
+  background: linear-gradient(180deg, #1d4ed8, #1e3a8a);
+}
+
+.arnold-bug-body::before,
+.arnold-bug-body::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  width: 20px;
+  height: 70px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f4d0a4, #d8a46c);
+}
+
+.arnold-bug-body::before { left: -14px; transform: rotate(18deg); }
+.arnold-bug-body::after { right: -14px; transform: rotate(-18deg); }
+
+.arnold-bug-ticket {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  width: 110px;
+  height: 56px;
+  border-radius: .9rem;
+  background: linear-gradient(135deg, #facc15, #fb7185);
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  transform: rotate(-10deg);
+}
+
+.arnold-bug-ticket::before {
+  content: 'BUG REPORT';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: .8rem;
+  font-weight: 900;
+  color: #111827;
+}
+
+.arnold-bug-copy strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: .35rem;
+}
+
+.arnold-bug-copy p {
+  margin: 0;
+  color: rgba(255,255,255,.78);
+}
+
+.arnold-bug-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: .8rem;
+}
+
+.arnold-bug-chip-row span {
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  padding: .35rem .7rem;
+  font-size: .85rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .pick-poster-strip {
+    grid-template-columns: 1fr !important;
+  }
+
+  .arnold-bug-card {
+    min-height: auto;
+  }
+}
+
+
+/* v291 repair Arnold tester visual */
+.prelaunch-tester-section {
+  grid-template-columns: minmax(240px, .75fr) minmax(0, 1fr) minmax(320px, .95fr) !important;
+  gap: 1rem !important;
+}
+
+.arnold-tester-ad {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(250,204,21,.28);
+  background:
+    radial-gradient(circle at 35% 10%, rgba(250,204,21,.30), transparent 30%),
+    radial-gradient(circle at 80% 100%, rgba(59,130,246,.24), transparent 34%),
+    linear-gradient(160deg, rgba(15,23,42,.98), rgba(8,12,26,.98));
+  min-height: 100%;
+  padding: 1rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .75rem;
+  box-shadow: 0 20px 45px rgba(0,0,0,.26);
+}
+
+.arnold-tester-badge {
+  width: fit-content;
+  border-radius: 999px;
+  background: #facc15;
+  color: #111827;
+  font-weight: 950;
+  letter-spacing: .04em;
+  padding: .45rem .75rem;
+  font-size: .82rem;
+}
+
+.arnold-tester-hero {
+  position: relative;
+  min-height: 190px;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+}
+
+.arnold-tester-glow {
+  position: absolute;
+  inset: 18px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(250,204,21,.22), transparent 64%);
+  filter: blur(1px);
+}
+
+.arnold-tester-head {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f2c99a, #cf935a);
+  box-shadow: inset 0 -8px 0 rgba(0,0,0,.10);
+}
+
+.arnold-tester-head::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  top: 9px;
+  height: 18px;
+  border-radius: 18px 18px 8px 8px;
+  background: #111827;
+}
+
+.arnold-tester-head::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(17,24,39,.70);
+}
+
+.arnold-tester-body {
+  position: absolute;
+  left: 50%;
+  top: 88px;
+  transform: translateX(-50%);
+  width: 124px;
+  height: 88px;
+  border-radius: 22px 22px 18px 18px;
+  background: linear-gradient(180deg, #2563eb, #1e3a8a);
+  box-shadow: inset 0 10px 0 rgba(255,255,255,.10);
+}
+
+.arnold-tester-body::before,
+.arnold-tester-body::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  width: 20px;
+  height: 74px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f2c99a, #cf935a);
+}
+
+.arnold-tester-body::before { left: -15px; transform: rotate(18deg); }
+.arnold-tester-body::after { right: -15px; transform: rotate(-18deg); }
+
+.arnold-tester-ticket {
+  position: absolute;
+  right: 16px;
+  bottom: 18px;
+  width: 104px;
+  height: 58px;
+  border-radius: .8rem;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  transform: rotate(-9deg);
+  background: linear-gradient(135deg, #facc15, #fb7185);
+  color: #111827;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: 0 12px 25px rgba(0,0,0,.30);
+}
+
+.arnold-tester-copy strong,
+.arnold-tester-copy span {
+  display: block;
+}
+
+.arnold-tester-copy strong {
+  font-size: 1.05rem;
+  margin-bottom: .25rem;
+}
+
+.arnold-tester-copy span {
+  color: rgba(255,255,255,.76);
+  font-size: .92rem;
+}
+
+.prelaunch-tester-section .prelaunch-copy,
+.prelaunch-tester-section .prelaunch-form {
+  padding-top: .85rem !important;
+  padding-bottom: .85rem !important;
+}
+
+@media (max-width: 1050px) {
+  .prelaunch-tester-section {
+    grid-template-columns: 1fr !important;
+  }
+
+  .arnold-tester-hero {
+    min-height: 170px;
+  }
+}

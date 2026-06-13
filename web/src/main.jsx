@@ -238,7 +238,7 @@ const defaultSettings = {
   social_youtube_url: '',
   youtube_live_url: '',
   spinner_style: 'classic',
-  welcome_marquee_text: 'Welcome to Prizetown! | New competitions added regularly | Instant wins and final draw prizes | Enter responsibly and good luck',
+  welcome_marquee_text: 'Welcome to Prizetown! | New competitions added regularly | Broken buttons and final draw prizes | Enter responsibly and good luck',
   free_entry_global: `Free Postal Entry Route
 
 Where a competition offers free postal entry, postal entries must be submitted before the stated deadline and must include the required details clearly and legibly.
@@ -617,10 +617,23 @@ function PreLaunchTesterProgramme({ settings = {} }) {
   }
 
   return <section className="prelaunch-tester-section panel" id="prelaunch-testers">
+    <div className="arnold-tester-ad" aria-label="Arnold bug hunter advert">
+      <div className="arnold-tester-badge">BUG HUNTERS WANTED</div>
+      <div className="arnold-tester-hero" aria-hidden="true">
+        <div className="arnold-tester-glow"></div>
+        <div className="arnold-tester-head"></div>
+        <div className="arnold-tester-body"></div>
+        <div className="arnold-tester-ticket">FREE<br />CREDITS</div>
+      </div>
+      <div className="arnold-tester-copy">
+        <strong>Arnold wants your sharp eyes.</strong>
+        <span>Find bugs, send screenshots, earn manual tester rewards.</span>
+      </div>
+    </div>{/* Arnold tester visual v291 repair */}
     <div className="prelaunch-copy">
-      <p className="eyebrow"><Sparkles size={16} /> Pre-launch testers wanted</p>
-      <h2>Help test Prizetown before launch and earn free ticket credits.</h2>
-      <p>We are inviting early testers to try the site, find bugs and help make Prizetown smoother before public launch. Useful confirmed bug reports can earn manual free ticket credits as a thank-you.</p>
+      <p className="eyebrow"><Sparkles size={16} /> Arnold needs bug hunters</p>
+      <h2>Find bugs before launch and earn free ticket credits.</h2>
+      <p>Arnold is building a small pre-launch bug-hunter team. Test the site on mobile, tablet or desktop, report anything broken or confusing, and useful confirmed bugs can earn manual free ticket credits.</p>
       <div className="prelaunch-reward-grid">
         <article><strong>Small bug</strong><span>Typos, layout issues or confusing text.</span><em>Small credit thank-you</em></article>
         <article><strong>Useful bug</strong><span>Broken buttons, mobile issues or checkout confusion.</span><em>Better credit reward</em></article>
@@ -676,7 +689,7 @@ function Home({ settings, resetCookieChoice, competitions, instantWinners, user,
   const liveActivityStats = [
     ['Live competitions', liveCompetitions.length || 0],
     ['Tickets allocated', liveCompetitions.reduce((sum, c) => sum + Number(c.entries_sold || 0), 0)],
-    ['Instant wins claimed', safeArray(instantWinners).length || 0],
+    ['Broken buttons claimed', safeArray(instantWinners).length || 0],
     ['Next draw', nextDrawCompetition ? fmtDate(nextDrawCompetition.draw_at) : 'Coming soon']
   ];
   const instantWinnerHighlights = safeArray(instantWinners).slice(0, 6);
@@ -870,14 +883,14 @@ return <main>
 
     <section className="highlife-showcase">
       <div className="highlife-lead">
-        <p className="eyebrow"><Sparkles size={16} /> Live the high life</p>
-        <h2>Prizes with proper dream-big energy</h2>
-        <p>Cars, cash, tech and luxury lifestyle moments — Arnold brings the VIP feeling while the competition posters do the selling.</p>
+        <p className="eyebrow"><Sparkles size={16} /> Become a bug hunter</p>
+        <h2>Help test Prizetown before launch</h2>
+        <p>Find bugs, report issues and help us polish the site before launch. We are looking for testers on mobile, tablet and desktop — useful confirmed bug reports can earn manual free ticket credits. Bug-hunter rewards are manual during testing only.</p>
         <div className="highlife-points">
-          <span>Live draws</span>
-          <span>Instant wins</span>
-          <span>Big prize nights</span>
-          <span>Winner moments</span>
+          <span>Mobile bugs</span>
+          <span>Broken buttons</span>
+          <span>Checkout flow</span>
+          <span>Free ticket credits</span>
         </div>
       </div>
       <div className="highlife-grid">
@@ -3695,6 +3708,8 @@ function Admin({ settings, setSettings, competitions, entries, orders, auditLogs
             ['Homepage Duplicate Cleanup', 'The public homepage has been simplified by hiding repeated promo/trust sections so customers reach competitions faster. The sections are only hidden with CSS and can be restored later.'],
             ['Pre-launch Tester Programme', 'The homepage invites early users to sign up as testers and report bugs by email. Bug rewards/free ticket credits are manual and should be reviewed before any real credit logic is added.'],
             ['Pre-launch Tester Module Toggle', 'The tester signup section is controlled by the module_prelaunch_testers_enabled setting so it can be switched off after launch or when not needed.'],
+            ['Bug Hunter Advert', 'The old lifestyle promo block on the homepage has been repurposed into a bug-hunter advert to support pre-launch testing and reduce wasted space.'],
+            ['Arnold Bug Hunter Visual', 'The pre-launch tester module includes an Arnold-themed bug-hunter advert so the section feels intentional and not like placeholder space.'],
             ['Demo Posters', 'Starter/demo competitions use SVG poster artwork from web/public/demo-posters. Replace those files or edit competition image URLs when changing sample prize types.'],
             ['Image URLs', 'Built-in site assets such as demo posters, logo, favicon and Arnold images load from the public web app. Uploaded files use the API uploads path.'],
             ['Spinner Style', 'Use Final Draw > Spinner style to switch between Classic and Ticket squares. Classic is the current spinner and is kept so you can revert instantly.'],
