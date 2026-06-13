@@ -7478,3 +7478,20 @@ body:not(.broadcast-body) .footer-pre-cta {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v292 remove unwanted small cartoon Arnold bug card */
+.arnold-tester-ad,
+.arnold-tester-hero,
+.arnold-tester-head,
+.arnold-tester-body,
+.arnold-tester-ticket,
+.arnold-tester-copy,
+.arnold-inline-bug-ad,
+.arnold-inline-figure,
+.arnold-inline-head,
+.arnold-inline-body,
+.arnold-inline-ticket,
+.arnold-inline-caption {
+  display: none !important;
+}
