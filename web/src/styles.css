@@ -7974,3 +7974,145 @@ body.prizetown-admin-route .admin-home-grid {
 .spinner-mini-wheel-v302.trusted-wheel-style-ticket-squares {
   background: radial-gradient(circle at 50% 50%, rgba(250,204,21,.22), rgba(249,115,22,.14), rgba(15,23,42,.94));
 }
+
+
+/* v303 admin readability and larger controls */
+body.prizetown-admin-route {
+  font-size: 17px;
+}
+
+body.prizetown-admin-route .admin-shell {
+  gap: 1.4rem !important;
+}
+
+body.prizetown-admin-route .admin-menu {
+  font-size: 1rem;
+}
+
+body.prizetown-admin-route .admin-menu h2 {
+  font-size: 1.45rem;
+}
+
+body.prizetown-admin-route .admin-menu .muted,
+body.prizetown-admin-route .admin-content .muted {
+  font-size: .98rem;
+  line-height: 1.55;
+}
+
+body.prizetown-admin-route .admin-menu-group summary {
+  font-size: 1.02rem;
+  padding: .95rem 1rem;
+}
+
+body.prizetown-admin-route .admin-tabs button,
+body.prizetown-admin-route .admin-menu button,
+body.prizetown-admin-route .segmented-buttons button,
+body.prizetown-admin-route button,
+body.prizetown-admin-route .button {
+  min-height: 46px;
+  font-size: .98rem;
+  padding: .85rem 1rem;
+}
+
+body.prizetown-admin-route .admin-content h1 {
+  font-size: clamp(1.7rem, 2.1vw, 2.35rem);
+  line-height: 1.15;
+}
+
+body.prizetown-admin-route .admin-content h2 {
+  font-size: clamp(1.35rem, 1.7vw, 1.85rem);
+  line-height: 1.2;
+}
+
+body.prizetown-admin-route .admin-content h3 {
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+body.prizetown-admin-route .panel,
+body.prizetown-admin-route .list-panel,
+body.prizetown-admin-route form.panel {
+  padding: 1.25rem !important;
+}
+
+body.prizetown-admin-route label {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+body.prizetown-admin-route input,
+body.prizetown-admin-route select,
+body.prizetown-admin-route textarea {
+  min-height: 46px;
+  font-size: 1rem;
+  padding: .85rem .95rem;
+}
+
+body.prizetown-admin-route textarea {
+  min-height: 115px;
+}
+
+body.prizetown-admin-route table,
+body.prizetown-admin-route .table,
+body.prizetown-admin-route .admin-table {
+  font-size: .98rem;
+}
+
+body.prizetown-admin-route th,
+body.prizetown-admin-route td {
+  padding: .85rem .8rem;
+  line-height: 1.45;
+}
+
+body.prizetown-admin-route .admin-home-card,
+body.prizetown-admin-route .draw-control-card,
+body.prizetown-admin-route .draw-proof-card,
+body.prizetown-admin-route .spinner-style-card-v302 {
+  font-size: 1rem;
+  padding: 1.05rem !important;
+}
+
+body.prizetown-admin-route .spinner-style-card-v302 {
+  min-height: 245px;
+}
+
+body.prizetown-admin-route .spinner-style-card-v302 strong {
+  font-size: 1.08rem;
+}
+
+body.prizetown-admin-route .spinner-style-card-v302 span {
+  font-size: .98rem;
+}
+
+body.prizetown-admin-route .admin-version-hero strong {
+  font-size: 1.75rem;
+}
+
+@media (min-width: 1400px) {
+  body.prizetown-admin-route {
+    font-size: 18px;
+  }
+
+  body.prizetown-admin-route .admin-tabs button,
+  body.prizetown-admin-route .admin-menu button,
+  body.prizetown-admin-route .segmented-buttons button,
+  body.prizetown-admin-route button,
+  body.prizetown-admin-route .button {
+    min-height: 50px;
+  }
+}
+
+@media (max-width: 700px) {
+  body.prizetown-admin-route {
+    font-size: 16px;
+  }
+
+  body.prizetown-admin-route .admin-tabs button,
+  body.prizetown-admin-route .admin-menu button,
+  body.prizetown-admin-route .segmented-buttons button,
+  body.prizetown-admin-route button,
+  body.prizetown-admin-route .button {
+    min-height: 48px;
+    width: 100%;
+  }
+}
